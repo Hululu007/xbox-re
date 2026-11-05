@@ -94,12 +94,23 @@ jobs:
           echo "Mobile search scope feature verified in source before build"
 
       - name: Run WebSocket danmaku tests
+        id: unit_tests
         run: |
           chmod +x ./gradlew
+          set -o pipefail
           ./gradlew \
             :app:testMobileArm64_v8aDebugUnitTest \
             --tests 'com.fongmi.android.tv.player.danmaku.*' \
-            --no-daemon
+            --no-daemon 2>&1 | tee /tmp/gradle-unit-test.log
+
+      - name: Report Gradle failure details
+        if: failure() && steps.unit_tests.outcome == 'failure'
+        run: |
+          echo "::group::Gradle failure detail"
+          if [ -f /tmp/gradle-unit-test.log ]; then
+            grep -nE "error:|^e: |FAILED|What went wrong|Execution failed|Caused by:|AAPT|Android resource linking failed|cannot find symbol|package .* does not exist|Tests? failed|AssertionError|java\.lang\.|BUILD FAILED|FAILURE:" /tmp/gradle-unit-test.log | tail -70 | while IFS= read -r line; do echo "::error::$line"; done
+          fi
+          echo "::endgroup::"
 
       - name: Resolve release tag
         id: meta
