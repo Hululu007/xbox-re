@@ -106,6 +106,11 @@ jobs:
           grep -q 'applyWindow(dialog, context, landFactor, portFactor, maxDp);' app/src/main/java/com/fongmi/android/tv/ui/dialog/LightDialog.java
           grep -q 'if (window != null) applyWindow(window);' app/src/main/java/com/fongmi/android/tv/ui/dialog/ChoiceDialog.java
           echo "Dialog window applied before show in both shared dialog classes"
+          # 自动简繁转换必须保持关闭（不跟随系统地区自动转繁体）
+          grep -q 'Trans.setTraditional(false);' app/src/main/java/com/fongmi/android/tv/setting/Setting.java
+          grep -q 'DEFAULT_ENABLE = false;' catvod/src/main/java/com/github/catvod/utils/Trans.java
+          ! grep -q '"TW".equals' catvod/src/main/java/com/github/catvod/utils/Trans.java
+          echo "Auto traditional conversion is disabled"
 
       - name: Run WebSocket danmaku tests
         id: unit_tests

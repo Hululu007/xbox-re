@@ -1,7 +1,6 @@
 package com.github.catvod.utils;
 
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 
 public class Trans {
@@ -14,7 +13,9 @@ public class Trans {
     private static volatile Boolean traditional;
 
     static {
-        DEFAULT_ENABLE = "TW".equals(Locale.getDefault().getCountry());
+        // 自动简繁转换已停用：不再按系统地区（TW/HK/MO）默认开启。
+        // 显式的 s2t(boolean, text) / t2s(boolean, text) 仍按调用方参数工作。
+        DEFAULT_ENABLE = false;
         int len = UTF8T.length();
         int capacity = (int) (len / 0.75f) + 1;
         S2T = new HashMap<>(capacity);

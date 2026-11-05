@@ -353,8 +353,9 @@ public class Setting {
         return LANGUAGE_FOLLOW_SYSTEM;
     }
 
+    /** 自动简繁转换已停用：显式置 false，避免 null 回落按系统地区自动转繁体。 */
     public static void applyLanguage() {
-        Trans.setTraditional(null);
+        Trans.setTraditional(false);
     }
 
     public static Context wrapDisplay(Context context) {
