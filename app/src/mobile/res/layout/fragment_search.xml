@@ -52,7 +52,7 @@
             android:clickable="true"
             android:gravity="center"
             android:text="@string/search_scope_all"
-            android:textColor="@color/white"
+            android:textColor="@color/yellow"
             android:textSize="13sp" />
 
         <com.google.android.material.textview.MaterialTextView
@@ -65,7 +65,7 @@
             android:clickable="true"
             android:gravity="center"
             android:text="@string/search_scope_current"
-            android:textColor="@color/white"
+            android:textColor="@color/yellow"
             android:textSize="13sp" />
 
         <com.google.android.material.textview.MaterialTextView
@@ -77,7 +77,7 @@
             android:clickable="true"
             android:gravity="center"
             android:text="@string/search_scope_selected"
-            android:textColor="@color/white"
+            android:textColor="@color/yellow"
             android:textSize="13sp" />
 
     </androidx.appcompat.widget.LinearLayoutCompat>

@@ -1,6 +1,7 @@
 package com.fongmi.android.tv.ui.dialog;
 
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.text.Editable;
 import android.text.TextUtils;
@@ -105,8 +106,6 @@ public class SiteDialog extends BaseAlertDialog implements SiteAdapter.OnClickLi
         // 范围弹窗显示全选/反选；隐藏与范围无关的两个图标，给筛选框腾出宽度。
         binding.selectAll.setVisibility(range ? View.VISIBLE : View.GONE);
         binding.invert.setVisibility(range ? View.VISIBLE : View.GONE);
-        binding.block.setVisibility(range ? View.GONE : View.VISIBLE);
-        binding.search.setVisibility(range ? View.GONE : View.VISIBLE);
         // 切站列表：把当前站点滚到可见区前端；范围弹窗保持列表顶部。
         binding.recycler.post(() -> binding.recycler.scrollToPosition(search ? 0 : adapter.getSelectedPosition()));
     }
@@ -188,24 +187,23 @@ public class SiteDialog extends BaseAlertDialog implements SiteAdapter.OnClickLi
     }
 
     private void setGroupView() {
-        if (groups.isEmpty()) {
-            selectedGroup = "";
-            binding.groupScroll.setVisibility(View.GONE);
-            return;
-        }
         if (!TextUtils.isEmpty(selectedGroup) && !groups.contains(selectedGroup)) selectedGroup = "";
         binding.groupScroll.setVisibility(View.VISIBLE);
         binding.groupList.removeAllViews();
+        // 第一个按钮固定为「全部」；所有站点列表弹窗实例都经过这里。
+        binding.groupList.addView(getGroupView(""));
         for (String group : groups) binding.groupList.addView(getGroupView(group));
         updateGroupView();
     }
 
     private MaterialButton getGroupView(String group) {
+        boolean all = TextUtils.isEmpty(group);
         MaterialButton button = new MaterialButton(requireContext(), null, com.google.android.material.R.attr.materialButtonOutlinedStyle);
         LinearLayoutCompat.LayoutParams params = new LinearLayoutCompat.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         params.setMarginEnd(ResUtil.dp2px(8));
         button.setLayoutParams(params);
-        button.setText(group);
+        button.setText(all ? getString(R.string.site_group_all) : group);
+        button.setTag(group);
         button.setSingleLine(true);
         button.setAllCaps(false);
         button.setMinWidth(0);
@@ -233,9 +231,11 @@ public class SiteDialog extends BaseAlertDialog implements SiteAdapter.OnClickLi
     private void updateGroupView() {
         for (int i = 0; i < binding.groupList.getChildCount(); i++) {
             View view = binding.groupList.getChildAt(i);
-            boolean selected = ((MaterialButton) view).getText().toString().equals(selectedGroup);
+            Object tag = view.getTag();
+            boolean selected = tag != null && TextUtils.equals(tag.toString(), selectedGroup);
             view.setSelected(selected);
             view.setAlpha(TextUtils.isEmpty(selectedGroup) || selected ? 1.0f : 0.5f);
+            if (view instanceof MaterialButton) ((MaterialButton) view).setTypeface(null, selected ? Typeface.BOLD : Typeface.NORMAL);
         }
     }
 

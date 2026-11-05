@@ -132,4 +132,5 @@
     <string name="search_scope_hint">搜索范围仅在选定搜索模式生效</string>
     <string name="site_select_all">全选</string>
     <string name="site_invert">反选</string>
+    <string name="site_group_all">全部</string>
 </resources>
