@@ -10,6 +10,7 @@ import com.fongmi.android.tv.bean.Config;
 import com.fongmi.android.tv.databinding.DialogHistoryBinding;
 import com.fongmi.android.tv.impl.ConfigListener;
 import com.fongmi.android.tv.ui.adapter.ConfigAdapter;
+import com.fongmi.android.tv.utils.LocalScriptSource;
 import com.fongmi.android.tv.ui.custom.SpaceItemDecoration;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
@@ -98,6 +99,10 @@ public class HistoryDialog extends BaseAlertDialog implements ConfigAdapter.OnCl
 
     @Override
     public void onDeleteClick(Config item) {
+        // 脚本文件夹接口：删历史项 = 取消该文件夹登记，磁盘上的「脚本扫描.json」保留，
+        // 之后重新添加文件夹时旧配置（含 sites_bac）还能读回来。
+        if (LocalScriptSource.isStoreUrl(item.getUrl()))
+            LocalScriptSource.removeDir(LocalScriptSource.dirOfUrl(item.getUrl()));
         if (adapter.remove(item) == 0) dismiss();
     }
 

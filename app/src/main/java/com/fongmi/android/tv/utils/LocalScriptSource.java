@@ -476,6 +476,48 @@ public final class LocalScriptSource {
         return true;
     }
 
+    /**
+     * 重置：把所有站点条目（sites + sites_bac）的 proxy 字段恢复到按
+     * 「路径 / 文件名 / url 尾部 #代理」判定的默认值，撤销手动改过的代理状态。
+     * 只改 json 里的 proxy 字段，不动脚本文件，也不动 Site.java / 代理生效逻辑。
+     */
+    public static boolean resetProxy(String dir) {
+        Pair<List<JSONObject>, List<JSONObject>> pair = load(dir);
+        boolean changed = false;
+        for (JSONObject item : pair.first) changed |= resetOne(item);
+        for (JSONObject item : pair.second) changed |= resetOne(item);
+        if (changed) save(dir, pair.first, pair.second);
+        return changed;
+    }
+
+    private static boolean resetOne(JSONObject item) {
+        String key = item.optString("key");
+        String api = item.optString("api");
+        String home = item.optString("homePage");
+        boolean hit = key.contains(PROXY_KEY) || api.contains(PROXY_KEY)
+                || home.endsWith("#" + PROXY_KEY);
+        String want = hit ? PROXY_FLAG : "";
+        if (want.equals(item.optString("proxy"))) return false;
+        try {
+            item.put("proxy", want);
+        } catch (Exception ignored) {
+            return false;
+        }
+        return true;
+    }
+
+    /** 删除远程 html URL 条目（仅 url 类型），两栏都找；脚本文件不动 */
+    public static boolean removeUrl(String dir, String key) {
+        if (TextUtils.isEmpty(key)) return false;
+        Pair<List<JSONObject>, List<JSONObject>> pair = load(dir);
+        boolean changed = pair.first.removeIf(item ->
+                key.equals(item.optString("key")) && isEditable(item));
+        changed |= pair.second.removeIf(item ->
+                key.equals(item.optString("key")) && isEditable(item));
+        if (changed) save(dir, pair.first, pair.second);
+        return changed;
+    }
+
     public static JSONObject find(List<JSONObject> list, String key) {
         for (JSONObject item : list) if (key.equals(item.optString("key"))) return item;
         return null;

@@ -1280,4 +1280,8 @@
     <string name="script_reloaded">配置已重新加载</string>
     <string name="config_refresh">刷新接口</string>
     <string name="site_update">更新</string>
+
+    <string name="script_reset">重置</string>
+    <string name="script_delete">删除</string>
+    <string name="script_deleted">已删除</string>
 </resources>

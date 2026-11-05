@@ -36,6 +36,7 @@ import com.fongmi.android.tv.databinding.AdapterScriptItemBinding;
 import com.fongmi.android.tv.databinding.DialogScriptManageBinding;
 import com.fongmi.android.tv.databinding.DialogScriptUrlBinding;
 import com.fongmi.android.tv.impl.Callback;
+import com.fongmi.android.tv.ui.custom.CustomRecyclerView;
 import com.fongmi.android.tv.utils.FileChooser;
 import com.fongmi.android.tv.utils.LocalScriptSource;
 import com.fongmi.android.tv.utils.Notify;
@@ -135,6 +136,46 @@ public final class ScriptManageDialog extends BaseAlertDialog {
     public void onStart() {
         super.onStart();
         configureWindow(getDialog()); // 幂等兜底，同值不产生可见跳变
+        applyColumnLayout();
+    }
+
+    @Override
+    public void onConfigurationChanged(@NonNull android.content.res.Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        applyColumnLayout();
+    }
+
+    /** 竖屏上下两栏；横屏左右两栏（上=工作区，下=回收站 的叫法保持不变） */
+    private void applyColumnLayout() {
+        if (binding == null) return;
+        boolean land = ResUtil.isLand(requireContext());
+        binding.columns.setOrientation(land ? LinearLayoutCompat.HORIZONTAL : LinearLayoutCompat.VERTICAL);
+        LinearLayoutCompat.LayoutParams cp =
+                (LinearLayoutCompat.LayoutParams) binding.columns.getLayoutParams();
+        cp.height = land
+                ? Math.max(ResUtil.dp2px(200), (int) (ResUtil.getScreenHeight(requireContext()) * 0.45f))
+                : ViewGroup.LayoutParams.WRAP_CONTENT;
+        binding.columns.setLayoutParams(cp);
+        for (LinearLayoutCompat col : new LinearLayoutCompat[]{binding.keepColumn, binding.bacColumn}) {
+            LinearLayoutCompat.LayoutParams lp = (LinearLayoutCompat.LayoutParams) col.getLayoutParams();
+            if (land) {
+                lp.width = 0;
+                lp.height = ViewGroup.LayoutParams.MATCH_PARENT;
+                lp.weight = 1f;
+            } else {
+                lp.width = ViewGroup.LayoutParams.MATCH_PARENT;
+                lp.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+                lp.weight = 0f;
+            }
+            col.setLayoutParams(lp);
+        }
+        for (CustomRecyclerView rv : new CustomRecyclerView[]{binding.keepRecycler, binding.bacRecycler}) {
+            LinearLayoutCompat.LayoutParams lp = (LinearLayoutCompat.LayoutParams) rv.getLayoutParams();
+            lp.height = land ? 0 : ViewGroup.LayoutParams.WRAP_CONTENT;
+            lp.weight = land ? 1f : 0f;
+            rv.setLayoutParams(lp);
+            rv.setMaxHeight(land ? 0 : ResUtil.dp2px(140));
+        }
     }
 
     @Override
@@ -146,6 +187,7 @@ public final class ScriptManageDialog extends BaseAlertDialog {
         binding.keepRecycler.setAdapter(keepAdapter);
         binding.bacRecycler.setAdapter(bacAdapter);
         buildRows();
+        applyColumnLayout();
         bindState();
     }
 
@@ -166,7 +208,8 @@ public final class ScriptManageDialog extends BaseAlertDialog {
     /* ---------------- 顶部若干行按钮 ---------------- */
 
     private void buildRows() {
-        int[] tools = {R.string.script_add_url, R.string.script_swap, R.string.script_up, R.string.script_down};
+        int[] tools = {R.string.script_add_url, R.string.script_reset, R.string.script_swap,
+                R.string.script_up, R.string.script_down};
         for (int i = 0; i < tools.length; i++) {
             TextView chip = makeChip(getString(tools[i]), false, true);
             int idx = i;
@@ -322,6 +365,9 @@ public final class ScriptManageDialog extends BaseAlertDialog {
                 showUrlDialog(null);
                 return;
             case 1:
+                runOp(() -> LocalScriptSource.resetProxy(currentDir));
+                break;
+            case 2:
                 runOp(() -> {
                     if (LocalScriptSource.swap(currentDir, keepSel, bacSel)) {
                         keepSel.clear();
@@ -329,10 +375,10 @@ public final class ScriptManageDialog extends BaseAlertDialog {
                     }
                 });
                 break;
-            case 2:
+            case 3:
                 runOp(() -> reorder(true));
                 break;
-            case 3:
+            case 4:
                 runOp(() -> reorder(false));
                 break;
             default:
@@ -401,7 +447,21 @@ public final class ScriptManageDialog extends BaseAlertDialog {
                 .setView(b.getRoot()).create();
         if (dialog.getWindow() != null)
             dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        b.delete.setVisibility(editing == null ? View.GONE : View.VISIBLE);
         b.negative.setOnClickListener(v -> dialog.dismiss());
+        b.delete.setOnClickListener(v -> {
+            dialog.dismiss();
+            final String deleteKey = editing == null ? "" : editing.optString("key");
+            if (deleteKey.isEmpty()) return;
+            Task.execute(() -> {
+                LocalScriptSource.removeUrl(currentDir, deleteKey);
+                App.post(() -> {
+                    dirty = true;
+                    Notify.show(R.string.script_deleted);
+                    bindState();
+                });
+            });
+        });
         b.positive.setOnClickListener(v -> {
             String name = b.name.getText().toString().trim();
             String url = b.url.getText().toString().trim();
