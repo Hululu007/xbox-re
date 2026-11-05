@@ -365,7 +365,7 @@ public final class ScriptManageDialog extends BaseAlertDialog {
                 showUrlDialog(null);
                 return;
             case 1:
-                runOp(() -> LocalScriptSource.resetProxy(currentDir));
+                runOp(() -> LocalScriptSource.reset(currentDir));
                 break;
             case 2:
                 runOp(() -> {

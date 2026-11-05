@@ -477,33 +477,66 @@ public final class LocalScriptSource {
     }
 
     /**
-     * 重置：把所有站点条目（sites + sites_bac）的 proxy 字段恢复到按
-     * 「路径 / 文件名 / url 尾部 #代理」判定的默认值，撤销手动改过的代理状态。
-     * 只改 json 里的 proxy 字段，不动脚本文件，也不动 Site.java / 代理生效逻辑。
+     * 重置 = 回到「初始扫描的状态」，三件事一起做：
+     *  1. sites_bac 里所有条目移回 sites，回收站清空（脚本文件一个字节不动）；
+     *  2. 所有条目的 proxy 按扫描规则重算：本地脚本看路径 / 文件名 / 父目录
+     *     是否含关键字「代理」，远程 URL 看 url 尾部（如 #代理）是否含「代理」；
+     *     撤销手动勾选/取消过的代理状态；
+     *  3. 顺序恢复成初始扫描顺序：本地脚本按绝对路径排序，远程 URL 追加在尾部。
+     *
+     * 只写 json，不动脚本文件，也不动 Site.java / 代理生效逻辑（按约定本轮只生成字段）。
+     * 已经不存在的本地脚本条目仍由 load() 的 purgeGone 清掉，不会在这里复活。
      */
-    public static boolean resetProxy(String dir) {
+    public static boolean reset(String dir) {
         Pair<List<JSONObject>, List<JSONObject>> pair = load(dir);
-        boolean changed = false;
-        for (JSONObject item : pair.first) changed |= resetOne(item);
-        for (JSONObject item : pair.second) changed |= resetOne(item);
-        if (changed) save(dir, pair.first, pair.second);
-        return changed;
+        List<JSONObject> all = new ArrayList<>(pair.first);
+        all.addAll(pair.second); // 回收站全部移回工作区
+        if (all.isEmpty()) return false;
+        File root = new File(dir);
+        for (JSONObject item : all) {
+            String want = scannedProxy(root, item);
+            if (!want.equals(item.optString("proxy"))) {
+                try {
+                    item.put("proxy", want);
+                } catch (Exception ignored) {
+                }
+            }
+        }
+        // 初始扫描顺序：本地脚本按绝对路径排序（与 scripts() 一致），远程 URL 排尾部
+        all.sort((a, b) -> sortKey(a).compareTo(sortKey(b)));
+        save(dir, all, new ArrayList<>());
+        return true;
     }
 
-    private static boolean resetOne(JSONObject item) {
-        String key = item.optString("key");
+    private static String sortKey(JSONObject item) {
         String api = item.optString("api");
         String home = item.optString("homePage");
-        boolean hit = key.contains(PROXY_KEY) || api.contains(PROXY_KEY)
-                || home.endsWith("#" + PROXY_KEY);
-        String want = hit ? PROXY_FLAG : "";
-        if (want.equals(item.optString("proxy"))) return false;
-        try {
-            item.put("proxy", want);
-        } catch (Exception ignored) {
-            return false;
+        if (api.startsWith("file://")) return api.substring("file://".length());
+        // /file/ 路由里的路径是相对 Path.rootPath()，且只有本机地址才是本地脚本
+        if (home.contains("127.0.0.1")) {
+            int idx = home.indexOf("/file/");
+            if (idx >= 0) return new File(Path.rootPath(), home.substring(idx + 6)).getAbsolutePath();
         }
-        return true;
+        return "~" + item.optString("key"); // 远程 URL 排在扫描出来的本地脚本之后
+    }
+
+    /** 按初始扫描时的同一套规则判定 proxy，避免手改 key / name 造成误判 */
+    private static String scannedProxy(File root, JSONObject item) {
+        String api = item.optString("api");
+        String home = item.optString("homePage");
+        File file = null;
+        if (api.startsWith("file://")) {
+            file = new File(api.substring("file://".length()));
+        } else if (home.contains("127.0.0.1")) {
+            // 本地 html 的 homePage 由 fileHomePage() 生成，路径相对 Path.rootPath()
+            int idx = home.indexOf("/file/");
+            if (idx >= 0) file = new File(Path.rootPath(), home.substring(idx + 6));
+        }
+        if (file != null && file.getAbsolutePath().startsWith(root.getAbsolutePath()))
+            return proxyOf(root, file);
+        // 远程 URL：尾部 #代理 或任意处含关键字「代理」→ "proxy":"proxy"
+        return (home.contains(PROXY_KEY) || item.optString("key").contains(PROXY_KEY)
+                || item.optString("name").contains(PROXY_KEY)) ? PROXY_FLAG : "";
     }
 
     /** 删除远程 html URL 条目（仅 url 类型），两栏都找；脚本文件不动 */

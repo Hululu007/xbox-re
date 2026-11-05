@@ -1291,7 +1291,7 @@
     <string name="config_refresh">Refresh config</string>
     <string name="site_update">Update</string>
 
-    <string name="script_reset">Reset proxy</string>
+    <string name="script_reset">Reset</string>
     <string name="script_delete">Delete</string>
     <string name="script_deleted">Deleted</string>
 </resources>
