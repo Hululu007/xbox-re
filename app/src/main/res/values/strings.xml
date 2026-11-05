@@ -663,11 +663,10 @@
     <string name="setting_incognito">Incognito mode</string>
     <string name="setting_drive_check">Drive link check</string>
     <string name="setting_theme_color">Theme color</string>
-    <string name="setting_appearance">Appearance &amp; language</string>
-    <string name="setting_appearance_summary">4 options</string>
+    <string name="setting_appearance">Appearance</string>
+    <string name="setting_appearance_summary">3 options</string>
     <string name="setting_auto">Auto</string>
     <string name="setting_custom">Custom</string>
-    <string name="setting_language">Language</string>
     <string name="setting_size">Image size</string>
     <string name="setting_ui_scale">Interface size</string>
     <string name="dialog_close">Close</string>
@@ -692,7 +691,6 @@
     <string name="about_free_badge">Lite</string>
     <string name="about_version">Version %1$s · %2$s/%3$s</string>
     <string name="about_disclaimer">xbox is a stripped-down independent branch based on webhtv (package com.fongmi.android.tv.xbox) and can be installed alongside the original app.\n\nThis build does not provide online updates and will never check or install packages from the upstream project. Do not overwrite it with the upstream app. For new versions, use releases published by this project only.\n\nThe app itself is completely free and provides no paid services, video content, live sources, API sources, resource storage or content distribution. It is for technical learning, research and personal testing only; please uninstall it within 24 hours of downloading, installing or trying it. All consequences of continued use are borne by the user.\n\nThe app does not embed, sell or distribute any video resources, and is not responsible for interfaces, site sources, plugins, scripts, links, cloud-drive resources or third-party service content added by users. Users must comply with local laws and respect the rights of copyright owners and content providers.\n\nSelling, traffic diversion, paid maintenance, membership services, advertising monetisation, box preinstallation, TV box bundling or any other profit-making in the name of this app is strictly prohibited.\n\nIf you do not agree to the above, stop using and uninstall the app immediately.</string>
-    <string name="about_check_update">Check updates</string>
     <string name="about_acknowledge">I understand</string>
 
     <!-- Backup & Restore -->
@@ -1162,12 +1160,6 @@
         <item>Compact</item>
         <item>More compact</item>
         <item>Smaller</item>
-    </string-array>
-
-    <string-array name="select_language">
-        <item>Follow system</item>
-        <item>Simplified Chinese</item>
-        <item>Traditional Chinese</item>
     </string-array>
 
     <string-array name="select_scale">

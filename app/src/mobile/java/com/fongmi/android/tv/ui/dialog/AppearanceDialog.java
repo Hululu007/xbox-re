@@ -24,12 +24,10 @@ import com.google.android.material.textview.MaterialTextView;
 public final class AppearanceDialog extends DialogFragment implements ThemeDialog.Listener {
 
     private String[] uiScales;
-    private String[] languages;
     private String[] imageSizes;
     private MaterialTextView uiScaleValue;
     private MaterialTextView themeValue;
     private MaterialTextView imageSizeValue;
-    private MaterialTextView languageValue;
 
     public static void show(Fragment fragment) {
         new AppearanceDialog().show(fragment.getChildFragmentManager(), AppearanceDialog.class.getSimpleName());
@@ -39,7 +37,6 @@ public final class AppearanceDialog extends DialogFragment implements ThemeDialo
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
         uiScales = ResUtil.getStringArray(R.array.select_ui_scale);
-        languages = ResUtil.getStringArray(R.array.select_language);
         imageSizes = ResUtil.getStringArray(R.array.select_size);
         return LightDialog.create(requireContext(), getString(R.string.setting_appearance), createContent(), getString(R.string.dialog_close), null, null, null);
     }
@@ -50,7 +47,6 @@ public final class AppearanceDialog extends DialogFragment implements ThemeDialo
         uiScaleValue = addRow(content, R.string.setting_ui_scale, uiScales[Setting.getUiScaleIndex()], this::chooseUiScale);
         themeValue = addRow(content, R.string.setting_theme_color, getThemeText(), view -> ThemeDialog.show(this));
         imageSizeValue = addRow(content, R.string.setting_size, imageSizes[PlayerSetting.getSize()], this::chooseImageSize);
-        languageValue = addRow(content, R.string.setting_language, languages[Setting.getLanguageIndex()], this::chooseLanguage);
         return content;
     }
 
@@ -103,16 +99,6 @@ public final class AppearanceDialog extends DialogFragment implements ThemeDialo
             imageSizeValue.setText(imageSizes[which]);
             PlayerSetting.putSize(which);
             RefreshEvent.size();
-        });
-    }
-
-    private void chooseLanguage(View view) {
-        ChoiceDialog.showSingle(this, R.string.setting_language, languages, Setting.getLanguageIndex(), which -> {
-            if (which == Setting.getLanguageIndex()) return;
-            languageValue.setText(languages[which]);
-            Setting.putLanguageIndex(which);
-            dismissAllowingStateLoss();
-            RefreshEvent.language();
         });
     }
 

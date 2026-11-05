@@ -9,7 +9,6 @@ import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
-import android.os.LocaleList;
 import android.provider.Settings;
 import android.util.DisplayMetrics;
 
@@ -33,16 +32,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
 
 public class Setting {
 
     private static final Type STRING_LIST = new TypeToken<List<String>>() {}.getType();
 
     public static final int LANGUAGE_FOLLOW_SYSTEM = 0;
-    public static final int LANGUAGE_SIMPLIFIED = 1;
-    public static final int LANGUAGE_TRADITIONAL = 2;
-    private static final int[] LANGUAGE_OPTIONS = {LANGUAGE_FOLLOW_SYSTEM, LANGUAGE_SIMPLIFIED, LANGUAGE_TRADITIONAL};
 
     public static final int CSP_WARMUP_DISABLED = 0;
     public static final int CSP_WARMUP_DEFAULT = 1;
@@ -353,40 +348,13 @@ public class Setting {
         Prefers.put("incognito", incognito);
     }
 
+    /** 语言设置已移除：始终跟随系统，并忽略历史偏好，避免旧数据强制切换地区。 */
     public static int getLanguage() {
-        int language = Prefers.getInt("language", LANGUAGE_FOLLOW_SYSTEM);
-        return isLanguage(language) ? language : LANGUAGE_FOLLOW_SYSTEM;
-    }
-
-    public static void putLanguage(int language) {
-        int value = isLanguage(language) ? language : LANGUAGE_FOLLOW_SYSTEM;
-        Prefers.put("language", value);
-        applyLanguage(value);
-    }
-
-    public static void applyLanguage() {
-        applyLanguage(getLanguage());
-    }
-
-    public static int getLanguageIndex() {
-        int language = getLanguage();
-        for (int i = 0; i < LANGUAGE_OPTIONS.length; i++) if (LANGUAGE_OPTIONS[i] == language) return i;
         return LANGUAGE_FOLLOW_SYSTEM;
     }
 
-    public static void putLanguageIndex(int index) {
-        putLanguage(index >= 0 && index < LANGUAGE_OPTIONS.length ? LANGUAGE_OPTIONS[index] : LANGUAGE_FOLLOW_SYSTEM);
-    }
-
-    private static boolean isLanguage(int language) {
-        for (int option : LANGUAGE_OPTIONS) if (option == language) return true;
-        return false;
-    }
-
-    private static void applyLanguage(int language) {
-        if (language == LANGUAGE_SIMPLIFIED) Trans.setTraditional(false);
-        else if (language == LANGUAGE_TRADITIONAL) Trans.setTraditional(true);
-        else Trans.setTraditional(null);
+    public static void applyLanguage() {
+        Trans.setTraditional(null);
     }
 
     public static Context wrapDisplay(Context context) {
@@ -394,14 +362,8 @@ public class Setting {
     }
 
     public static Context wrapLanguage(Context context) {
-        int language = getLanguage();
-        applyLanguage(language);
-        if (language == LANGUAGE_FOLLOW_SYSTEM) return context;
-        Locale locale = language == LANGUAGE_TRADITIONAL ? Locale.TRADITIONAL_CHINESE : Locale.SIMPLIFIED_CHINESE;
-        Configuration config = new Configuration(context.getResources().getConfiguration());
-        config.setLocale(locale);
-        config.setLocales(new LocaleList(locale));
-        return context.createConfigurationContext(config);
+        applyLanguage();
+        return context;
     }
 
     public static int getUiScale() {
