@@ -89,6 +89,13 @@ public class HistoryDialog extends BaseAlertDialog implements ConfigAdapter.OnCl
         dismiss();
     }
 
+    /** 每行刷新 = 重新加载该接口（脚本文件夹 json 会先重扫再解析） */
+    @Override
+    public void onRefreshClick(Config item) {
+        if (listener != null) listener.setConfig(item);
+        dismiss();
+    }
+
     @Override
     public void onDeleteClick(Config item) {
         if (adapter.remove(item) == 0) dismiss();

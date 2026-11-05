@@ -1251,4 +1251,33 @@
 
     <string name="player_audio_badge_queue">队列</string>
     <string name="player_audio_repeat">循环</string>
+
+    <!-- 脚本文件夹订阅源 / 脚本管理 -->
+    <string name="script_manage">脚本管理</string>
+    <string name="script_refresh">刷新</string>
+    <string name="script_add_folder">添加文件夹</string>
+    <string name="script_add_url">在线html录入</string>
+    <string name="script_edit_url">编辑远程URL</string>
+    <string name="script_url_name">名称</string>
+    <string name="script_url_hint">url 地址</string>
+    <string name="script_use_proxy">是否使用代理</string>
+    <string name="script_proxy">代理</string>
+    <string name="script_swap">位置互换</string>
+    <string name="script_up">上移</string>
+    <string name="script_down">下移</string>
+    <string name="script_all">全部</string>
+    <string name="script_select_keep">全选上</string>
+    <string name="script_invert_keep">反选上</string>
+    <string name="script_select_bac">全选下</string>
+    <string name="script_invert_bac">反选下</string>
+    <string name="script_keep">工作区 (%1$d)</string>
+    <string name="script_bac">回收站 (%1$d)</string>
+    <string name="script_empty">还没有脚本文件夹，点「添加文件夹」选择一个目录</string>
+    <string name="script_folder_added">已添加文件夹，扫描到 %1$d 个脚本</string>
+    <string name="script_folder_exists">该文件夹已添加</string>
+    <string name="script_url_required">请输入 url 地址</string>
+    <string name="script_url_saved">已保存</string>
+    <string name="script_reloaded">配置已重新加载</string>
+    <string name="config_refresh">刷新接口</string>
+    <string name="site_update">更新</string>
 </resources>

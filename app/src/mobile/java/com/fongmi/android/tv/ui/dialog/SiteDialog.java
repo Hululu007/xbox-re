@@ -26,12 +26,14 @@ import com.fongmi.android.tv.R;
 import com.fongmi.android.tv.api.config.VodConfig;
 import com.fongmi.android.tv.bean.Site;
 import com.fongmi.android.tv.databinding.DialogSiteBinding;
+import com.fongmi.android.tv.impl.Callback;
 import com.fongmi.android.tv.impl.SiteListener;
 import com.fongmi.android.tv.setting.Setting;
 import com.fongmi.android.tv.setting.SiteBlockSetting;
 import com.fongmi.android.tv.ui.adapter.SiteAdapter;
 import com.fongmi.android.tv.ui.custom.CustomTextListener;
 import com.fongmi.android.tv.ui.custom.SpaceItemDecoration;
+import com.fongmi.android.tv.utils.Notify;
 import com.fongmi.android.tv.utils.ResUtil;
 import com.fongmi.android.tv.utils.Util;
 import com.google.android.material.button.MaterialButton;
@@ -151,6 +153,18 @@ public class SiteDialog extends BaseAlertDialog implements SiteAdapter.OnClickLi
         binding.search.setOnClickListener(this::onColumnToggle);
         binding.selectAll.setOnClickListener(v -> { if (adapter != null) adapter.selectAll(); });
         binding.invert.setOnClickListener(v -> { if (adapter != null) adapter.invert(); });
+        binding.update.setOnClickListener(v -> reloadCurrentConfig());
+    }
+
+    /** 通用「重新加载当前配置」：脚本文件夹 json 会先重扫再解析，普通 http 源也会重新拉一次 */
+    private void reloadCurrentConfig() {
+        VodConfig.load(VodConfig.get().getConfig(), new Callback() {
+            @Override
+            public void success() {
+                Notify.show(R.string.script_reloaded);
+            }
+        });
+        dismiss();
     }
 
     private void onBlockToggle(View view) {

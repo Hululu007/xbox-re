@@ -15,6 +15,7 @@ import com.fongmi.android.tv.event.ConfigEvent;
 import com.fongmi.android.tv.event.RefreshEvent;
 import com.fongmi.android.tv.impl.Callback;
 import com.fongmi.android.tv.setting.CustomCspSetting;
+import com.fongmi.android.tv.utils.LocalScriptSource;
 import com.fongmi.android.tv.utils.UrlUtil;
 import com.fongmi.android.tv.web.ext.WebHomeExtensionRegistry;
 import com.github.catvod.bean.Doh;
@@ -115,7 +116,12 @@ public class VodConfig extends BaseConfig {
 
     @Override
     protected void load(Config config) throws Throwable {
-        String json = Decoder.getJson(UrlUtil.convert(config.getUrl()), TAG);
+        String url = config.getUrl();
+        // 脚本文件夹订阅源：每次加载前按目录内容重扫并回写「脚本扫描.json」，
+        // 手动更新、重启、切换接口都会拿到最新站点；普通 http 配置零影响。
+        String dir = LocalScriptSource.dirOfUrl(url);
+        if (!TextUtils.isEmpty(dir)) LocalScriptSource.refresh(dir);
+        String json = Decoder.getJson(UrlUtil.convert(url), TAG);
         checkJson(config, Json.parse(json).getAsJsonObject());
     }
 

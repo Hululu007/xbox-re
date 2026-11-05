@@ -1261,4 +1261,33 @@
     <string name="player_audio_repeat">Repeat</string>
     <string name="lut_close">Close</string>
     <string name="player_lyrics_search">Search lyrics</string>
+
+    <!-- 脚本文件夹订阅源 / 脚本管理 -->
+    <string name="script_manage">Script manager</string>
+    <string name="script_refresh">Refresh</string>
+    <string name="script_add_folder">Add folder</string>
+    <string name="script_add_url">Add remote HTML</string>
+    <string name="script_edit_url">Edit remote HTML</string>
+    <string name="script_url_name">Name</string>
+    <string name="script_url_hint">URL</string>
+    <string name="script_use_proxy">Use proxy</string>
+    <string name="script_proxy">proxy</string>
+    <string name="script_swap">Swap</string>
+    <string name="script_up">Move up</string>
+    <string name="script_down">Move down</string>
+    <string name="script_all">All</string>
+    <string name="script_select_keep">Select all [top]</string>
+    <string name="script_invert_keep">Invert [top]</string>
+    <string name="script_select_bac">Select all [bottom]</string>
+    <string name="script_invert_bac">Invert [bottom]</string>
+    <string name="script_keep">Workspace (%1$d)</string>
+    <string name="script_bac">Recycle bin (%1$d)</string>
+    <string name="script_empty">No script folder. Tap "Add folder" to pick one.</string>
+    <string name="script_folder_added">Folder added: %1$d scripts</string>
+    <string name="script_folder_exists">Folder already added</string>
+    <string name="script_url_required">Enter a URL</string>
+    <string name="script_url_saved">Saved</string>
+    <string name="script_reloaded">Config reloaded</string>
+    <string name="config_refresh">Refresh config</string>
+    <string name="site_update">Update</string>
 </resources>

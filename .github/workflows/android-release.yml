@@ -371,17 +371,64 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RELEASE_NOTES: ${{ steps.release_notes.outputs.notes }}
         run: |
-          PRERELEASE_FLAG=""
-          if [ "${{ inputs.prerelease }}" = "true" ] || [ "${{ steps.meta.outputs.channel }}" = "beta" ]; then
-            PRERELEASE_FLAG="--prerelease"
-          fi
-          NOTES="${RELEASE_NOTES:-手动触发 GitHub Actions 构建发布。}"
-          gh release create "${{ steps.meta.outputs.tag }}" \
-            --target "$GITHUB_SHA" \
-            --title "${{ steps.meta.outputs.title }}" \
-            --notes "$NOTES" \
-            $PRERELEASE_FLAG \
-            dist/*.apk dist/*.json
+          ls -lh dist/
+          python3 - <<'PY'
+          import glob, json, os, urllib.error, urllib.parse, urllib.request
+
+          tag = "${{ steps.meta.outputs.tag }}"
+          title = "${{ steps.meta.outputs.title }}"
+          notes = os.environ.get("RELEASE_NOTES", "").strip() or "手动触发 GitHub Actions 构建发布。"
+          prerelease = ("${{ inputs.prerelease }}" == "true") or ("${{ steps.meta.outputs.channel }}" == "beta")
+          token = os.environ["GH_TOKEN"]
+          repo = "${{ github.repository }}"
+          api = "https://api.github.com"
+          base = {"Authorization": "Bearer " + token, "Accept": "application/vnd.github+json",
+                  "User-Agent": "webhtv-release", "X-GitHub-Api-Version": "2022-11-28"}
+
+          def call(method, url, data=None, raw=None, ctype="application/json"):
+              headers = dict(base)
+              headers["Content-Type"] = ctype
+              body = raw if raw is not None else (json.dumps(data).encode() if data is not None else None)
+              req = urllib.request.Request(url, method=method, data=body, headers=headers)
+              try:
+                  with urllib.request.urlopen(req, timeout=180) as resp:
+                      text = resp.read().decode()
+                      return resp.status, (json.loads(text) if text.strip() else {})
+              except urllib.error.HTTPError as e:
+                  return e.code, e.read().decode()
+
+          status, body = call("GET", api + "/repos/" + repo + "/releases/tags/" + tag)
+          if status == 200:
+              rel = body
+              print("Release already exists, reuse:", tag)
+          else:
+              status, rel = call("POST", api + "/repos/" + repo + "/releases", {
+                  "tag_name": tag, "target_commitish": os.environ["GITHUB_SHA"],
+                  "name": title, "body": notes, "draft": False, "prerelease": prerelease})
+              if status not in (200, 201):
+                  print("::error title=Create release failed::HTTP %s %s" % (status, rel))
+                  raise SystemExit(1)
+              print("Release created:", tag)
+          upload_url = rel["upload_url"].split("{")[0]
+          assets = sorted(set(glob.glob("dist/*.apk") + glob.glob("dist/*.json")))
+          print("assets:", assets)
+          if not assets:
+              raise SystemExit("::error title=No release assets::dist is empty")
+          for path in assets:
+              name = os.path.basename(path)
+              with open(path, "rb") as f:
+                  data = f.read()
+              url = upload_url + "?name=" + urllib.parse.quote(name)
+              status, body = call("POST", url, raw=data, ctype="application/octet-stream")
+              if status in (200, 201):
+                  print("uploaded:", name)
+              elif status == 422 and "already_exists" in str(body):
+                  print("asset exists, skip:", name)
+              else:
+                  print("::error title=Upload asset failed::%s HTTP %s %s" % (name, status, body))
+                  raise SystemExit(1)
+          print("Release ready:", tag)
+          PY
 
       - name: Sync to CNB
         if: ${{ inputs.sync_cnb }}
