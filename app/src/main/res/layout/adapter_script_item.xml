@@ -40,7 +40,7 @@
         android:paddingTop="2dp"
         android:paddingEnd="6dp"
         android:paddingBottom="2dp"
-        android:textColor="#174EA6"
+        android:textColor="@color/dialog_card_action_text"
         android:textSize="11sp"
         tools:text="js" />
 
@@ -55,7 +55,7 @@
         android:paddingEnd="6dp"
         android:paddingBottom="2dp"
         android:text="@string/script_proxy"
-        android:textColor="#174EA6"
+        android:textColor="@color/dialog_card_action_text"
         android:textSize="11sp"
         android:visibility="gone"
         tools:visibility="visible" />

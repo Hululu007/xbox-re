@@ -3,8 +3,6 @@ package com.fongmi.android.tv.ui.dialog;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Intent;
-import android.graphics.Color;
-import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -15,7 +13,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -42,6 +39,7 @@ import com.fongmi.android.tv.utils.LocalScriptSource;
 import com.fongmi.android.tv.utils.Notify;
 import com.fongmi.android.tv.utils.ResUtil;
 import com.fongmi.android.tv.utils.Task;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import org.json.JSONObject;
@@ -71,7 +69,7 @@ public final class ScriptManageDialog extends BaseAlertDialog {
     private List<JSONObject> bac = new ArrayList<>();
     private final Set<String> keepSel = new LinkedHashSet<>();
     private final Set<String> bacSel = new LinkedHashSet<>();
-    private final List<TextView> filterChips = new ArrayList<>();
+    private final List<MaterialButton> filterChips = new ArrayList<>();
     private final String[] filters = {"all", "py", "js", "html", "url"};
     private ItemAdapter keepAdapter;
     private ItemAdapter bacAdapter;
@@ -125,7 +123,7 @@ public final class ScriptManageDialog extends BaseAlertDialog {
         params.width = Math.max(width, ResUtil.dp2px(320));
         params.height = WindowManager.LayoutParams.WRAP_CONTENT;
         params.gravity = Gravity.CENTER;
-        window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        window.setBackgroundDrawable(new ColorDrawable(ContextCompat.getColor(requireContext(), R.color.transparent)));
         window.getDecorView().setPadding(0, 0, 0, 0);
         window.clearFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
         window.setAttributes(params);
@@ -211,14 +209,14 @@ public final class ScriptManageDialog extends BaseAlertDialog {
         int[] tools = {R.string.script_add_url, R.string.script_reset, R.string.script_swap,
                 R.string.script_up, R.string.script_down};
         for (int i = 0; i < tools.length; i++) {
-            TextView chip = makeChip(getString(tools[i]), false, true);
+            MaterialButton chip = makeChip(getString(tools[i]), false, true);
             int idx = i;
             chip.setOnClickListener(v -> onTool(idx));
             binding.toolRow.addView(chip);
         }
         String[] labels = {getString(R.string.script_all), "py", "js", "html", "url"};
         for (int i = 0; i < filters.length; i++) {
-            TextView chip = makeChip(labels[i], i == 0, true);
+            MaterialButton chip = makeChip(labels[i], i == 0, true);
             int idx = i;
             chip.setOnClickListener(v -> {
                 filter = filters[idx];
@@ -230,24 +228,36 @@ public final class ScriptManageDialog extends BaseAlertDialog {
         int[] selects = {R.string.script_select_keep, R.string.script_invert_keep,
                 R.string.script_select_bac, R.string.script_invert_bac};
         for (int i = 0; i < selects.length; i++) {
-            TextView chip = makeChip(getString(selects[i]), false, true);
-            chip.setTextSize(11); // 文案改为 全选[工] 等后更长，保证一行完整显示
+            MaterialButton chip = makeChip(getString(selects[i]), false, true);
             int idx = i;
             chip.setOnClickListener(v -> onSelect(idx));
             binding.selectRow.addView(chip);
         }
     }
 
-    private TextView makeChip(String text, boolean selected, boolean fill) {
-        TextView view = new TextView(requireContext());
+    /** 按钮样式完全照 app 现成的 MaterialButton 写法（见 dialog_shell_proxy.xml /
+     *  mobile SiteDialog.getGroupView）：OutlinedButton style + dialog_* 色表。
+     *  选中态用现成的 dialog_toggle_button_bg / text（含 state_checked），
+     *  不再自造 TextView、不再写死字号、不再用加粗硬凑对比度。 */
+    private MaterialButton makeChip(String text, boolean selected, boolean fill) {
+        MaterialButton view = new MaterialButton(requireContext(), null,
+                com.google.android.material.R.attr.materialButtonOutlinedStyle);
         view.setText(text);
-        view.setTextSize(12);
         view.setSingleLine(true);
         view.setEllipsize(TextUtils.TruncateAt.END);
         view.setGravity(Gravity.CENTER);
-        int p = dp(6);
-        view.setPadding(p, dp(7), p, dp(7));
-        view.setBackgroundResource(R.drawable.selector_sync_device_item);
+        view.setAllCaps(false);
+        view.setMinWidth(0);
+        view.setMinHeight(0);
+        view.setMinimumWidth(0);
+        view.setMinimumHeight(0);
+        view.setInsetTop(0);
+        view.setInsetBottom(0);
+        view.setPadding(dp(6), dp(7), dp(6), dp(7));
+        view.setCheckable(true);
+        view.setTextColor(ContextCompat.getColorStateList(requireContext(), R.color.dialog_toggle_button_text));
+        view.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), R.color.dialog_toggle_button_bg));
+        view.setStrokeColor(ContextCompat.getColorStateList(requireContext(), R.color.dialog_outlined_button_stroke));
         applyChipStyle(view, selected);
         LinearLayoutCompat.LayoutParams lp = fill
                 ? new LinearLayoutCompat.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
@@ -257,11 +267,8 @@ public final class ScriptManageDialog extends BaseAlertDialog {
         return view;
     }
 
-    private void applyChipStyle(TextView view, boolean selected) {
-        // 两个变体都有的对话框色表：选中蓝 + 加粗，未选中灰 + 常规；克制、不刺眼
-        view.setTextColor(ContextCompat.getColor(requireContext(),
-                selected ? R.color.dialog_text_button : R.color.dialog_outlined_button_text));
-        view.setTypeface(null, selected ? Typeface.BOLD : Typeface.NORMAL);
+    private void applyChipStyle(MaterialButton view, boolean selected) {
+        view.setChecked(selected);
     }
 
     private int dp(int value) {
@@ -274,7 +281,7 @@ public final class ScriptManageDialog extends BaseAlertDialog {
         binding.dirList.removeAllViews();
         List<String> dirs = LocalScriptSource.dirs();
         for (String dir : dirs) {
-            TextView chip = makeChip(new File(dir).getName(), dir.equals(currentDir), false);
+            MaterialButton chip = makeChip(new File(dir).getName(), dir.equals(currentDir), false);
             chip.setOnClickListener(v -> {
                 currentDir = dir;
                 keepSel.clear();
@@ -283,7 +290,7 @@ public final class ScriptManageDialog extends BaseAlertDialog {
             });
             binding.dirList.addView(chip);
         }
-        TextView add = makeChip("+ " + getString(R.string.script_add_folder), false, false);
+        MaterialButton add = makeChip("+ " + getString(R.string.script_add_folder), false, false);
         add.setOnClickListener(v -> FileChooser.from(folderLauncher).showDirectory());
         binding.dirList.addView(add);
     }
@@ -447,7 +454,7 @@ public final class ScriptManageDialog extends BaseAlertDialog {
         Dialog dialog = new MaterialAlertDialogBuilder(requireActivity(), R.style.ThemeOverlay_WebHTV_LightDialog)
                 .setView(b.getRoot()).create();
         if (dialog.getWindow() != null)
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(ContextCompat.getColor(requireContext(), R.color.transparent)));
         b.delete.setVisibility(editing == null ? View.GONE : View.VISIBLE);
         b.negative.setOnClickListener(v -> dialog.dismiss());
         b.delete.setOnClickListener(v -> {
@@ -529,7 +536,6 @@ public final class ScriptManageDialog extends BaseAlertDialog {
             boolean selected = (inBac ? bacSel : keepSel).contains(key);
             holder.binding.check.setChecked(selected);
             holder.binding.name.setText(item.optString("name"));
-            holder.binding.name.setTypeface(null, selected ? Typeface.BOLD : Typeface.NORMAL);
             holder.binding.badge.setText(LocalScriptSource.kindOf(item));
             holder.binding.proxyBadge.setVisibility("proxy".equals(item.optString("proxy")) ? View.VISIBLE : View.GONE);
             holder.binding.edit.setVisibility(LocalScriptSource.isEditable(item) ? View.VISIBLE : View.GONE);

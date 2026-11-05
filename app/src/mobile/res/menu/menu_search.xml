@@ -12,7 +12,7 @@
     <!-- 房子按钮：搜索栏同一行最后面，打开站点范围弹窗；仅在「选定搜索」下可点 -->
     <item
         android:id="@+id/action_site"
-        android:icon="@drawable/ic_search_scope"
+        android:icon="@drawable/ic_setting_home"
         android:title="@string/search_scope"
         app:showAsAction="always" />
 

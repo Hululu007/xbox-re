@@ -69,7 +69,7 @@
                 android:nextFocusDown="@id/modeSelected"
                 android:nextFocusUp="@id/keyword"
                 android:padding="8dp"
-                android:src="@drawable/ic_search_scope"
+                android:src="@drawable/ic_setting_home"
                 app:tint="@color/site_action_icon" />
 
         </androidx.appcompat.widget.LinearLayoutCompat>
