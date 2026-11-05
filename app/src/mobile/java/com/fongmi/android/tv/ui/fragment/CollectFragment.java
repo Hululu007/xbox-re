@@ -68,11 +68,16 @@ public class CollectFragment extends BaseFragment implements MenuProvider, Colle
     }
 
     public static CollectFragment newInstance(String keyword, String siteKey, String pic, String wallPic) {
+        return newInstance(keyword, siteKey, pic, wallPic, null);
+    }
+
+    public static CollectFragment newInstance(String keyword, String siteKey, String pic, String wallPic, String scope) {
         Bundle args = new Bundle();
         args.putString("keyword", keyword);
         args.putString("siteKey", siteKey);
         args.putString("pic", pic);
         args.putString("wallPic", wallPic);
+        args.putString("scope", scope);
         CollectFragment fragment = new CollectFragment();
         fragment.setArguments(args);
         return fragment;
@@ -92,6 +97,12 @@ public class CollectFragment extends BaseFragment implements MenuProvider, Colle
 
     private String getWallPic() {
         return getArguments().getString("wallPic");
+    }
+
+    /** 缺省 selected：direct / 收藏 / 分类页等旧入口保持既有勾选站点集合。 */
+    private String getScope() {
+        String scope = getArguments().getString("scope");
+        return scope == null || scope.isEmpty() ? "selected" : scope;
     }
 
     @Override
@@ -149,9 +160,17 @@ public class CollectFragment extends BaseFragment implements MenuProvider, Colle
 
     private void setSites() {
         String siteKey = getSiteKey();
+        String scope = getScope();
+        Site home = VodConfig.get().getHome();
         mSites = new ArrayList<>();
         for (Site site : VodConfig.get().getSites()) {
-            if (!site.isSearchable()) continue;
+            if ("current".equals(scope)) {
+                if (home == null || !site.getKey().equals(home.getKey())) continue;
+            } else if ("all".equals(scope)) {
+                if (site.getSearchable() == 0) continue;
+            } else if (!site.isSearchable()) {
+                continue;
+            }
             if (!TextUtils.isEmpty(siteKey) && !site.getKey().equals(siteKey)) continue;
             mSites.add(site);
         }

@@ -96,6 +96,18 @@ public class SiteAdapter extends RecyclerView.Adapter<SiteAdapter.ViewHolder> {
         return mItems;
     }
 
+    /** 全选：仅作用于筛选后当前显示的站点（mItems）。 */
+    public void selectAll() {
+        for (Site site : mItems) site.setSearchable(true).save();
+        notifyItemRangeChanged(0, getItemCount());
+    }
+
+    /** 反选：仅作用于筛选后当前显示的站点（mItems）。 */
+    public void invert() {
+        for (Site site : mItems) site.setSearchable(!site.isSearchable()).save();
+        notifyItemRangeChanged(0, getItemCount());
+    }
+
     public int getSelectedPosition() {
         for (int i = 0; i < mItems.size(); i++) if (mItems.get(i).isSelected()) return i;
         return 0;

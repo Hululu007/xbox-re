@@ -9,10 +9,11 @@
         android:visible="false"
         app:showAsAction="always" />
 
+    <!-- 房子按钮：搜索栏同一行最后面，打开站点范围弹窗；仅在「选定搜索」下可点 -->
     <item
         android:id="@+id/action_site"
-        android:icon="@drawable/ic_action_site"
-        android:title="@string/menu_site"
+        android:icon="@drawable/ic_search_scope"
+        android:title="@string/search_scope"
         app:showAsAction="always" />
 
 </menu>

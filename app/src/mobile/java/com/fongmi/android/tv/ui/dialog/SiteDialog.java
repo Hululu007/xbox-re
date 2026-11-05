@@ -49,6 +49,7 @@ public class SiteDialog extends BaseAlertDialog implements SiteAdapter.OnClickLi
     private List<String> groups;
     private String selectedGroup = "";
     private boolean search;
+    private boolean range;
     private boolean change;
     private boolean block;
     private int columnCount = 1;
@@ -58,6 +59,13 @@ public class SiteDialog extends BaseAlertDialog implements SiteAdapter.OnClickLi
     }
 
     public SiteDialog search() {
+        search = true;
+        return this;
+    }
+
+    /** 搜索范围弹窗 = 选定搜索的选择弹窗：筛选框 + 全选/反选。 */
+    public SiteDialog range() {
+        range = true;
         search = true;
         return this;
     }
@@ -94,7 +102,13 @@ public class SiteDialog extends BaseAlertDialog implements SiteAdapter.OnClickLi
         binding.recycler.setItemAnimator(null);
         binding.recycler.setHasFixedSize(true);
         attachSortTouchHelper();
-        binding.recycler.post(() -> binding.recycler.scrollToPosition(0));
+        // 范围弹窗显示全选/反选；隐藏与范围无关的两个图标，给筛选框腾出宽度。
+        binding.selectAll.setVisibility(range ? View.VISIBLE : View.GONE);
+        binding.invert.setVisibility(range ? View.VISIBLE : View.GONE);
+        binding.block.setVisibility(range ? View.GONE : View.VISIBLE);
+        binding.search.setVisibility(range ? View.GONE : View.VISIBLE);
+        // 切站列表：把当前站点滚到可见区前端；范围弹窗保持列表顶部。
+        binding.recycler.post(() -> binding.recycler.scrollToPosition(search ? 0 : adapter.getSelectedPosition()));
     }
 
     private void attachSortTouchHelper() {
@@ -136,6 +150,8 @@ public class SiteDialog extends BaseAlertDialog implements SiteAdapter.OnClickLi
         });
         binding.block.setOnClickListener(this::onBlockToggle);
         binding.search.setOnClickListener(this::onColumnToggle);
+        binding.selectAll.setOnClickListener(v -> { if (adapter != null) adapter.selectAll(); });
+        binding.invert.setOnClickListener(v -> { if (adapter != null) adapter.invert(); });
     }
 
     private void onBlockToggle(View view) {

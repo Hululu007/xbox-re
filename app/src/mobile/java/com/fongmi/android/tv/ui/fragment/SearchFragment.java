@@ -2,6 +2,7 @@ package com.fongmi.android.tv.ui.fragment;
 
 import static androidx.fragment.app.FragmentTransaction.TRANSIT_FRAGMENT_OPEN;
 
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextUtils;
@@ -12,6 +13,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -55,7 +57,16 @@ public class SearchFragment extends BaseFragment implements MenuProvider, WordAd
 
     private static final int HOT_LIMIT = 10;
 
+    public static final String SCOPE_ALL = "all";
+    public static final String SCOPE_CURRENT = "current";
+    public static final String SCOPE_SELECTED = "selected";
+    /** 短按首页搜索 = selected 且按钮高亮 selected；长按首页搜索（带 siteKey）= 本站。
+     *  改成 true 则短按继承用户上次点选的按钮。 */
+    private static final boolean INHERIT_SCOPE = false;
+    private static final String DEFAULT_SCOPE = SCOPE_SELECTED;
+
     private FragmentSearchBinding mBinding;
+    private String mScope;
     private RecordAdapter mRecordAdapter;
     private WordAdapter mWordAdapter;
     private HotWordAdapter mHotTvAdapter;
@@ -121,9 +132,47 @@ public class SearchFragment extends BaseFragment implements MenuProvider, WordAd
 
     @Override
     protected void initView() {
+        mScope = resolveScope();
+        // 长按入口不写回持久化，避免下次短按被带成「本站」。
+        if (TextUtils.isEmpty(getSiteKey())) Setting.putSearchScope(mScope);
+        setScopeButtons();
         setRecyclerView();
         checkKeyword();
         search();
+    }
+
+    /**
+     * 首页搜索入口映射：短按（无 siteKey）→ selected，按钮高亮 selected；
+     * 长按（带 siteKey=当前站）→ current，只搜本站。
+     */
+    private String resolveScope() {
+        if (!TextUtils.isEmpty(getSiteKey())) return SCOPE_CURRENT;
+        if (INHERIT_SCOPE) return Setting.getSearchScope();
+        return DEFAULT_SCOPE;
+    }
+
+    private void setScope(String scope) {
+        mScope = scope;
+        Setting.putSearchScope(scope);
+        setScopeButtons();
+    }
+
+    private void setScopeButtons() {
+        boolean all = SCOPE_ALL.equals(mScope);
+        boolean current = SCOPE_CURRENT.equals(mScope);
+        boolean selected = SCOPE_SELECTED.equals(mScope);
+        mBinding.modeAll.setSelected(all);
+        mBinding.modeCurrent.setSelected(current);
+        mBinding.modeSelected.setSelected(selected);
+        // 选中态背景用项目既有 selector_filter_glass_chip，再加粗文字保证可区分。
+        styleScopeButton(mBinding.modeAll, all);
+        styleScopeButton(mBinding.modeCurrent, current);
+        styleScopeButton(mBinding.modeSelected, selected);
+        requireActivity().invalidateOptionsMenu();
+    }
+
+    private void styleScopeButton(TextView view, boolean selected) {
+        view.setTypeface(null, selected ? Typeface.BOLD : Typeface.NORMAL);
     }
 
     private void setRecyclerView() {
@@ -150,6 +199,9 @@ public class SearchFragment extends BaseFragment implements MenuProvider, WordAd
 
     @Override
     protected void initEvent() {
+        mBinding.modeAll.setOnClickListener(v -> setScope(SCOPE_ALL));
+        mBinding.modeCurrent.setOnClickListener(v -> setScope(SCOPE_CURRENT));
+        mBinding.modeSelected.setOnClickListener(v -> setScope(SCOPE_SELECTED));
         mBinding.keyword.setOnEditorActionListener((textView, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_SEARCH) search();
             return true;
@@ -192,7 +244,7 @@ public class SearchFragment extends BaseFragment implements MenuProvider, WordAd
         if (fm.findFragmentByTag(collectTag) != null) return;
         String searchTag = SearchFragment.class.getSimpleName();
         FragmentTransaction ft = fm.beginTransaction().setTransition(TRANSIT_FRAGMENT_OPEN);
-        ft.add(R.id.container, CollectFragment.newInstance(keyword, getSiteKey(), getPic(), getWallPic()), collectTag);
+        ft.add(R.id.container, CollectFragment.newInstance(keyword, getSiteKey(), getPic(), getWallPic(), mScope), collectTag);
         Optional.ofNullable(fm.findFragmentByTag(searchTag)).ifPresent(ft::hide);
         ft.setReorderingAllowed(true).addToBackStack(null).commit();
     }
@@ -279,8 +331,10 @@ public class SearchFragment extends BaseFragment implements MenuProvider, WordAd
     }
 
     private void onSite() {
+        // 搜索范围仅对「选定搜索」生效。
+        if (!SCOPE_SELECTED.equals(mScope)) return;
         Util.hideKeyboard(mBinding.keyword);
-        mBinding.keyword.post(() -> SiteDialog.create().search().show(this));
+        mBinding.keyword.post(() -> SiteDialog.create().search().range().show(this));
     }
 
     private interface HotSaver {
@@ -309,6 +363,11 @@ public class SearchFragment extends BaseFragment implements MenuProvider, WordAd
     @Override
     public void onPrepareMenu(@NonNull Menu menu) {
         menu.findItem(R.id.action_reset).setVisible(!empty());
+        MenuItem site = menu.findItem(R.id.action_site);
+        if (site == null) return;
+        boolean editable = SCOPE_SELECTED.equals(mScope);
+        site.setEnabled(editable);
+        if (site.getIcon() != null) site.getIcon().mutate().setAlpha(editable ? 255 : 100);
     }
 
     @Override

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/shape_shell_proxy_dialog"
@@ -38,6 +39,53 @@
             android:textSize="14sp"
             app:drawableStartCompat="@drawable/ic_site_search"
             app:drawableTint="@color/dialog_outlined_button_text" />
+
+        <!-- 全选 / 反选：仅在搜索范围弹窗显示，作用范围为筛选后当前显示的站点 -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/selectAll"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:layout_marginStart="8dp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:minimumWidth="0dp"
+            android:minimumHeight="0dp"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:text="@string/site_select_all"
+            android:textAllCaps="false"
+            android:textColor="@color/dialog_outlined_button_text"
+            android:textSize="12sp"
+            android:visibility="gone"
+            app:backgroundTint="@color/dialog_outlined_button_bg"
+            app:strokeColor="@color/dialog_outlined_button_stroke"
+            app:strokeWidth="1dp"
+            tools:visibility="visible" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/invert"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:layout_marginStart="6dp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:minimumWidth="0dp"
+            android:minimumHeight="0dp"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:text="@string/site_invert"
+            android:textAllCaps="false"
+            android:textColor="@color/dialog_outlined_button_text"
+            android:textSize="12sp"
+            android:visibility="gone"
+            app:backgroundTint="@color/dialog_outlined_button_bg"
+            app:strokeColor="@color/dialog_outlined_button_stroke"
+            app:strokeWidth="1dp"
+            tools:visibility="visible" />
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/block"

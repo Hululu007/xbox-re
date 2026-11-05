@@ -31,6 +31,57 @@
 
     </com.google.android.material.appbar.MaterialToolbar>
 
+    <!-- 搜索范围三模式：顺序 all / 当前站点 / selected，选中态复用项目既有 selector_filter_glass_chip -->
+    <androidx.appcompat.widget.LinearLayoutCompat
+        android:id="@+id/modeBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="4dp"
+        android:orientation="horizontal">
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/modeAll"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="6dp"
+            android:background="@drawable/selector_filter_glass_chip"
+            android:clickable="true"
+            android:gravity="center"
+            android:text="@string/search_scope_all"
+            android:textColor="@color/white"
+            android:textSize="13sp" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/modeCurrent"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="6dp"
+            android:background="@drawable/selector_filter_glass_chip"
+            android:clickable="true"
+            android:gravity="center"
+            android:text="@string/search_scope_current"
+            android:textColor="@color/white"
+            android:textSize="13sp" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/modeSelected"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1"
+            android:background="@drawable/selector_filter_glass_chip"
+            android:clickable="true"
+            android:gravity="center"
+            android:text="@string/search_scope_selected"
+            android:textColor="@color/white"
+            android:textSize="13sp" />
+
+    </androidx.appcompat.widget.LinearLayoutCompat>
+
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"

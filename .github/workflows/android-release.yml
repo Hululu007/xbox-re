@@ -79,6 +79,20 @@ jobs:
         run: |
           sdkmanager "platform-tools" "platforms;android-37.0" "build-tools;37.0.0"
 
+      - name: Verify mobile search scope feature is present
+        run: |
+          set -euo pipefail
+          grep -q 'android:id="@+id/modeAll"' app/src/mobile/res/layout/fragment_search.xml
+          grep -q 'android:id="@+id/modeSelected"' app/src/mobile/res/layout/fragment_search.xml
+          grep -q 'android:id="@+id/selectAll"' app/src/mobile/res/layout/dialog_site.xml
+          grep -q 'android:id="@+id/invert"' app/src/mobile/res/layout/dialog_site.xml
+          grep -q 'SCOPE_SELECTED' app/src/mobile/java/com/fongmi/android/tv/ui/fragment/SearchFragment.java
+          grep -q 'getPic(), getWallPic(), mScope' app/src/mobile/java/com/fongmi/android/tv/ui/fragment/SearchFragment.java
+          grep -q 'public void invert()' app/src/mobile/java/com/fongmi/android/tv/ui/adapter/SiteAdapter.java
+          grep -q 'public SiteDialog range()' app/src/mobile/java/com/fongmi/android/tv/ui/dialog/SiteDialog.java
+          grep -q 'string name="search_scope_selected"' app/src/mobile/res/values-zh-rCN/strings.xml
+          echo "Mobile search scope feature verified in source before build"
+
       - name: Run WebSocket danmaku tests
         run: |
           chmod +x ./gradlew
