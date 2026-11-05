@@ -90,7 +90,7 @@ jobs:
           grep -q 'getPic(), getWallPic(), mScope' app/src/mobile/java/com/fongmi/android/tv/ui/fragment/SearchFragment.java
           grep -q 'public void invert()' app/src/mobile/java/com/fongmi/android/tv/ui/adapter/SiteAdapter.java
           grep -q 'public SiteDialog range()' app/src/mobile/java/com/fongmi/android/tv/ui/dialog/SiteDialog.java
-          grep -q 'string name="search_scope_selected"' app/src/mobile/res/values-zh-rCN/strings.xml
+          grep -q 'string name="search_scope_selected"' app/src/mobile/res/values-zh/strings.xml
           # 原有 block/search 两个按钮必须一直在，不允许再按 range 隐藏
           grep -q 'android:id="@+id/block"' app/src/mobile/res/layout/dialog_site.xml
           grep -q 'android:id="@+id/search"' app/src/mobile/res/layout/dialog_site.xml
@@ -98,7 +98,7 @@ jobs:
           ! grep -q 'binding.search.setVisibility' app/src/mobile/java/com/fongmi/android/tv/ui/dialog/SiteDialog.java
           # 分类筛选第一个按钮 = 全部（所有站点列表弹窗）
           grep -q 'getGroupView("")' app/src/mobile/java/com/fongmi/android/tv/ui/dialog/SiteDialog.java
-          grep -q 'string name="site_group_all"' app/src/mobile/res/values-zh-rCN/strings.xml
+          grep -q 'string name="site_group_all"' app/src/mobile/res/values-zh/strings.xml
           # 三模式按钮选中态用项目已有的 yellow 色表
           grep -q '@color/yellow' app/src/mobile/res/layout/fragment_search.xml
           echo "Mobile search scope feature verified in source before build"
@@ -111,6 +111,9 @@ jobs:
           grep -q 'DEFAULT_ENABLE = false;' catvod/src/main/java/com/github/catvod/utils/Trans.java
           ! grep -q '"TW".equals' catvod/src/main/java/com/github/catvod/utils/Trans.java
           echo "Auto traditional conversion is disabled"
+          # 远程托管弹窗：6 个子弹窗的窗口参数必须在 show 之前应用
+          test "$(grep -c '窗口参数必须在 show 之前定好' app/src/main/java/com/fongmi/android/tv/ui/dialog/RemoteTrustDialog.java)" -eq 6
+          echo "Remote trust dialog windows applied before show"
 
       - name: Run WebSocket danmaku tests
         id: unit_tests

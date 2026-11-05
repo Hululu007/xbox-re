@@ -124,6 +124,8 @@ public final class RemoteTrustDialog {
         AlertDialog dialog = new MaterialAlertDialogBuilder(activity, R.style.ThemeOverlay_WebHTV_LightDialog)
                 .setView(binding.root)
                 .create();
+        // 窗口参数必须在 show 之前定好，避免首帧居中后跳位（A 类 bug）
+        configureWindow(activity, dialog);
         binding.dialog = dialog;
         binding.callback = callback;
         activeActivity = new WeakReference<>(activity);
@@ -898,6 +900,8 @@ public final class RemoteTrustDialog {
         AlertDialog dialog = new MaterialAlertDialogBuilder(activity, R.style.ThemeOverlay_WebHTV_LightDialog)
                 .setView(dialogBinding.getRoot())
                 .create();
+        // 窗口参数必须在 show 之前定好，避免首帧居中后跳位（A 类 bug）
+        configureSmallModalWindow(activity, dialog);
         dialogBinding.negative.setOnClickListener(v -> dialog.dismiss());
         dialogBinding.positive.setOnClickListener(v -> {
             String value = textOf(dialogBinding.code);
@@ -1114,6 +1118,8 @@ public final class RemoteTrustDialog {
         AlertDialog dialog = new MaterialAlertDialogBuilder(activity, R.style.ThemeOverlay_WebHTV_LightDialog)
                 .setView(dialogBinding.getRoot())
                 .create();
+        // 窗口参数必须在 show 之前定好，避免首帧居中后跳位（A 类 bug）
+        configureSmallModalWindow(activity, dialog);
         dialogBinding.negative.setOnClickListener(v -> dialog.dismiss());
         dialogBinding.positive.setOnClickListener(v -> {
             String value = textOf(dialogBinding.input);
@@ -1213,6 +1219,8 @@ public final class RemoteTrustDialog {
         AlertDialog dialog = new MaterialAlertDialogBuilder(activity, R.style.ThemeOverlay_WebHTV_LightDialog)
                 .setView(root)
                 .create();
+        // 窗口参数必须在 show 之前定好，避免首帧居中后跳位（A 类 bug）
+        configureConfigWindow(activity, dialog);
         state.dialog = dialog;
         state.render = () -> {
             if (state.adding) renderConfigAddContent(activity, binding, state);
@@ -2132,6 +2140,8 @@ public final class RemoteTrustDialog {
         AlertDialog dialog = new MaterialAlertDialogBuilder(activity, R.style.ThemeOverlay_WebHTV_LightDialog)
                 .setView(dialogBinding.getRoot())
                 .create();
+        // 窗口参数必须在 show 之前定好，避免首帧居中后跳位（A 类 bug）
+        configureSmallModalWindow(activity, dialog);
         dialogBinding.negative.setOnClickListener(v -> dialog.dismiss());
         dialogBinding.positive.setOnClickListener(v -> {
             dialog.dismiss();
@@ -2930,6 +2940,8 @@ public final class RemoteTrustDialog {
         AlertDialog dialog = new MaterialAlertDialogBuilder(activity, R.style.ThemeOverlay_WebHTV_LightDialog)
                 .setView(dialogBinding.getRoot())
                 .create();
+        // 窗口参数必须在 show 之前定好，避免首帧居中后跳位（A 类 bug）
+        configureSmallModalWindow(activity, dialog);
         dialogBinding.negative.setOnClickListener(v -> dialog.dismiss());
         dialog.setOnDismissListener(d -> {
             if (binding.serverQrDialog == dialog) binding.serverQrDialog = null;
