@@ -148,11 +148,8 @@ jobs:
           ALIAS="${RELEASE_KEY_ALIAS:-$KEY_ALIAS}"
           KEY_PASS="${RELEASE_KEY_PASSWORD:-$STORE_PASSWORD}"
           if [ -z "$KS_BASE64" ] || [ -z "$STORE_PASSWORD" ] || [ -z "$ALIAS" ]; then
-            # xbox-re: no keystore secrets configured yet. app/build.gradle already
-            # falls back to signingConfigs.debug when storeFile/keyAlias/storePassword
-            # are absent, so keep building instead of failing the whole release.
-            echo "::warning title=Release signing not configured::No keystore secrets; app/build.gradle will use debug signing. Configure RELEASE_KEYSTORE_BASE64, RELEASE_KEY_ALIAS and RELEASE_STORE_PASSWORD for a stable release key."
-            exit 0
+            echo "::error title=Release signing not configured::Configure RELEASE_KEYSTORE_BASE64, RELEASE_KEY_ALIAS and RELEASE_STORE_PASSWORD in repository secrets. Never publish a debug-signed release."
+            exit 1
           fi
           mkdir -p app/signing
           printf '%s' "$KS_BASE64" | base64 --decode > app/signing/release.jks
@@ -184,6 +181,38 @@ jobs:
           mkdir -p dist
           cp Release/apk/*.apk dist/
           ls -lh dist/
+
+      - name: Verify APK signatures and package identity
+        run: |
+          set -euo pipefail
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          BT_DIR="$(find "$SDK_ROOT/build-tools" -mindepth 1 -maxdepth 1 -type d | sort | tail -1)"
+          APKSIGNER="$BT_DIR/apksigner"
+          AAPT2="$BT_DIR/aapt2"
+          test -x "$APKSIGNER" && test -x "$AAPT2"
+          count=0
+          for apk in dist/*.apk; do
+            echo "== $apk"
+            PKG="$("$AAPT2" dump packagename "$apk")"
+            echo "  package: $PKG"
+            if [ "$PKG" != "com.fongmi.android.tv.xbox" ]; then
+              echo "::error title=Wrong applicationId::$PKG"
+              exit 1
+            fi
+            CERTS="$("$APKSIGNER" verify --print-certs "$apk" 2>&1)"
+            echo "$CERTS"
+            if echo "$CERTS" | grep -qi "Android Debug"; then
+              echo "::error title=Debug-signed APK::Refusing to publish a debug-signed release."
+              exit 1
+            fi
+            if ! echo "$CERTS" | grep -q "CN=xbox-re"; then
+              echo "::error title=Unexpected signer::Release keystore was not used."
+              exit 1
+            fi
+            count=$((count+1))
+          done
+          test "$count" -eq 4 || { echo "::error title=APK count::Expected 4 APKs, got $count"; exit 1; }
+          echo "Verified $count release-signed APKs with the xbox applicationId"
 
       - name: Set up ORAS
         id: oras
