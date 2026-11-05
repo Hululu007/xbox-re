@@ -231,6 +231,7 @@ public final class ScriptManageDialog extends BaseAlertDialog {
                 R.string.script_select_bac, R.string.script_invert_bac};
         for (int i = 0; i < selects.length; i++) {
             TextView chip = makeChip(getString(selects[i]), false, true);
+            chip.setTextSize(11); // 文案改为 全选[工] 等后更长，保证一行完整显示
             int idx = i;
             chip.setOnClickListener(v -> onSelect(idx));
             binding.selectRow.addView(chip);

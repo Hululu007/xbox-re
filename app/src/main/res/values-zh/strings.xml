@@ -1266,10 +1266,10 @@
     <string name="script_up">上移</string>
     <string name="script_down">下移</string>
     <string name="script_all">全部</string>
-    <string name="script_select_keep">全选上</string>
-    <string name="script_invert_keep">反选上</string>
-    <string name="script_select_bac">全选下</string>
-    <string name="script_invert_bac">反选下</string>
+    <string name="script_select_keep">全选[工]</string>
+    <string name="script_invert_keep">反选[工]</string>
+    <string name="script_select_bac">全选[回]</string>
+    <string name="script_invert_bac">反选[回]</string>
     <string name="script_keep">工作区 (%1$d)</string>
     <string name="script_bac">回收站 (%1$d)</string>
     <string name="script_empty">还没有脚本文件夹，点「添加文件夹」选择一个目录</string>
