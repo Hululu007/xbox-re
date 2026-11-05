@@ -175,6 +175,9 @@ public final class ChoiceDialog extends DialogFragment {
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(createView(LayoutInflater.from(requireContext())));
         dialog.setCanceledOnTouchOutside(true);
+        // 同 LightDialog：show 之前定好尺寸/位置，避免首帧居中后跳位。
+        Window window = dialog.getWindow();
+        if (window != null) applyWindow(window);
         return dialog;
     }
 
@@ -184,6 +187,13 @@ public final class ChoiceDialog extends DialogFragment {
         Dialog dialog = getDialog();
         Window window = dialog == null ? null : dialog.getWindow();
         if (window == null) return;
+        // 幂等兜底，与 onCreateDialog 中的值一致。
+        applyWindow(window);
+        window.getDecorView().post(this::focusSelectedItem);
+    }
+
+    /** 统一的窗口参数：尺寸、位置、背景、遮罩。可在 show 前或 show 后调用。 */
+    private void applyWindow(Window window) {
         WindowManager.LayoutParams params = window.getAttributes();
         boolean land = ResUtil.isLand(requireContext());
         params.width = (int) (ResUtil.getScreenWidth(requireContext()) * (land ? 0.52f : 0.9f));
@@ -194,7 +204,6 @@ public final class ChoiceDialog extends DialogFragment {
         window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
         window.setAttributes(params);
         window.setLayout(params.width, params.height);
-        window.getDecorView().post(this::focusSelectedItem);
     }
 
     private View createView(LayoutInflater inflater) {

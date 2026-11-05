@@ -102,6 +102,10 @@ jobs:
           # 三模式按钮选中态用项目已有的 yellow 色表
           grep -q '@color/yellow' app/src/mobile/res/layout/fragment_search.xml
           echo "Mobile search scope feature verified in source before build"
+          # 弹窗窗口参数必须在 show 之前应用，避免首帧居中后跳位（A 类 bug）
+          grep -q 'applyWindow(dialog, context, landFactor, portFactor, maxDp);' app/src/main/java/com/fongmi/android/tv/ui/dialog/LightDialog.java
+          grep -q 'if (window != null) applyWindow(window);' app/src/main/java/com/fongmi/android/tv/ui/dialog/ChoiceDialog.java
+          echo "Dialog window applied before show in both shared dialog classes"
 
       - name: Run WebSocket danmaku tests
         id: unit_tests

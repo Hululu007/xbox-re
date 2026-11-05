@@ -47,6 +47,10 @@ public final class LightDialog {
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(root(context, title, content, positive, listener(dialog, onPositive), negative, listener(dialog, onNegative), neutral, listener(dialog, onNeutral)));
         dialog.setCanceledOnTouchOutside(true);
+        // 窗口参数必须在 show 之前定好：窗口是居中的，若等 onShow 再改尺寸，
+        // 首帧会以默认尺寸居中、随后整体位移，表现为「弹窗跳一下」。
+        applyWindow(dialog, context, landFactor, portFactor, maxDp);
+        // 幂等兜底（旋转 / 窗口重建后同值重算，不会产生可见跳变）。
         dialog.setOnShowListener(d -> applyWindow(dialog, context, landFactor, portFactor, maxDp));
         return dialog;
     }
