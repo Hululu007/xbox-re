@@ -310,7 +310,7 @@ jobs:
             echo "== $apk"
             PKG="$("$AAPT2" dump packagename "$apk")"
             echo "  package: $PKG"
-            if [ "$PKG" != "com.fongmi.android.tv.xbox" ]; then
+            if [ "$PKG" != "com.github.kuby007.themetestre" ]; then
               echo "::error title=Wrong applicationId::$PKG"
               exit 1
             fi
@@ -333,7 +333,7 @@ jobs:
             count=$((count+1))
           done
           test "$count" -eq 4 || { echo "::error title=APK count::Expected 4 APKs, got $count"; exit 1; }
-          echo "Verified $count release-signed APKs with the xbox applicationId"
+          echo "Verified $count release-signed APKs with the theme-test-re applicationId"
 
       - name: Set up ORAS
         id: oras
