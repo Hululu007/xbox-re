@@ -248,6 +248,12 @@ jobs:
             fi
             CERTS="$("$APKSIGNER" verify --print-certs "$apk" 2>&1)"
             echo "$CERTS"
+            VERBOSE="$("$APKSIGNER" verify --verbose "$apk" 2>&1)"
+            if ! echo "$VERBOSE" | grep -qi "v1 scheme.*: true"; then
+              echo "::error title=V1 signature missing::$apk has no JAR (v1) signature; MT / some installers report it as unsigned."
+              echo "$VERBOSE"
+              exit 1
+            fi
             if echo "$CERTS" | grep -qi "Android Debug"; then
               echo "::error title=Debug-signed APK::Refusing to publish a debug-signed release."
               exit 1
