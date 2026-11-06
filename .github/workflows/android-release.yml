@@ -272,6 +272,18 @@ jobs:
           KEY_PASS="${RELEASE_KEY_PASSWORD:-$STORE_PASS}"
           for apk in dist/*.apk; do
             echo "== signing $apk with v1+v2+v3"
+            # Gradle 产出的「未签名」APK 仍可能带第三方 jar 自带的
+            # META-INF/*.SF / *.RSA / *.DSA / *.EC 和 MANIFEST.MF。apksigner 只追加
+            # 自己那套、不清理旧的；MT 逐个校验 META-INF 签名文件，遇到旧的对不上
+            # 当前证书就判「校验不通过」，而 apksigner verify 仍显示 v1+v2+v3 全 true。
+            LEGACY="$(unzip -Z1 "$apk" | grep -iE '^META-INF/.*\.(SF|RSA|DSA|EC)$|^META-INF/MANIFEST\.MF$' || true)"
+            if [ -n "$LEGACY" ]; then
+              echo "  removing stale JAR signature entries:"
+              echo "$LEGACY" | sed 's/^/    /'
+              while IFS= read -r entry; do
+                [ -z "$entry" ] || zip -d -q "$apk" "$entry" || true
+              done <<< "$LEGACY"
+            fi
             PRE="$("$APKSIGNER" verify --min-sdk-version 21 --verbose "$apk" 2>&1 || true)"
             if echo "$PRE" | grep -qi "verified using"; then
               echo "::error title=APK already signed::$apk already carries signatures; unsigned build is required"
@@ -294,6 +306,12 @@ jobs:
             echo "$(echo "$VERBOSE" | tr '\n' ' ')"
             if [ "$SIGFILES" -lt 1 ] || ! echo "$VERBOSE" | grep -qi "v1 scheme.*: true"; then
               echo "::error title=v1 signing failed::$(echo "$VERBOSE" | tr '\n' ' ') | META-INF signature files=$SIGFILES"
+              exit 1
+            fi
+            # MT 口径：META-INF 里必须恰好一个签名块，不能混第二套证书
+            SIGCOUNT="$(unzip -Z1 "$apk" | grep -icE '^META-INF/.*\.(RSA|DSA|EC)$' || true)"
+            if [ "$SIGCOUNT" -ne 1 ]; then
+              echo "::error title=Multiple JAR signatures::$apk has $SIGCOUNT signature blocks in META-INF; MT reports verification failure"
               exit 1
             fi
           done
@@ -325,6 +343,15 @@ jobs:
               echo "::error title=V1 signature missing::$apk has no JAR (v1) signature; MT / some installers report it as unsigned. $(echo "$VERBOSE" | tr '\n' ' ') | META-INF signature files=$SIGFILES"
               exit 1
             fi
+            SIGCOUNT="$(unzip -Z1 "$apk" | grep -icE '^META-INF/.*\.(RSA|DSA|EC)$' || true)"
+            if [ "$SIGCOUNT" -ne 1 ]; then
+              echo "::error title=Multiple JAR signatures::$apk has $SIGCOUNT signature blocks; MT reports verification failure"
+              exit 1
+            fi
+            if echo "$VERBOSE" | grep -qi "WARNING"; then
+              echo "::error title=apksigner warning::$(echo "$VERBOSE" | tr '\n' ' ')"
+              exit 1
+            fi
             if echo "$CERTS" | grep -qi "Android Debug"; then
               echo "::error title=Debug-signed APK::Refusing to publish a debug-signed release."
               exit 1
@@ -337,6 +364,28 @@ jobs:
           done
           test "$count" -eq 4 || { echo "::error title=APK count::Expected 4 APKs, got $count"; exit 1; }
           echo "Verified $count release-signed APKs with the xbox applicationId"
+          # 可下载的自检报告：用户能拿 MT 显示的证书指纹 / 签名方案直接对照，
+          # 不必依赖 CI 自述，也不必下载几十 MB 的 APK 去验。
+          {
+            echo "xbox-re 签名自检报告"
+            echo "tag: ${{ steps.meta.outputs.tag }}"
+            echo "commit: $GITHUB_SHA"
+            echo "SHA256 证书指纹: 82:7C:75:5F:F6:04:3C:5B:3B:F0:65:8B:BD:21:10:C5:79:88:6C:9B:DC:91:55:CA:00:4A:BF:66:E5:59:D5:7B"
+            echo ""
+            for apk in dist/*.apk; do
+              echo "=== $(basename "$apk") ==="
+              echo "sha256: $(sha256sum "$apk" | cut -d' ' -f1)"
+              echo "package: $("$AAPT2" dump packagename "$apk")"
+              echo "META-INF 条目:"
+              unzip -Z1 "$apk" | grep -iE '^META-INF/' | sed 's/^/  /'
+              echo "apksigner verify:"
+              "$APKSIGNER" verify --min-sdk-version 21 --verbose "$apk" 2>&1 | sed 's/^/  /'
+              echo "证书:"
+              "$APKSIGNER" verify --print-certs "$apk" 2>&1 | sed 's/^/  /'
+              echo ""
+            done
+          } > dist/signature-report.txt
+          echo "signature-report.txt generated"
 
       - name: Set up ORAS
         id: oras
