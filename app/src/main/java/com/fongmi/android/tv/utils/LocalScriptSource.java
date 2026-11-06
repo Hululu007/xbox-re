@@ -304,6 +304,16 @@ public final class LocalScriptSource {
         return new File(Path.rootPath(), rel);
     }
 
+    /** 本地 json 接口（含脚本导入生成的 脚本扫描.json）以文件本身为权威。 */
+    public static boolean isLocalConfig(String configUrl) {
+        try {
+            File file = configFile(configUrl);
+            return file != null && file.isFile();
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
     public static void save(String dir, List<JSONObject> sites, List<JSONObject> bac) {
         dedupNames(sites, bac);
         JSONObject store = readStore(dir);

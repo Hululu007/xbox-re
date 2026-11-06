@@ -6,7 +6,6 @@ import android.widget.FrameLayout;
 import androidx.fragment.app.FragmentActivity;
 
 import com.fongmi.android.tv.R;
-import com.fongmi.android.tv.api.config.VodConfig;
 import com.fongmi.android.tv.bean.Site;
 import com.fongmi.android.tv.setting.SiteFeature;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -24,7 +23,7 @@ public final class SiteFeatureDialog {
                 .setView(box(activity, input))
                 .setPositiveButton(R.string.dialog_positive, (dialog, which) -> {
                     SiteFeature.setProxyUrl(input.getText().toString());
-                    SiteFeature.apply(VodConfig.get().getHome());
+                    SiteFeature.apply();
                     if (callback != null) callback.run();
                 })
                 .setNegativeButton(R.string.dialog_negative, null)
@@ -32,7 +31,7 @@ public final class SiteFeatureDialog {
     }
 
     public static void ext(FragmentActivity activity, Site site, Runnable callback) {
-        EditText input = input(activity, SiteFeature.ext(site), R.string.setting_default_proxy_hint);
+        EditText input = input(activity, SiteFeature.ext(site), 0);
         new MaterialAlertDialogBuilder(activity, R.style.ThemeOverlay_WebHTV_LightDialog)
                 .setTitle(R.string.menu_ext)
                 .setView(box(activity, input))
@@ -47,7 +46,7 @@ public final class SiteFeatureDialog {
     private static EditText input(FragmentActivity activity, String value, int hint) {
         EditText input = new EditText(activity);
         input.setText(value);
-        input.setHint(hint);
+        if (hint != 0) input.setHint(hint);
         input.setSingleLine(true);
         input.setSelection(input.getText().length());
         return input;

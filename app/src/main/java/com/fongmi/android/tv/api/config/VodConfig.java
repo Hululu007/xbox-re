@@ -217,7 +217,7 @@ public class VodConfig extends BaseConfig {
         BaseLoader.get().parseJar(spider, true);
         setSites(Json.safeListElement(object, "sites").stream().map(e -> Site.objectFrom(e, spider)).distinct().collect(Collectors.toCollection(ArrayList::new)));
         Map<String, Site> items = Site.findAll().stream().collect(Collectors.toMap(Site::getKey, Function.identity()));
-        getSites().forEach(site -> { site.sync(items.get(site.getKey())); SiteFeature.applyExt(site); });
+        getSites().forEach(site -> { site.sync(items.get(site.getKey())); SiteFeature.onConfigParsed(site); });
         CustomCspSetting.Result custom = CustomCspSetting.inject(getSites());
         Site home = !custom.home().isEmpty() ? custom.home() : getSites().stream().filter(item -> item.getKey().equals(config.getHome())).findFirst().orElse(getSites().isEmpty() ? new Site() : getSites().get(0));
         setHome(config, home, false);
@@ -336,6 +336,7 @@ public class VodConfig extends BaseConfig {
         config.setHome(home.getKey());
         if (save) config.save();
         getSites().forEach(item -> item.setSelected(home));
+        SiteFeature.apply();
     }
 
     private static class Loader {

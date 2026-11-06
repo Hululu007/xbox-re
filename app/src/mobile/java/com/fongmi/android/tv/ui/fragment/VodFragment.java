@@ -368,11 +368,9 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
         }
     }
 
-    /** 首页代理按钮：切换全局代理访问模式并立即生效；站点配置只影响明暗，不被反向改写。 */
+    /** 首页代理按钮：循环开关，明暗按当前站点配置翻转并写回，立即生效。 */
     private void onProxyToggle() {
-        Site current = VodConfig.get().getHome();
-        SiteFeature.setGlobal(!SiteFeature.isOn(current));
-        SiteFeature.apply(current);
+        SiteFeature.toggle(VodConfig.get().getHome());
         updateToolbarMenu();
     }
 
@@ -560,7 +558,7 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
     public void onResume() {
         super.onResume();
         if (mWeb != null) mWeb.onResume();
-        SiteFeature.apply(VodConfig.get().getHome());
+        SiteFeature.apply();
         updateToolbarMenu();
     }
 
