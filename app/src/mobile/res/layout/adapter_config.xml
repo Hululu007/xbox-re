@@ -22,16 +22,6 @@
         tools:text="https://fongmi.github.io/cat.json" />
 
     <androidx.appcompat.widget.AppCompatImageView
-        android:id="@+id/refresh"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="@string/config_refresh"
-        android:src="@drawable/ic_setting_refresh"
-        app:tint="@color/dialog_outlined_button_text" />
-
-    <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/delete"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

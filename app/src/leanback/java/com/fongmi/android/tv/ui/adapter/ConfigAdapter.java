@@ -28,8 +28,6 @@ public class ConfigAdapter extends RecyclerView.Adapter<ConfigAdapter.ViewHolder
         void onTextClick(Config item);
 
         void onDeleteClick(Config item);
-
-        void onRefreshClick(Config item);
     }
 
     public ConfigAdapter readOnly(boolean readOnly) {
@@ -75,7 +73,6 @@ public class ConfigAdapter extends RecyclerView.Adapter<ConfigAdapter.ViewHolder
         holder.binding.text.setOnClickListener(v -> listener.onTextClick(item));
         holder.binding.delete.setVisibility(readOnly ? View.GONE : View.VISIBLE);
         holder.binding.delete.setOnClickListener(v -> listener.onDeleteClick(item));
-        holder.binding.refresh.setOnClickListener(v -> listener.onRefreshClick(item));
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {

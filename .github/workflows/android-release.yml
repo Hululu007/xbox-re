@@ -229,6 +229,35 @@ jobs:
           cp Release/apk/*.apk dist/
           ls -lh dist/
 
+      - name: Add v1 (JAR) signature
+        env:
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          BT_DIR="$(find "$SDK_ROOT/build-tools" -mindepth 1 -maxdepth 1 -type d | sort | tail -1)"
+          APKSIGNER="$BT_DIR/apksigner"
+          ALIAS="${RELEASE_KEY_ALIAS:-$KEY_ALIAS}"
+          STORE_PASS="${RELEASE_STORE_PASSWORD:-$KEY_PASSWORD}"
+          KEY_PASS="${RELEASE_KEY_PASSWORD:-$STORE_PASS}"
+          for apk in dist/*.apk; do
+            echo "== adding v1 signature to $apk"
+            "$APKSIGNER" sign \
+              --ks app/signing/release.jks \
+              --ks-key-alias "$ALIAS" \
+              --ks-pass "pass:$STORE_PASS" \
+              --key-pass "pass:$KEY_PASS" \
+              --v1-signing-enabled true \
+              --v2-signing-enabled true \
+              --out "${apk}.signed" "$apk"
+            mv "${apk}.signed" "$apk"
+          done
+          echo "v1 signature added to all APKs"
+
       - name: Verify APK signatures and package identity
         run: |
           set -euo pipefail

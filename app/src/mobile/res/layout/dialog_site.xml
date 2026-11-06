@@ -41,6 +41,19 @@
             app:drawableStartCompat="@drawable/ic_site_search"
             app:drawableTint="@color/dialog_outlined_button_text" />
 
+        <!-- 重载当前点播配置（含脚本文件夹 json 重扫），放在搜索框后 -->
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/refresh"
+            android:layout_width="32dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="6dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/config_refresh"
+            android:padding="4dp"
+            android:scaleType="center"
+            android:src="@drawable/ic_setting_refresh"
+            app:tint="@color/dialog_outlined_button_text" />
+
         <!-- 全选 / 反选：仅在搜索范围弹窗显示，作用范围为筛选后当前显示的站点 -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/selectAll"
@@ -125,33 +138,6 @@
             android:orientation="horizontal" />
 
     </HorizontalScrollView>
-
-    <androidx.appcompat.widget.LinearLayoutCompat
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:gravity="end"
-        android:orientation="horizontal">
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/update"
-            android:layout_width="wrap_content"
-            android:layout_height="32dp"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:minWidth="0dp"
-            android:minHeight="0dp"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:text="@string/site_update"
-            android:textAllCaps="false"
-            android:textColor="@color/dialog_outlined_button_text"
-            android:textSize="11sp"
-            app:backgroundTint="@color/dialog_outlined_button_bg"
-            app:strokeColor="@color/dialog_outlined_button_stroke"
-            app:strokeWidth="1dp" />
-
-    </androidx.appcompat.widget.LinearLayoutCompat>
 
     <com.fongmi.android.tv.ui.custom.CustomRecyclerView
         android:id="@+id/recycler"

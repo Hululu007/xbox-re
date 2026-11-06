@@ -29,12 +29,26 @@
             android:inputType="text"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
-            android:nextFocusRight="@id/selectAll"
+            android:nextFocusRight="@id/refresh"
             android:singleLine="true"
             android:textColor="@color/white"
             android:textColorHint="@color/text"
             android:textSize="16sp"
             app:drawableStartCompat="@drawable/ic_site_search" />
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/refresh"
+            android:layout_width="36dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/selector_site_action"
+            android:contentDescription="@string/config_refresh"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:nextFocusRight="@id/selectAll"
+            android:padding="6dp"
+            android:src="@drawable/ic_setting_refresh"
+            app:tint="@color/site_action_icon" />
 
         <View
             android:id="@+id/actionGap"

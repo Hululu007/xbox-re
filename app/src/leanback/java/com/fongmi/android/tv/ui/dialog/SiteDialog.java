@@ -210,6 +210,7 @@ public class SiteDialog extends BaseAlertDialog implements SiteAdapter.OnClickLi
         binding.invert.setOnClickListener(v -> {
             if (adapter != null) adapter.invert();
         });
+        binding.refresh.setOnClickListener(v -> reloadCurrentConfig());
         binding.select.setOnClickListener(v -> {
             if (adapter != null) adapter.selectAll();
         });
@@ -326,6 +327,17 @@ public class SiteDialog extends BaseAlertDialog implements SiteAdapter.OnClickLi
     public void onItemClick(Site item) {
         if (listener != null) listener.setSite(item);
         dismiss();
+    }
+
+    /** 重载当前点播配置（脚本文件夹 json 会先重扫再解析）。 */
+    private void reloadCurrentConfig() {
+        dismiss();
+        VodConfig.load(VodConfig.get().getConfig(), new Callback() {
+            @Override
+            public void success() {
+                Notify.show(R.string.script_reloaded);
+            }
+        });
     }
 
     private void loadConfig(FragmentActivity activity, Config config) {

@@ -153,7 +153,7 @@ public class SiteDialog extends BaseAlertDialog implements SiteAdapter.OnClickLi
         binding.search.setOnClickListener(this::onColumnToggle);
         binding.selectAll.setOnClickListener(v -> { if (adapter != null) adapter.selectAll(); });
         binding.invert.setOnClickListener(v -> { if (adapter != null) adapter.invert(); });
-        binding.update.setOnClickListener(v -> reloadCurrentConfig());
+        binding.refresh.setOnClickListener(v -> reloadCurrentConfig());
     }
 
     /** 通用「重新加载当前配置」：脚本文件夹 json 会先重扫再解析，普通 http 源也会重新拉一次 */

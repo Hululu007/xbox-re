@@ -1284,4 +1284,9 @@
     <string name="script_reset">重置</string>
     <string name="script_delete">删除</string>
     <string name="script_deleted">已删除</string>
+    <string name="script_add_url_chip">+URL</string>
+    <string name="script_work_label">工作区</string>
+    <string name="script_bin_label">回收站</string>
+    <string name="script_name_required">请输入名称</string>
+    <string name="script_url_duplicate">名称或 url 已存在</string>
 </resources>

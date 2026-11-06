@@ -90,11 +90,8 @@ android {
                 keyPassword releaseKeyPassword
                 storePassword localProps['storePassword']
             }
-            // minSdk 24 时 AGP 默认只出 v2/v3，不生成 META-INF/*.RSA，
-            // MT 管理器等按 v1 判断的工具会显示「未签名」。显式补 v1，
-            // v2/v3 保持默认开启，包同时具备 v1 + v2 + v3，可直接安装。
-            enableV1Signing = true
-            enableV2Signing = true
+            // minSdk 24 时 AGP 9.2.1 不生成 v1/JAR 签名（此 DSL 开关实测无效）。
+            // v1 由 CI 在打包后统一用 apksigner 补签，见 android-release.yml。
         }
     }
 

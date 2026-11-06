@@ -4,70 +4,32 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/selector_sync_device_item"
+    android:background="@drawable/selector_git_cloud_tree_item"
     android:gravity="center_vertical"
-    android:minHeight="44dp"
+    android:minHeight="40dp"
     android:orientation="horizontal"
-    android:paddingStart="4dp"
+    android:paddingStart="6dp"
     android:paddingEnd="4dp">
-
-    <com.google.android.material.checkbox.MaterialCheckBox
-        android:id="@+id/check"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
-        android:gravity="center"
-        app:buttonTint="@color/dialog_checkbox_tint" />
 
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/name"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="4dp"
         android:layout_weight="1"
         android:ellipsize="middle"
         android:singleLine="true"
         android:textColor="@color/sync_device_text"
-        android:textSize="13sp"
-        tools:text="看剧ai[js]" />
-
-    <com.google.android.material.textview.MaterialTextView
-        android:id="@+id/badge"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="4dp"
-        android:background="@drawable/shape_login_state_badge"
-        android:paddingStart="6dp"
-        android:paddingTop="2dp"
-        android:paddingEnd="6dp"
-        android:paddingBottom="2dp"
-        android:textColor="@color/dialog_card_action_text"
-        android:textSize="11sp"
-        tools:text="js" />
-
-    <com.google.android.material.textview.MaterialTextView
-        android:id="@+id/proxyBadge"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="4dp"
-        android:background="@drawable/shape_login_state_badge"
-        android:paddingStart="6dp"
-        android:paddingTop="2dp"
-        android:paddingEnd="6dp"
-        android:paddingBottom="2dp"
-        android:text="@string/script_proxy"
-        android:textColor="@color/dialog_card_action_text"
-        android:textSize="11sp"
-        android:visibility="gone"
-        tools:visibility="visible" />
+        android:textSize="12sp"
+        tools:text="wgg代理[html]" />
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/edit"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
         android:layout_marginStart="4dp"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/script_edit_url"
-        android:padding="5dp"
+        android:padding="4dp"
         android:src="@drawable/ic_git_cloud_edit"
         android:visibility="gone"
         app:tint="@color/dialog_text_button"

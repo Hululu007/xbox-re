@@ -90,13 +90,6 @@ public class HistoryDialog extends BaseAlertDialog implements ConfigAdapter.OnCl
         dismiss();
     }
 
-    /** 每行刷新 = 重新加载该接口（脚本文件夹 json 会先重扫再解析） */
-    @Override
-    public void onRefreshClick(Config item) {
-        if (listener != null) listener.setConfig(item);
-        dismiss();
-    }
-
     @Override
     public void onDeleteClick(Config item) {
         // 脚本文件夹接口：删历史项 = 取消该文件夹登记，磁盘上的「脚本扫描.json」保留，

@@ -18,6 +18,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.AppCompatImageView;
 import androidx.appcompat.widget.LinearLayoutCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
@@ -46,9 +47,11 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -119,15 +122,21 @@ public final class ScriptManageDialog extends BaseAlertDialog {
         Window window = dialog.getWindow();
         WindowManager.LayoutParams params = window.getAttributes();
         boolean land = ResUtil.isLand(requireContext());
-        int width = Math.min((int) (ResUtil.getScreenWidth(requireContext()) * (land ? 0.78f : 0.94f)), ResUtil.dp2px(760));
-        params.width = Math.max(width, ResUtil.dp2px(320));
-        params.height = WindowManager.LayoutParams.WRAP_CONTENT;
+        params.width = (int) (ResUtil.getScreenWidth(requireContext()) * 0.96f);
+        params.height = (int) (ResUtil.getScreenHeight(requireContext()) * (land ? 0.96f : 0.90f));
         params.gravity = Gravity.CENTER;
         window.setBackgroundDrawable(new ColorDrawable(ContextCompat.getColor(requireContext(), R.color.transparent)));
         window.getDecorView().setPadding(0, 0, 0, 0);
         window.clearFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
         window.setAttributes(params);
         window.setLayout(params.width, params.height);
+        if (binding != null) {
+            ViewGroup.LayoutParams lp = binding.getRoot().getLayoutParams();
+            if (lp == null) lp = new ViewGroup.LayoutParams(params.width, params.height);
+            lp.width = params.width;
+            lp.height = params.height;
+            binding.getRoot().setLayoutParams(lp);
+        }
     }
 
     @Override
@@ -140,39 +149,32 @@ public final class ScriptManageDialog extends BaseAlertDialog {
     @Override
     public void onConfigurationChanged(@NonNull android.content.res.Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
+        configureWindow(getDialog());
         applyColumnLayout();
     }
 
-    /** 竖屏上下两栏；横屏左右两栏（上=工作区，下=回收站 的叫法保持不变） */
+    /** 始终左右两列；横竖屏只由窗口尺寸与图标密度适配，不再切上下布局。 */
     private void applyColumnLayout() {
         if (binding == null) return;
-        boolean land = ResUtil.isLand(requireContext());
-        binding.columns.setOrientation(land ? LinearLayoutCompat.HORIZONTAL : LinearLayoutCompat.VERTICAL);
+        binding.columns.setOrientation(LinearLayoutCompat.HORIZONTAL);
         LinearLayoutCompat.LayoutParams cp =
                 (LinearLayoutCompat.LayoutParams) binding.columns.getLayoutParams();
-        cp.height = land
-                ? Math.max(ResUtil.dp2px(200), (int) (ResUtil.getScreenHeight(requireContext()) * 0.45f))
-                : ViewGroup.LayoutParams.WRAP_CONTENT;
+        cp.height = 0;
+        cp.weight = 1f;
         binding.columns.setLayoutParams(cp);
         for (LinearLayoutCompat col : new LinearLayoutCompat[]{binding.keepColumn, binding.bacColumn}) {
             LinearLayoutCompat.LayoutParams lp = (LinearLayoutCompat.LayoutParams) col.getLayoutParams();
-            if (land) {
-                lp.width = 0;
-                lp.height = ViewGroup.LayoutParams.MATCH_PARENT;
-                lp.weight = 1f;
-            } else {
-                lp.width = ViewGroup.LayoutParams.MATCH_PARENT;
-                lp.height = ViewGroup.LayoutParams.WRAP_CONTENT;
-                lp.weight = 0f;
-            }
+            lp.width = 0;
+            lp.height = ViewGroup.LayoutParams.MATCH_PARENT;
+            lp.weight = 1f;
             col.setLayoutParams(lp);
         }
         for (CustomRecyclerView rv : new CustomRecyclerView[]{binding.keepRecycler, binding.bacRecycler}) {
             LinearLayoutCompat.LayoutParams lp = (LinearLayoutCompat.LayoutParams) rv.getLayoutParams();
-            lp.height = land ? 0 : ViewGroup.LayoutParams.WRAP_CONTENT;
-            lp.weight = land ? 1f : 0f;
+            lp.height = 0;
+            lp.weight = 1f;
             rv.setLayoutParams(lp);
-            rv.setMaxHeight(land ? 0 : ResUtil.dp2px(140));
+            rv.setMaxHeight(0);
         }
     }
 
@@ -191,6 +193,7 @@ public final class ScriptManageDialog extends BaseAlertDialog {
 
     @Override
     protected void initEvent() {
+        binding.reset.setOnClickListener(v -> onTool(1));
         binding.refresh.setOnClickListener(v -> {
             if (TextUtils.isEmpty(currentDir)) return;
             dirty = true;
@@ -206,15 +209,8 @@ public final class ScriptManageDialog extends BaseAlertDialog {
     /* ---------------- 顶部若干行按钮 ---------------- */
 
     private void buildRows() {
-        int[] tools = {R.string.script_add_url, R.string.script_reset, R.string.script_swap,
-                R.string.script_up, R.string.script_down};
-        for (int i = 0; i < tools.length; i++) {
-            MaterialButton chip = makeChip(getString(tools[i]), false, true);
-            int idx = i;
-            chip.setOnClickListener(v -> onTool(idx));
-            binding.toolRow.addView(chip);
-        }
-        String[] labels = {getString(R.string.script_all), "py", "js", "html", "url"};
+        // 第 4 行：分类 + 在线html录入（外圈、分散对齐）
+        String[] labels = {getString(R.string.script_all), "PY", "JS", "HTML", "URL"};
         for (int i = 0; i < filters.length; i++) {
             MaterialButton chip = makeChip(labels[i], i == 0, true);
             int idx = i;
@@ -225,14 +221,53 @@ public final class ScriptManageDialog extends BaseAlertDialog {
             filterChips.add(chip);
             binding.filterRow.addView(chip);
         }
-        int[] selects = {R.string.script_select_keep, R.string.script_invert_keep,
-                R.string.script_select_bac, R.string.script_invert_bac};
-        for (int i = 0; i < selects.length; i++) {
-            MaterialButton chip = makeChip(getString(selects[i]), false, true);
-            int idx = i;
-            chip.setOnClickListener(v -> onSelect(idx));
-            binding.selectRow.addView(chip);
-        }
+        MaterialButton add = makeChip(getString(R.string.script_add_url_chip), false, true);
+        add.setCheckable(false);
+        add.setOnClickListener(v -> onTool(0));
+        binding.filterRow.addView(add);
+
+        // 第 5 行：工作区 / 移动 / 回收站 三段，纯图标无外圈
+        boolean land = ResUtil.isLand(requireContext());
+        addLabel(binding.actionLeft, R.string.script_work_label, land);
+        addIcon(binding.actionLeft, R.drawable.ic_action_check, R.string.script_select_keep, v -> onSelect(0), land);
+        addIcon(binding.actionLeft, R.drawable.ic_setting_refresh, R.string.script_invert_keep, v -> onSelect(1), land);
+        addIcon(binding.actionCenter, R.drawable.ic_player_button_up, R.string.script_up, v -> onTool(3), land);
+        addIcon(binding.actionCenter, R.drawable.ic_sync_arrow_right, R.string.script_swap, v -> onTool(2), land);
+        addIcon(binding.actionCenter, R.drawable.ic_player_button_down, R.string.script_down, v -> onTool(4), land);
+        addIcon(binding.actionRight, R.drawable.ic_action_check, R.string.script_select_bac, v -> onSelect(2), land);
+        addIcon(binding.actionRight, R.drawable.ic_setting_refresh, R.string.script_invert_bac, v -> onSelect(3), land);
+        addLabel(binding.actionRight, R.string.script_bin_label, land);
+    }
+
+    /** 图标按钮：只用 app 现成 drawable 与色表，无外圈。 */
+    private void addIcon(LinearLayoutCompat row, int icon, int desc, View.OnClickListener click, boolean land) {
+        AppCompatImageView view = new AppCompatImageView(requireContext());
+        view.setImageResource(icon);
+        view.setContentDescription(getString(desc));
+        view.setScaleType(android.widget.ImageView.ScaleType.CENTER);
+        view.setPadding(dp(3), dp(3), dp(3), dp(3));
+        view.setFocusable(true);
+        view.setColorFilter(ContextCompat.getColor(requireContext(), R.color.dialog_text_button));
+        view.setOnClickListener(click);
+        int size = dp(land ? 32 : 28);
+        LinearLayoutCompat.LayoutParams lp = new LinearLayoutCompat.LayoutParams(size, size);
+        lp.setMarginStart(dp(2));
+        row.addView(view, lp);
+    }
+
+    /** 段标签：横竖屏用现成字号档，过长中间省略。 */
+    private void addLabel(LinearLayoutCompat row, int text, boolean land) {
+        android.widget.TextView view = new android.widget.TextView(requireContext());
+        view.setText(text);
+        view.setSingleLine(true);
+        view.setEllipsize(TextUtils.TruncateAt.MIDDLE);
+        view.setTextSize(land ? 13 : 11);
+        view.setTextColor(ContextCompat.getColor(requireContext(), R.color.dialog_outlined_button_text));
+        LinearLayoutCompat.LayoutParams lp = new LinearLayoutCompat.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        lp.setMarginStart(dp(2));
+        lp.setMarginEnd(dp(2));
+        row.addView(view, lp);
     }
 
     /** 按钮样式完全照 app 现成的 MaterialButton 写法（见 dialog_shell_proxy.xml /
@@ -280,8 +315,15 @@ public final class ScriptManageDialog extends BaseAlertDialog {
     private void renderDirs() {
         binding.dirList.removeAllViews();
         List<String> dirs = LocalScriptSource.dirs();
+        Map<String, Integer> seen = new HashMap<>();
         for (String dir : dirs) {
-            MaterialButton chip = makeChip(new File(dir).getName(), dir.equals(currentDir), false);
+            String name = new File(dir).getName();
+            int n = seen.containsKey(name) ? seen.get(name) : 0;
+            seen.put(name, n + 1);
+            String label = n == 0 ? name : name + "|" + n;
+            MaterialButton chip = makeChip(label, dir.equals(currentDir), false);
+            chip.setEllipsize(TextUtils.TruncateAt.MIDDLE);
+            chip.setMaxWidth(dp(180));
             chip.setOnClickListener(v -> {
                 currentDir = dir;
                 keepSel.clear();
@@ -338,9 +380,15 @@ public final class ScriptManageDialog extends BaseAlertDialog {
     }
 
     private List<JSONObject> visible(List<JSONObject> list) {
-        if ("all".equals(filter)) return new ArrayList<>(list);
         List<JSONObject> out = new ArrayList<>();
-        for (JSONObject item : list) if (filter.equals(LocalScriptSource.kindOf(item))) out.add(item);
+        for (JSONObject item : list) {
+            if (!"all".equals(filter) && !filter.equals(LocalScriptSource.kindOf(item))) continue;
+            try {
+                out.add(new JSONObject(item.toString()));
+            } catch (Exception ignored) {
+                out.add(item);
+            }
+        }
         return out;
     }
 
@@ -354,6 +402,9 @@ public final class ScriptManageDialog extends BaseAlertDialog {
         if (binding == null) return;
         List<JSONObject> keep = visible(sites);
         List<JSONObject> gone = visible(bac);
+        // 显示层双重保护：同名加 |N 序号、相同 url 只留第一个
+        LocalScriptSource.dedupNames(keep, gone);
+        LocalScriptSource.dedupUrls(keep, gone);
         binding.keepTitle.setText(getString(R.string.script_keep, keep.size()));
         binding.bacTitle.setText(getString(R.string.script_bac, gone.size()));
         binding.summary.setText(TextUtils.isEmpty(currentDir)
@@ -473,6 +524,10 @@ public final class ScriptManageDialog extends BaseAlertDialog {
         b.positive.setOnClickListener(v -> {
             String name = b.name.getText().toString().trim();
             String url = b.url.getText().toString().trim();
+            if (TextUtils.isEmpty(name)) {
+                Notify.show(R.string.script_name_required);
+                return;
+            }
             if (url.isEmpty()) {
                 Notify.show(R.string.script_url_required);
                 return;
@@ -481,9 +536,14 @@ public final class ScriptManageDialog extends BaseAlertDialog {
             dialog.dismiss();
             String key = editing == null ? "" : editing.optString("key");
             Task.execute(() -> {
-                if (editing == null) LocalScriptSource.addUrl(currentDir, name, url, proxy);
-                else LocalScriptSource.updateUrl(currentDir, key, name, url, proxy);
+                boolean ok = editing == null
+                        ? LocalScriptSource.addUrl(currentDir, name, url, proxy)
+                        : LocalScriptSource.updateUrl(currentDir, key, name, url, proxy);
                 App.post(() -> {
+                    if (!ok) {
+                        Notify.show(R.string.script_url_duplicate);
+                        return;
+                    }
                     dirty = true;
                     Notify.show(R.string.script_url_saved);
                     bindState();
@@ -534,12 +594,9 @@ public final class ScriptManageDialog extends BaseAlertDialog {
             JSONObject item = items.get(position);
             String key = item.optString("key");
             boolean selected = (inBac ? bacSel : keepSel).contains(key);
-            holder.binding.check.setChecked(selected);
+            holder.binding.getRoot().setSelected(selected);
             holder.binding.name.setText(item.optString("name"));
-            holder.binding.badge.setText(LocalScriptSource.kindOf(item));
-            holder.binding.proxyBadge.setVisibility("proxy".equals(item.optString("proxy")) ? View.VISIBLE : View.GONE);
             holder.binding.edit.setVisibility(LocalScriptSource.isEditable(item) ? View.VISIBLE : View.GONE);
-            holder.binding.check.setOnClickListener(v -> toggle(inBac, key));
             holder.binding.getRoot().setOnClickListener(v -> toggle(inBac, key));
             holder.binding.edit.setOnClickListener(v -> showUrlDialog(item));
         }

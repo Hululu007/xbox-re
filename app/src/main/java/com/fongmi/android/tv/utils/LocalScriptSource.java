@@ -3,7 +3,6 @@ package com.fongmi.android.tv.utils;
 import android.text.TextUtils;
 import android.util.Pair;
 
-import com.fongmi.android.tv.server.Server;
 import com.github.catvod.utils.Path;
 import com.github.catvod.utils.Prefers;
 
@@ -15,8 +14,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -196,13 +197,28 @@ public final class LocalScriptSource {
         return item;
     }
 
-    /** 本地 html 页面地址：端口取运行时实际值，不写死 9978/9979 */
+    /** 本地 html 页面地址：file:///绝对路径（127.0.0.1/file 路由格式不被解析）。 */
     private static String fileHomePage(File file) {
-        String abs = file.getAbsolutePath();
-        String root = Path.rootPath();
-        String rel = abs.startsWith(root) ? abs.substring(root.length()) : abs;
-        while (rel.startsWith("/")) rel = rel.substring(1);
-        return Server.get().getAddress("/file/") + rel;
+        return "file://" + file.getAbsolutePath();
+    }
+
+    /** 旧 json 里的 127.0.0.1/file 地址迁移成 file:// 绝对路径，保留 #代理 尾部。 */
+    private static boolean migrateHome(JSONObject item) {
+        String home = item.optString("homePage");
+        if (!home.contains("127.0.0.1")) return false;
+        int idx = home.indexOf("/file/");
+        if (idx < 0) return false;
+        String rel = home.substring(idx + 6);
+        int hash = rel.indexOf('#');
+        String tail = hash >= 0 ? rel.substring(hash) : "";
+        if (hash >= 0) rel = rel.substring(0, hash);
+        String abs = new File(Path.rootPath(), rel).getAbsolutePath();
+        try {
+            item.put("homePage", "file://" + abs + tail);
+            return true;
+        } catch (Exception ignored) {
+            return false;
+        }
     }
 
     private static boolean isRemoteItem(JSONObject item) {
@@ -256,6 +272,7 @@ public final class LocalScriptSource {
     }
 
     public static void save(String dir, List<JSONObject> sites, List<JSONObject> bac) {
+        dedupNames(sites, bac);
         JSONObject store = readStore(dir);
         try {
             store.put("sites", toArray(sites));
@@ -296,6 +313,11 @@ public final class LocalScriptSource {
         purgeGone(bac, foundPaths);
         boolean purged = before != sites.size() + bac.size();
 
+        // 旧版生成的 127.0.0.1/file 地址不被解析，加载时自动迁移并回写 json
+        boolean migrated = false;
+        for (JSONObject item : sites) migrated |= migrateHome(item);
+        for (JSONObject item : bac) migrated |= migrateHome(item);
+
         // 规则 3：新文件追加进 sites（规则 1、2 自然满足——已在里面就不动，保留手改的 name/ext/proxy）
         boolean changed = false;
         for (File file : found) {
@@ -306,7 +328,7 @@ public final class LocalScriptSource {
             changed = true;
         }
         boolean first = !storeFile(dir).isFile();
-        if (changed || purged || first) save(dir, sites, bac);
+        if (changed || purged || first || migrated) save(dir, sites, bac);
         return new Pair<>(sites, bac);
     }
 
@@ -318,6 +340,9 @@ public final class LocalScriptSource {
                 return !foundPaths.contains(api.substring("file://".length()));
             }
             String home = item.optString("homePage");
+            if (home.startsWith("file://")) {
+                return !foundPaths.contains(home.substring("file://".length()));
+            }
             int idx = home.indexOf("/file/");
             if (idx < 0) return false;
             String rel = home.substring(idx + 6);
@@ -436,10 +461,11 @@ public final class LocalScriptSource {
 
     /** 新增：勾选代理 → url 尾部加 #代理 + "proxy":"proxy" */
     public static boolean addUrl(String dir, String name, String url, boolean proxy) {
-        if (TextUtils.isEmpty(url)) return false;
+        if (TextUtils.isEmpty(url) || TextUtils.isEmpty(name)) return false;
         Pair<List<JSONObject>, List<JSONObject>> pair = load(dir);
         String clean = stripProxy(url);
         if (clean.isEmpty()) return false;
+        if (duplicate(pair.first, pair.second, name, clean, "")) return false;
         String full = proxy ? clean + "#" + PROXY_KEY : clean;
         JSONObject item = new JSONObject();
         try {
@@ -462,7 +488,7 @@ public final class LocalScriptSource {
 
     /** 改远程 html URL：名称、url、代理 */
     public static boolean updateUrl(String dir, String key, String name, String url, boolean proxy) {
-        if (TextUtils.isEmpty(url)) return false;
+        if (TextUtils.isEmpty(url) || TextUtils.isEmpty(name)) return false;
         Pair<List<JSONObject>, List<JSONObject>> pair = load(dir);
         JSONObject target = null;
         for (JSONObject item : pair.first) if (key.equals(item.optString("key"))) target = item;
@@ -470,8 +496,9 @@ public final class LocalScriptSource {
         if (target == null || !isEditable(target)) return false;
         String clean = stripProxy(url);
         if (clean.isEmpty()) return false;
+        if (duplicate(pair.first, pair.second, name, clean, key)) return false;
         try {
-            target.put("name", withLabel(TextUtils.isEmpty(name) ? clean : name));
+            target.put("name", withLabel(name));
             target.put("homePage", proxy ? clean + "#" + PROXY_KEY : clean);
             target.put("proxy", proxy ? PROXY_FLAG : "");
             target.put("api", HTML_API);
@@ -517,6 +544,7 @@ public final class LocalScriptSource {
         String api = item.optString("api");
         String home = item.optString("homePage");
         if (api.startsWith("file://")) return api.substring("file://".length());
+        if (home.startsWith("file://")) return home.substring("file://".length());
         // /file/ 路由里的路径是相对 Path.rootPath()，且只有本机地址才是本地脚本
         if (home.contains("127.0.0.1")) {
             int idx = home.indexOf("/file/");
@@ -532,6 +560,8 @@ public final class LocalScriptSource {
         File file = null;
         if (api.startsWith("file://")) {
             file = new File(api.substring("file://".length()));
+        } else if (home.startsWith("file://")) {
+            file = new File(home.substring("file://".length()));
         } else if (home.contains("127.0.0.1")) {
             // 本地 html 的 homePage 由 fileHomePage() 生成，路径相对 Path.rootPath()
             int idx = home.indexOf("/file/");
@@ -559,5 +589,89 @@ public final class LocalScriptSource {
     public static JSONObject find(List<JSONObject> list, String key) {
         for (JSONObject item : list) if (key.equals(item.optString("key"))) return item;
         return null;
+    }
+
+    /* ---------------- 同名 / 同 url ---------------- */
+
+    /** 拆出「基础名 + 类型标签」，并剥掉已有的 |N 序号，保证去重幂等。 */
+    private static String[] splitName(String name) {
+        String label = "";
+        int i = name.lastIndexOf('[');
+        if (i > 0 && name.endsWith("]")) {
+            label = name.substring(i);
+            name = name.substring(0, i);
+        }
+        int p = name.lastIndexOf('|');
+        if (p >= 0) {
+            String tail = name.substring(p + 1);
+            boolean digits = !tail.isEmpty();
+            for (int k = 0; k < tail.length(); k++)
+                if (!Character.isDigit(tail.charAt(k))) { digits = false; break; }
+            if (digits) name = name.substring(0, p);
+        }
+        return new String[]{name, label};
+    }
+
+    private static String baseName(String name) {
+        String[] p = splitName(name);
+        return p[0] + p[1];
+    }
+
+    /** 同名条目的 name 写成 文件名|1[py]，key 不动；显示层与 json 都调它。 */
+    public static void dedupNames(List<JSONObject> sites, List<JSONObject> bac) {
+        List<List<JSONObject>> lists = new ArrayList<>();
+        lists.add(sites);
+        lists.add(bac);
+        Map<String, Integer> seen = new HashMap<>();
+        for (List<JSONObject> list : lists) {
+            for (JSONObject item : list) {
+                String base = baseName(item.optString("name"));
+                int n = seen.containsKey(base) ? seen.get(base) : 0;
+                seen.put(base, n + 1);
+                String[] p = splitName(item.optString("name"));
+                String want = n == 0 ? p[0] + p[1] : p[0] + "|" + n + p[1];
+                if (!want.equals(item.optString("name"))) {
+                    try {
+                        item.put("name", want);
+                    } catch (Exception ignored) {
+                    }
+                }
+            }
+        }
+    }
+
+    /** 显示层双重保护：相同 url（去掉 #代理 后）只保留第一个。 */
+    public static void dedupUrls(List<JSONObject> sites, List<JSONObject> bac) {
+        List<List<JSONObject>> lists = new ArrayList<>();
+        lists.add(sites);
+        lists.add(bac);
+        Set<String> seen = new HashSet<>();
+        for (List<JSONObject> list : lists) {
+            list.removeIf(item -> {
+                if (!isEditable(item)) return false;
+                String url = stripProxy(item.optString("homePage"));
+                return !url.isEmpty() && !seen.add(url);
+            });
+        }
+    }
+
+    private static boolean sameName(String a, String b) {
+        return baseName(a).equals(baseName(b));
+    }
+
+    /** 录入/编辑时检查：同名或相同 url 都拒绝，selfKey 为编辑中的条目自身。 */
+    private static boolean duplicate(List<JSONObject> sites, List<JSONObject> bac,
+                                     String name, String cleanUrl, String selfKey) {
+        List<List<JSONObject>> lists = new ArrayList<>();
+        lists.add(sites);
+        lists.add(bac);
+        for (List<JSONObject> list : lists) {
+            for (JSONObject item : list) {
+                if (!selfKey.isEmpty() && selfKey.equals(item.optString("key"))) continue;
+                if (!name.isEmpty() && sameName(item.optString("name"), name)) return true;
+                if (!cleanUrl.isEmpty() && cleanUrl.equals(stripProxy(item.optString("homePage")))) return true;
+            }
+        }
+        return false;
     }
 }
