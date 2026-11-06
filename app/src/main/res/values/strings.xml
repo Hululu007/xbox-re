@@ -1294,4 +1294,17 @@
     <string name="script_reset">重置</string>
     <string name="script_delete">删除</string>
     <string name="script_deleted">已删除</string>
+
+    <!-- 这三个资源在 values-zh-rCN / values-zh-rTW 里有对应声明，
+         默认 locale 必须同时存在，否则 Android Lint 判定为 fatal：
+         "can lead to crashes when the resource is queried in a configuration
+         that does not match this qualifier"。界面上的语言设置入口已移除，
+         这些字符串不会被显示；值用中文，避免默认 locale 残留英文。 -->
+    <string name="about_check_update">检查更新</string>
+    <string name="setting_language">语言</string>
+    <string-array name="select_language">
+        <item>跟随系统</item>
+        <item>简体中文</item>
+        <item>繁体中文</item>
+    </string-array>
 </resources>
