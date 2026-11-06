@@ -285,7 +285,7 @@ public class Setting {
     }
 
     public static int getSiteColumn() {
-        return Prefers.getInt("site_column", 1);
+        return Prefers.getInt("site_column", 2);
     }
 
     public static void putSiteColumn(int column) {

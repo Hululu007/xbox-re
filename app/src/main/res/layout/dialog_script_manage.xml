@@ -96,30 +96,35 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
-        android:gravity="center_vertical"
+        android:gravity="center"
         android:orientation="horizontal">
 
         <androidx.appcompat.widget.LinearLayoutCompat
             android:id="@+id/actionLeft"
-            android:layout_width="0dp"
+            android:layout_width="86dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:gravity="start|center_vertical"
             android:orientation="horizontal" />
 
+        <Space
+            android:layout_width="8dp"
+            android:layout_height="1dp" />
+
         <androidx.appcompat.widget.LinearLayoutCompat
             android:id="@+id/actionCenter"
-            android:layout_width="0dp"
+            android:layout_width="76dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:gravity="center"
             android:orientation="horizontal" />
 
+        <Space
+            android:layout_width="8dp"
+            android:layout_height="1dp" />
+
         <androidx.appcompat.widget.LinearLayoutCompat
             android:id="@+id/actionRight"
-            android:layout_width="0dp"
+            android:layout_width="86dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:gravity="end|center_vertical"
             android:orientation="horizontal" />
 
@@ -141,17 +146,6 @@
             android:layout_weight="1"
             android:orientation="vertical">
 
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/keepTitle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:singleLine="true"
-                android:textColor="@color/dialog_outlined_button_text"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                tools:text="工作区 (34)" />
-
             <com.fongmi.android.tv.ui.custom.CustomRecyclerView
                 android:id="@+id/keepRecycler"
                 android:layout_width="match_parent"
@@ -172,17 +166,6 @@
             android:layout_marginStart="8dp"
             android:layout_weight="1"
             android:orientation="vertical">
-
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/bacTitle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:singleLine="true"
-                android:textColor="@color/dialog_outlined_button_text"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                tools:text="回收站 (18)" />
 
             <com.fongmi.android.tv.ui.custom.CustomRecyclerView
                 android:id="@+id/bacRecycler"

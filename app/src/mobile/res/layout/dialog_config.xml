@@ -80,16 +80,13 @@
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
-        <Space
-            android:layout_width="0dp"
-            android:layout_height="1dp"
-            android:layout_weight="1" />
-
         <com.google.android.material.button.MaterialButton
             android:id="@+id/importScript"
             style="@style/Widget.Material3.Button.OutlinedButton"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="40dp"
+            android:layout_weight="1"
+            android:minWidth="0dp"
             android:minHeight="40dp"
             android:text="@string/script_import"
             android:textColor="@color/dialog_outlined_button_text"
@@ -99,8 +96,11 @@
         <com.google.android.material.button.MaterialButton
             android:id="@+id/negative"
             style="@style/Widget.Material3.Button.OutlinedButton"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="40dp"
+            android:layout_marginStart="6dp"
+            android:layout_weight="1"
+            android:minWidth="0dp"
             android:minHeight="40dp"
             android:text="@string/dialog_negative"
             android:textColor="@color/dialog_outlined_button_text"
@@ -110,9 +110,11 @@
         <com.google.android.material.button.MaterialButton
             android:id="@+id/positive"
             style="@style/Widget.Material3.Button"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="40dp"
-            android:layout_marginStart="10dp"
+            android:layout_marginStart="6dp"
+            android:layout_weight="1"
+            android:minWidth="0dp"
             android:minHeight="40dp"
             android:text="@string/dialog_positive"
             android:textColor="@color/dialog_primary_button_text"

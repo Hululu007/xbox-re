@@ -218,50 +218,66 @@ public final class ScriptManageDialog extends BaseAlertDialog {
                 filter = filters[idx];
                 render();
             });
+            chip.setTextSize(11);
+            chip.setPadding(dp(3), dp(6), dp(3), dp(6));
             filterChips.add(chip);
             binding.filterRow.addView(chip);
         }
         MaterialButton add = makeChip(getString(R.string.script_add_url_chip), false, true);
+        add.setTextSize(11);
+        add.setPadding(dp(3), dp(6), dp(3), dp(6));
         add.setCheckable(false);
         add.setOnClickListener(v -> onTool(0));
         binding.filterRow.addView(add);
 
-        // 第 5 行：工作区 / 移动 / 回收站 三段，纯图标无外圈
-        boolean land = ResUtil.isLand(requireContext());
-        addLabel(binding.actionLeft, R.string.script_work_label, land);
-        addIcon(binding.actionLeft, R.drawable.ic_script_check, R.string.script_select_keep, v -> onSelect(0), land);
-        addIcon(binding.actionLeft, R.drawable.ic_setting_refresh, R.string.script_invert_keep, v -> onSelect(1), land);
-        addIcon(binding.actionCenter, R.drawable.ic_player_button_up, R.string.script_up, v -> onTool(3), land);
-        addIcon(binding.actionCenter, R.drawable.ic_sync_arrow_right, R.string.script_swap, v -> onTool(2), land);
-        addIcon(binding.actionCenter, R.drawable.ic_player_button_down, R.string.script_down, v -> onTool(4), land);
-        addIcon(binding.actionRight, R.drawable.ic_script_check, R.string.script_select_bac, v -> onSelect(2), land);
-        addIcon(binding.actionRight, R.drawable.ic_setting_refresh, R.string.script_invert_bac, v -> onSelect(3), land);
-        addLabel(binding.actionRight, R.string.script_bin_label, land);
+        // 第 5 行：固定尺寸一行排布；「全」「反」直接文字，⇆ 为双向箭头，无文字提示
+        addLabel(binding.actionLeft, R.string.script_work_label);
+        addText(binding.actionLeft, "全", v -> onSelect(0));
+        addText(binding.actionLeft, "反", v -> onSelect(1));
+        addIcon(binding.actionCenter, R.drawable.ic_player_button_up, v -> onTool(3));
+        addIcon(binding.actionCenter, R.drawable.ic_script_swap, v -> onTool(2));
+        addIcon(binding.actionCenter, R.drawable.ic_player_button_down, v -> onTool(4));
+        addText(binding.actionRight, "全", v -> onSelect(2));
+        addText(binding.actionRight, "反", v -> onSelect(3));
+        addLabel(binding.actionRight, R.string.script_bin_label);
     }
 
-    /** 图标按钮：只用 app 现成 drawable 与色表，无外圈。 */
-    private void addIcon(LinearLayoutCompat row, int icon, int desc, View.OnClickListener click, boolean land) {
+    /** 图标按钮：固定 24dp、无外圈、无文字提示。 */
+    private void addIcon(LinearLayoutCompat row, int icon, View.OnClickListener click) {
         AppCompatImageView view = new AppCompatImageView(requireContext());
         view.setImageResource(icon);
-        view.setContentDescription(getString(desc));
         view.setScaleType(android.widget.ImageView.ScaleType.CENTER);
         view.setPadding(dp(3), dp(3), dp(3), dp(3));
         view.setFocusable(true);
         view.setColorFilter(ContextCompat.getColor(requireContext(), R.color.dialog_text_button));
         view.setOnClickListener(click);
-        int size = dp(land ? 32 : 28);
-        LinearLayoutCompat.LayoutParams lp = new LinearLayoutCompat.LayoutParams(size, size);
+        LinearLayoutCompat.LayoutParams lp = new LinearLayoutCompat.LayoutParams(dp(24), dp(24));
         lp.setMarginStart(dp(2));
         row.addView(view, lp);
     }
 
-    /** 段标签：横竖屏用现成字号档，过长中间省略。 */
-    private void addLabel(LinearLayoutCompat row, int text, boolean land) {
+    /** 「全」「反」纯文字按钮：固定 24dp，不带任何文字提示。 */
+    private void addText(LinearLayoutCompat row, String text, View.OnClickListener click) {
+        android.widget.TextView view = new android.widget.TextView(requireContext());
+        view.setText(text);
+        view.setSingleLine(true);
+        view.setGravity(Gravity.CENTER);
+        view.setTextSize(10);
+        view.setTextColor(ContextCompat.getColor(requireContext(), R.color.dialog_text_button));
+        view.setFocusable(true);
+        view.setOnClickListener(click);
+        LinearLayoutCompat.LayoutParams lp = new LinearLayoutCompat.LayoutParams(dp(24), dp(24));
+        lp.setMarginStart(dp(2));
+        row.addView(view, lp);
+    }
+
+    /** 段标签：固定 10sp，过长中间省略。 */
+    private void addLabel(LinearLayoutCompat row, int text) {
         android.widget.TextView view = new android.widget.TextView(requireContext());
         view.setText(text);
         view.setSingleLine(true);
         view.setEllipsize(TextUtils.TruncateAt.MIDDLE);
-        view.setTextSize(land ? 13 : 11);
+        view.setTextSize(10);
         view.setTextColor(ContextCompat.getColor(requireContext(), R.color.dialog_outlined_button_text));
         LinearLayoutCompat.LayoutParams lp = new LinearLayoutCompat.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -405,8 +421,6 @@ public final class ScriptManageDialog extends BaseAlertDialog {
         // 显示层双重保护：同名加 |N 序号、相同 url 只留第一个
         LocalScriptSource.dedupNames(keep, gone);
         LocalScriptSource.dedupUrls(keep, gone);
-        binding.keepTitle.setText(getString(R.string.script_keep, keep.size()));
-        binding.bacTitle.setText(getString(R.string.script_bac, gone.size()));
         binding.summary.setText(TextUtils.isEmpty(currentDir)
                 ? getString(R.string.script_empty) : currentDir);
         keepAdapter.setItems(keep);

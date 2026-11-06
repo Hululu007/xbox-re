@@ -116,3 +116,27 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
 ## 9. Enforcement boundary
 
 `AGENTS.md` is an instruction layer, not a security boundary. The task guard only enforces declared paths, protected initial dirty files, branch/HEAD stability, atomic task commits, and recovery tags when invoked. It does not enforce elapsed time, cycle counts, changed-file limits, checkpoints, replans, or state archives. Git hooks are not the primary mechanism because ordinary clones do not reliably enable tracked hooks and client hooks can be bypassed. CI remains the correct place for organization-wide mandatory checks.
+
+
+## 10. 构建脚本错误清单（每轮强制预检，不许重犯）
+
+本节记录本仓库 CI 已经踩过的坑。任何改动构建脚本、签名、资源目录或发版步骤之前，必须先逐条对照；dispatch 之前必须完成本节的预检。一条不满足就不许触发构建。
+
+1. **v1 签名只能从「完全未签名的 APK」一次签成**。apksigner 无法给已经带 v2/v3 签名的 APK 追加 v1（即使加 `--v1-signing-enabled true --min-sdk-version 21` 也无效）。minSdk 24 + AGP 9 默认只出 v2/v3；`signingConfigs { enableV1Signing = true }` 实测无效。正确做法：CI 工作副本把 `signingConfig` 置空，让 Gradle 输出未签名 APK，再用 apksigner 一次签 v1+v2+v3。
+2. **校验口径**：`apksigner verify --verbose` 在 minSdk 24 的 APK 上会报 `Verified using v1 scheme (JAR signing): false`，即使 META-INF 里确实有 v1 签名。必须用 `apksigner verify --min-sdk-version 21 --verbose`，并且客观统计 `META-INF/*.RSA|DSA|EC|SF` 数量 ≥ 1。不能只看默认的 scheme 行。
+3. **失败 annotation 必须单行化**。多行输出写成 `::error` 时只会显示第一行（曾只显示一个「Verifies」，白耗一轮构建）。所有诊断先把换行压成空格再输出，并把 apksigner 全文与 META-INF 数量一起打进 annotation。
+4. **新增 Java 引用先查 import**。曾因 `leanback SiteDialog.java` 用了 `R.string.script_reloaded` 却漏 `import com.fongmi.android.tv.R`，编译直接失败。改动后必须逐个核对新增 R 引用与 import。
+5. **drawable 禁止跨变体重名**。曾把 `ic_action_check.xml` 同时放进 main 与 mobile 导致资源冲突；新建图标一律用带用途前缀的唯一名（如 `ic_script_check`、`ic_popup_import`），并确认 main / mobile / leanback 三处不重名。
+6. **资源目录改名必须同步 workflow 门禁路径**。曾把 `values-zh-rCN` 改成 `values-zh`，workflow 里两行 grep 还指旧路径，`set -e` 直接退出。凡移动/改名 `res/values-*`，同步搜索 `.github/workflows/` 里的硬编码路径。
+7. **Gradle 日志要留得下来**：`tee` + `set -o pipefail` + 独立的失败诊断步骤；失败先读 annotation 与日志定位，再改，不盲目重跑。
+8. **不检查就出包、重复构建一律禁止**。dispatch 前固定预检：该 HEAD 已有 run 数必须为 0、4 个签名 secrets 齐全、workflow YAML 可解析、源码门禁断言本地模拟全过、tag 不冲突、门禁/校验步骤的关键字齐全。一次 HEAD 只 dispatch 一次；修复构建也不许在同一 HEAD 上重复触发。CI `completed/success` 且 8 个资产齐全之后，才允许报「构建成功」。
+
+### 每次出包前的固定预检清单
+
+- 当前 `main` HEAD 与预期一致，且 `actions/runs?head_sha=<HEAD>` 返回 0
+- secrets：`RELEASE_KEYSTORE_BASE64` / `RELEASE_KEY_ALIAS` / `RELEASE_STORE_PASSWORD` / `RELEASE_KEY_PASSWORD`
+- workflow YAML 可解析；关键步骤计数正确（未签名构建、补签、v1 校验、REST 发版）
+- 源码门禁断言逐条本地模拟，失败项为 0
+- 预计 tag 不存在
+- 正式签名 `CN=xbox-re`、applicationId `.xbox` 共存、APK 恰好 4 个
+- 本轮只 dispatch 一次；轮询到 completed 才下结论
