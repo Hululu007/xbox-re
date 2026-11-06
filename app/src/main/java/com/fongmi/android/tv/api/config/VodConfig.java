@@ -11,6 +11,7 @@ import com.fongmi.android.tv.bean.Depot;
 import com.fongmi.android.tv.bean.Parse;
 import com.fongmi.android.tv.bean.Rule;
 import com.fongmi.android.tv.bean.Site;
+import com.fongmi.android.tv.setting.SiteFeature;
 import com.fongmi.android.tv.event.ConfigEvent;
 import com.fongmi.android.tv.event.RefreshEvent;
 import com.fongmi.android.tv.impl.Callback;
@@ -216,7 +217,7 @@ public class VodConfig extends BaseConfig {
         BaseLoader.get().parseJar(spider, true);
         setSites(Json.safeListElement(object, "sites").stream().map(e -> Site.objectFrom(e, spider)).distinct().collect(Collectors.toCollection(ArrayList::new)));
         Map<String, Site> items = Site.findAll().stream().collect(Collectors.toMap(Site::getKey, Function.identity()));
-        getSites().forEach(site -> site.sync(items.get(site.getKey())));
+        getSites().forEach(site -> { site.sync(items.get(site.getKey())); SiteFeature.applyExt(site); });
         CustomCspSetting.Result custom = CustomCspSetting.inject(getSites());
         Site home = !custom.home().isEmpty() ? custom.home() : getSites().stream().filter(item -> item.getKey().equals(config.getHome())).findFirst().orElse(getSites().isEmpty() ? new Site() : getSites().get(0));
         setHome(config, home, false);

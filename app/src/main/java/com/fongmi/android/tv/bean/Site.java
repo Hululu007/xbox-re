@@ -60,6 +60,10 @@ public class Site implements Parcelable {
     private String ext;
 
     @Ignore
+    @SerializedName("proxy")
+    private String proxy;
+
+    @Ignore
     @SerializedName("jar")
     private String jar;
 
@@ -137,6 +141,7 @@ public class Site implements Parcelable {
         this.name = in.readString();
         this.api = in.readString();
         this.ext = in.readString();
+        this.proxy = in.readString();
         this.jar = in.readString();
         this.click = in.readString();
         this.playUrl = in.readString();
@@ -208,6 +213,14 @@ public class Site implements Parcelable {
 
     public void setExt(String ext) {
         this.ext = ext.trim();
+    }
+
+    public String getProxy() {
+        return TextUtils.isEmpty(proxy) ? "" : proxy;
+    }
+
+    public void setProxy(String proxy) {
+        this.proxy = proxy == null ? "" : proxy.trim();
     }
 
     public String getJar() {
@@ -478,6 +491,7 @@ public class Site implements Parcelable {
         dest.writeString(this.name);
         dest.writeString(this.api);
         dest.writeString(this.ext);
+        dest.writeString(this.proxy);
         dest.writeString(this.jar);
         dest.writeString(this.click);
         dest.writeString(this.playUrl);

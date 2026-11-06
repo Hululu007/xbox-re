@@ -15,6 +15,7 @@ import com.fongmi.android.tv.R;
 import com.fongmi.android.tv.playback.ViewingRecordSyncStore;
 import com.fongmi.android.tv.remote.RemoteStore;
 import com.fongmi.android.tv.setting.Setting;
+import com.fongmi.android.tv.setting.SiteFeature;
 import com.fongmi.android.tv.databinding.FragmentSettingEnhanceBinding;
 import com.fongmi.android.tv.setting.CustomCspSetting;
 import com.fongmi.android.tv.setting.ProxySetting;
@@ -29,6 +30,7 @@ import com.fongmi.android.tv.ui.dialog.ManagePageDialog;
 import com.fongmi.android.tv.ui.dialog.OneKeySyncDialog;
 import com.fongmi.android.tv.ui.dialog.RemoteTrustDialog;
 import com.fongmi.android.tv.ui.dialog.ScriptManageDialog;
+import com.fongmi.android.tv.ui.dialog.SiteFeatureDialog;
 import com.fongmi.android.tv.ui.dialog.ShellProxyDialog;
 import com.fongmi.android.tv.ui.dialog.SiteHealthDialog;
 import com.fongmi.android.tv.ui.dialog.ViewingRecordSyncDialog;
@@ -102,6 +104,7 @@ public class SettingEnhanceFragment extends BaseFragment {
         mBinding.loginState.setOnClickListener(view -> LoginStateLearnDialog.show(this, this::setText));
         mBinding.oneKeySync.setOnClickListener(v -> OneKeySyncDialog.create().show(requireActivity()));
         mBinding.scriptManage.setOnClickListener(view -> ScriptManageDialog.show(this));
+        mBinding.defaultProxy.setOnClickListener(view -> SiteFeatureDialog.proxyUrl(requireActivity(), this::setText));
     }
 
     private void reorderItems() {
@@ -112,6 +115,7 @@ public class SettingEnhanceFragment extends BaseFragment {
                 mBinding.remoteTrust,
                 mBinding.oneKeySync,
                 mBinding.loginState,
+                mBinding.defaultProxy,
                 mBinding.shellProxy,
                 mBinding.shellProxyConfig,
                 mBinding.managePage,
@@ -142,6 +146,7 @@ public class SettingEnhanceFragment extends BaseFragment {
         safeSet("playbackWebhook", mBinding.playbackWebhookText, () -> ViewingRecordSyncStore.summary(requireContext()));
         safeSet("managePage", mBinding.managePageText, () -> getString(R.string.manage_page_web));
         safeSet("remoteTrust", mBinding.remoteTrustText, () -> RemoteStore.summary(requireContext()));
+        safeSet("defaultProxy", mBinding.defaultProxyText, () -> SiteFeature.proxyUrl());
         setShellProxyText();
         setCustomCspText();
         safeSet("loginState", mBinding.loginStateText, () -> {

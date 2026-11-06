@@ -230,20 +230,20 @@ public final class ScriptManageDialog extends BaseAlertDialog {
         add.setOnClickListener(v -> onTool(0));
         binding.filterRow.addView(add);
 
-        // 第 5 行：固定尺寸一行排布；「全」「反」直接文字，⇆ 为双向箭头，无文字提示
-        addLabel(binding.actionLeft, R.string.script_work_label);
-        addText(binding.actionLeft, "全", v -> onSelect(0));
-        addText(binding.actionLeft, "反", v -> onSelect(1));
-        addIcon(binding.actionCenter, R.drawable.ic_player_button_up, v -> onTool(3));
-        addIcon(binding.actionCenter, R.drawable.ic_script_swap, v -> onTool(2));
-        addIcon(binding.actionCenter, R.drawable.ic_player_button_down, v -> onTool(4));
-        addText(binding.actionRight, "全", v -> onSelect(2));
-        addText(binding.actionRight, "反", v -> onSelect(3));
-        addLabel(binding.actionRight, R.string.script_bin_label);
+        // 第 5 行：固定 264dp 一行；「全」「反」分列栏名两侧，图标与文字同尺寸
+        addText(binding.actionLeft, "全", v -> onSelect(0), 0);
+        addLabel(binding.actionLeft, R.string.script_work_label, 2);
+        addText(binding.actionLeft, "反", v -> onSelect(1), 2);
+        addIcon(binding.actionCenter, R.drawable.ic_player_button_up, v -> onTool(3), 0);
+        addIcon(binding.actionCenter, R.drawable.ic_script_swap, v -> onTool(2), 6);
+        addIcon(binding.actionCenter, R.drawable.ic_player_button_down, v -> onTool(4), 6);
+        addText(binding.actionRight, "全", v -> onSelect(2), 0);
+        addLabel(binding.actionRight, R.string.script_bin_label, 2);
+        addText(binding.actionRight, "反", v -> onSelect(3), 2);
     }
 
-    /** 图标按钮：固定 24dp、无外圈、无文字提示。 */
-    private void addIcon(LinearLayoutCompat row, int icon, View.OnClickListener click) {
+    /** 图标按钮：固定 24dp，与文字按钮同尺寸；gapDp 由调用方给定，不动态算。 */
+    private void addIcon(LinearLayoutCompat row, int icon, View.OnClickListener click, int gapDp) {
         AppCompatImageView view = new AppCompatImageView(requireContext());
         view.setImageResource(icon);
         view.setScaleType(android.widget.ImageView.ScaleType.CENTER);
@@ -252,37 +252,36 @@ public final class ScriptManageDialog extends BaseAlertDialog {
         view.setColorFilter(ContextCompat.getColor(requireContext(), R.color.dialog_text_button));
         view.setOnClickListener(click);
         LinearLayoutCompat.LayoutParams lp = new LinearLayoutCompat.LayoutParams(dp(24), dp(24));
-        lp.setMarginStart(dp(2));
+        lp.setMarginStart(dp(gapDp));
         row.addView(view, lp);
     }
 
-    /** 「全」「反」纯文字按钮：固定 24dp，不带任何文字提示。 */
-    private void addText(LinearLayoutCompat row, String text, View.OnClickListener click) {
+    /** 「全」「反」纯文字按钮：14sp、固定 24dp，无任何文字提示。 */
+    private void addText(LinearLayoutCompat row, String text, View.OnClickListener click, int gapDp) {
         android.widget.TextView view = new android.widget.TextView(requireContext());
         view.setText(text);
         view.setSingleLine(true);
         view.setGravity(Gravity.CENTER);
-        view.setTextSize(10);
+        view.setTextSize(14);
         view.setTextColor(ContextCompat.getColor(requireContext(), R.color.dialog_text_button));
         view.setFocusable(true);
         view.setOnClickListener(click);
         LinearLayoutCompat.LayoutParams lp = new LinearLayoutCompat.LayoutParams(dp(24), dp(24));
-        lp.setMarginStart(dp(2));
+        lp.setMarginStart(dp(gapDp));
         row.addView(view, lp);
     }
 
-    /** 段标签：固定 10sp，过长中间省略。 */
-    private void addLabel(LinearLayoutCompat row, int text) {
+    /** 段标签：12sp、固定 34dp，过长中间省略。 */
+    private void addLabel(LinearLayoutCompat row, int text, int gapDp) {
         android.widget.TextView view = new android.widget.TextView(requireContext());
         view.setText(text);
         view.setSingleLine(true);
         view.setEllipsize(TextUtils.TruncateAt.MIDDLE);
-        view.setTextSize(10);
+        view.setGravity(Gravity.CENTER);
+        view.setTextSize(12);
         view.setTextColor(ContextCompat.getColor(requireContext(), R.color.dialog_outlined_button_text));
-        LinearLayoutCompat.LayoutParams lp = new LinearLayoutCompat.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        lp.setMarginStart(dp(2));
-        lp.setMarginEnd(dp(2));
+        LinearLayoutCompat.LayoutParams lp = new LinearLayoutCompat.LayoutParams(dp(34), dp(24));
+        lp.setMarginStart(dp(gapDp));
         row.addView(view, lp);
     }
 

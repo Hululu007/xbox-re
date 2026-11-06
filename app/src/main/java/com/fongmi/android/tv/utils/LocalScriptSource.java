@@ -271,6 +271,39 @@ public final class LocalScriptSource {
         return array;
     }
 
+    /**
+     * 把 ext / proxy 等字段永久写回本地 json 配置文件。
+     * 覆盖脚本导入生成的 脚本扫描.json，也覆盖用户手选的本地 json 接口；
+     * 在线地址（非 file:）直接返回 false，由调用方改存本地缓存。
+     */
+    public static boolean updateSiteField(String configUrl, String siteKey, String field, String value) {
+        try {
+            File file = configFile(configUrl);
+            if (file == null || !file.isFile()) return false;
+            JSONObject store = new JSONObject(readText(file));
+            for (String name : new String[]{"sites", "sites_bac"}) {
+                JSONArray array = store.optJSONArray(name);
+                if (array == null) continue;
+                for (int i = 0; i < array.length(); i++) {
+                    JSONObject item = array.optJSONObject(i);
+                    if (item != null && siteKey.equals(item.optString("key"))) item.put(field, value);
+                }
+            }
+            writeText(file, store.toString(2));
+            return true;
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    /** configUrl 形如 file:/相对 Path.rootPath() 的路径。 */
+    private static File configFile(String configUrl) {
+        if (TextUtils.isEmpty(configUrl) || !configUrl.startsWith("file:")) return null;
+        String rel = configUrl.substring("file:".length());
+        while (rel.startsWith("/")) rel = rel.substring(1);
+        return new File(Path.rootPath(), rel);
+    }
+
     public static void save(String dir, List<JSONObject> sites, List<JSONObject> bac) {
         dedupNames(sites, bac);
         JSONObject store = readStore(dir);

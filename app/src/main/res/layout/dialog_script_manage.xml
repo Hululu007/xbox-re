@@ -107,18 +107,18 @@
             android:orientation="horizontal" />
 
         <Space
-            android:layout_width="8dp"
+            android:layout_width="4dp"
             android:layout_height="1dp" />
 
         <androidx.appcompat.widget.LinearLayoutCompat
             android:id="@+id/actionCenter"
-            android:layout_width="76dp"
+            android:layout_width="84dp"
             android:layout_height="wrap_content"
             android:gravity="center"
             android:orientation="horizontal" />
 
         <Space
-            android:layout_width="8dp"
+            android:layout_width="4dp"
             android:layout_height="1dp" />
 
         <androidx.appcompat.widget.LinearLayoutCompat

@@ -1291,4 +1291,10 @@
     <string name="script_url_duplicate">名称或 url 已存在</string>
     <string name="script_import">导入脚本</string>
     <string name="script_edit">编辑脚本</string>
+    <string name="menu_proxy">代理</string>
+    <string name="menu_ext">扩展参数</string>
+    <string name="setting_default_proxy">默认代理</string>
+    <string name="setting_default_proxy_hint">代理地址</string>
+    <string name="toast_proxy_on">代理已开启</string>
+    <string name="toast_proxy_off">代理已关闭</string>
 </resources>

@@ -1,5 +1,6 @@
 package com.fongmi.android.tv.ui.fragment;
 
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -41,6 +42,7 @@ import com.fongmi.android.tv.impl.FilterListener;
 import com.fongmi.android.tv.impl.SiteListener;
 import com.fongmi.android.tv.model.SiteViewModel;
 import com.fongmi.android.tv.setting.Setting;
+import com.fongmi.android.tv.setting.SiteFeature;
 import com.fongmi.android.tv.ui.activity.HomeActivity;
 import com.fongmi.android.tv.ui.activity.HistoryActivity;
 import com.fongmi.android.tv.ui.activity.KeepActivity;
@@ -58,6 +60,7 @@ import com.fongmi.android.tv.ui.dialog.PushPlayDialog;
 import com.fongmi.android.tv.ui.dialog.PushPlayUrlDialog;
 import com.fongmi.android.tv.ui.dialog.ReceiveDialog;
 import com.fongmi.android.tv.ui.dialog.ScriptManageDialog;
+import com.fongmi.android.tv.ui.dialog.SiteFeatureDialog;
 import com.fongmi.android.tv.ui.dialog.SiteDialog;
 import com.fongmi.android.tv.ui.dialog.TypeDialog;
 import com.fongmi.android.tv.utils.ImgUtil;
@@ -299,6 +302,8 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
         else if (item.getItemId() == R.id.push_play) PushPlayDialog.create().listener(this::onPushPlayDeviceSelected).show(requireActivity());
         else if (item.getItemId() == R.id.enhance && homeActivity() != null) homeActivity().openEnhanceFromVod();
         else if (item.getItemId() == R.id.menu_import_script) ScriptManageDialog.show(this);
+        else if (item.getItemId() == R.id.proxy) onProxyToggle();
+        else if (item.getItemId() == R.id.menu_ext) SiteFeatureDialog.ext(requireActivity(), VodConfig.get().getHome(), this::homeContent);
         else if (item.getItemId() == R.id.web_home_fullscreen) onWebHomeFullscreen();
         else return false;
         return true;
@@ -352,6 +357,23 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
         Menu menu = mBinding.toolbar.getMenu();
         MenuItem fullscreen = menu.findItem(R.id.web_home_fullscreen);
         if (fullscreen != null) fullscreen.setVisible(Setting.isWebHomeFullscreen() && mWeb != null && mWeb.isVisible());
+        MenuItem proxy = menu.findItem(R.id.proxy);
+        if (proxy != null) {
+            Drawable icon = proxy.getIcon();
+            if (icon != null) {
+                icon = icon.mutate();
+                icon.setAlpha(SiteFeature.isOn(VodConfig.get().getHome()) ? 255 : 110);
+                proxy.setIcon(icon);
+            }
+        }
+    }
+
+    /** 首页代理按钮：切换全局代理访问模式并立即生效；站点配置只影响明暗，不被反向改写。 */
+    private void onProxyToggle() {
+        Site current = VodConfig.get().getHome();
+        SiteFeature.setGlobal(!SiteFeature.isOn(current));
+        SiteFeature.apply(current);
+        updateToolbarMenu();
     }
 
     private void setSearchLongClick() {
@@ -538,6 +560,8 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
     public void onResume() {
         super.onResume();
         if (mWeb != null) mWeb.onResume();
+        SiteFeature.apply(VodConfig.get().getHome());
+        updateToolbarMenu();
     }
 
     @Override
