@@ -13,12 +13,6 @@ import com.github.catvod.utils.Prefers;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * 站点级代理 / ext 配置。
@@ -33,8 +27,9 @@ import java.util.regex.Pattern;
  *     空 / 无参数才写 "proxy":"proxy"；关闭时统一写 ""；
  *     绝不把 app 默认代理地址（2080）写进 json。
  *   - 运行时归一：proxy 字段非空（占位或任意有效地址）一律使用默认代理地址。
- *   - 生效复用本项目 OkHttp.selector() + Proxy.bean；规则集按站点各自的 host 生成，
- *     因此切站点 / 搜索全站时各站点按自己的配置走代理，手动开关不串站。
+ *   - 生效复用本项目 OkHttp.selector() + Proxy.bean：按「当前访问站点」挂一条
+ *     通配 * 规则（与 xbox applyGlobal 一致），脚本内部请求任意 host 都走代理，
+ *     本地 py/js/html 脚本同样生效；切站点时重挂，按各自配置亮暗。
  */
 public final class SiteFeature {
 
@@ -45,7 +40,7 @@ public final class SiteFeature {
     private static final String K_URL = "site_feature_proxy_url";
     private static final String K_PROXY = "site_feature_proxy|";
     private static final String K_EXT = "site_feature_ext|";
-    private static final Pattern HOST = Pattern.compile("(?i)https?://([^/\\s:]+)");
+    private static final String KEY_WORD = "代理";
 
     private SiteFeature() {
     }
@@ -72,18 +67,31 @@ public final class SiteFeature {
         return ("proxy".equals(field) ? K_PROXY : K_EXT) + VodConfig.getUrl() + "|" + site.getKey();
     }
 
-    /** 配置重新解析后同步：本地 json 以文件为准，清掉旧缓存；在线接口回填本地缓存。 */
+    /**
+     * 配置重新解析后同步。
+     * 本地 json 以文件为权威，清掉旧缓存；在线接口回填本地缓存。
+     * 在线接口首次没有缓存时，按 proxy 字段或路径/名称关键字算出初始亮暗并落缓存，
+     * 这样「路径含代理」的站点也能被循环开关点暗（写 "" 后显式值优先于关键字）。
+     */
     public static void onConfigParsed(Site site) {
         if (site == null || TextUtils.isEmpty(site.getKey())) return;
+        String proxyKey = cacheKey("proxy", site);
         if (isLocal()) {
-            Prefers.getPrefers().edit()
-                    .remove(cacheKey("proxy", site))
-                    .remove(cacheKey("ext", site))
-                    .apply();
+            Prefers.getPrefers().edit().remove(proxyKey).remove(cacheKey("ext", site)).apply();
             return;
         }
-        site.setProxy(Prefers.getString(cacheKey("proxy", site), site.getProxy()));
+        boolean has = Prefers.getPrefers().contains(proxyKey);
+        String value = has ? Prefers.getString(proxyKey, "")
+                : (!TextUtils.isEmpty(site.getProxy()) || matchKeyword(site) ? PROXY_FLAG : "");
+        if (!has) Prefers.put(proxyKey, value);
+        site.setProxy(value);
         site.setExt(Prefers.getString(cacheKey("ext", site), site.getExt()));
+    }
+
+    /** 与 LocalScriptSource.scannedProxy 同一套：远程接口路径 / 名称含「代理」即视为启用。 */
+    private static boolean matchKeyword(Site site) {
+        return site.getName().contains(KEY_WORD) || site.getApi().contains(KEY_WORD)
+                || site.getHomePage().contains(KEY_WORD) || site.getKey().contains(KEY_WORD);
     }
 
     /**
@@ -146,49 +154,23 @@ public final class SiteFeature {
     /* ---------------- 生效：按站点各自的 host 生成规则集 ---------------- */
 
     /**
-     * 重建规则集：每个配置了代理的站点按自己 api/homePage/ext 里的 host 挂一条规则，
-     * 于是切站点 / 搜索全站时各站点按各自配置走代理，手动开关不串站。
-     * 本地脚本 / CSP 站点没有可提取的 http host（脚本内部请求 host 不定），
-     * 仅当它是当前首页站点时退化为通配规则（与 xbox 的 applyGlobal 一致）。
+     * 按「当前访问站点」挂 / 摘一条通配规则（与 xbox applyGlobal 一致）。
+     * 通配 * 让脚本内部请求任意 host 都走代理，本地 py/js/html 脚本同样生效；
+     * 切站点由 VodConfig.setHome 重挂，onResume / 默认代理保存后同步重挂。
+     * 运行时地址一律用默认代理地址（app 后台替换），不采信 json 里的有效地址值。
      */
     public static void apply() {
         try {
             OkHttp.selector().remove(RULE_NAME);
             OkHttp.closeIdleConnections();
-            List<Site> sites = VodConfig.get().getSites();
-            String homeKey = VodConfig.get().getHome().getKey();
-            JSONArray rules = new JSONArray();
-            for (Site site : sites) {
-                if (!isOn(site)) continue;
-                JSONArray hosts = new JSONArray();
-                for (String host : hostsOf(site)) hosts.put(host);
-                if (hosts.length() == 0) {
-                    if (!site.getKey().equals(homeKey)) continue;
-                    hosts.put("*");
-                }
-                JSONObject rule = new JSONObject();
-                rule.put("name", RULE_NAME);
-                rule.put("hosts", hosts);
-                rule.put("urls", new JSONArray().put(proxyUrl()));
-                rules.put(rule);
-            }
-            if (rules.length() > 0) OkHttp.selector().addAll(Proxy.arrayFrom(Json.parse(rules.toString())));
+            if (!isOn(VodConfig.get().getHome())) return;
+            JSONObject rule = new JSONObject();
+            rule.put("name", RULE_NAME);
+            rule.put("hosts", new JSONArray().put("*"));
+            rule.put("urls", new JSONArray().put(proxyUrl()));
+            OkHttp.selector().addAll(Proxy.arrayFrom(Json.parse(new JSONArray().put(rule).toString())));
         } catch (Throwable ignored) {
         }
     }
 
-    private static List<String> hostsOf(Site site) {
-        Set<String> out = new LinkedHashSet<>();
-        for (String raw : new String[]{site.getApi(), site.getHomePage(), site.getJar(),
-                site.getExt(), site.getClick(), site.getPlayUrl()}) {
-            if (TextUtils.isEmpty(raw)) continue;
-            Matcher m = HOST.matcher(raw);
-            while (m.find()) {
-                String host = m.group(1);
-                if ("127.0.0.1".equals(host) || "localhost".equalsIgnoreCase(host)) continue;
-                out.add(host);
-            }
-        }
-        return new ArrayList<>(out);
-    }
 }

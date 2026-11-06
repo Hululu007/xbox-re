@@ -116,8 +116,21 @@ public final class LocalScriptSource {
         File root = new File(dir);
         if (!root.isDirectory()) return out;
         collect(root, out);
-        out.sort((a, b) -> a.getAbsolutePath().compareTo(b.getAbsolutePath()));
+        // 首次生成 json 的次序：py -> js -> html -> url（url 是后来手工追加的，天然在尾部）；
+        // 组内按绝对路径。已有 json 的次序由 load() 保留，不在这里重排。
+        out.sort((a, b) -> {
+            int byExt = extRank(a) - extRank(b);
+            return byExt != 0 ? byExt : a.getAbsolutePath().compareTo(b.getAbsolutePath());
+        });
         return out;
+    }
+
+    private static int extRank(File file) {
+        String name = file.getName().toLowerCase();
+        if (name.endsWith(".py")) return 0;
+        if (name.endsWith(".js")) return 1;
+        if (name.endsWith(".html")) return 2;
+        return 3;
     }
 
     private static void collect(File dir, List<File> out) {
@@ -564,9 +577,10 @@ public final class LocalScriptSource {
      *  2. 所有条目的 proxy 按扫描规则重算：本地脚本看路径 / 文件名 / 父目录
      *     是否含关键字「代理」，远程 URL 看 url 尾部（如 #代理）是否含「代理」；
      *     撤销手动勾选/取消过的代理状态；
-     *  3. 顺序恢复成初始扫描顺序：本地脚本按绝对路径排序，远程 URL 追加在尾部。
+     *  3. 不调整 json 次序：非首次（文件已存在）时可能已被修改或排序，保持现状。
+     *     首次生成才按 py/js/html/url 次序（见 scripts()）。
      *
-     * 只写 json，不动脚本文件，也不动 Site.java / 代理生效逻辑（按约定本轮只生成字段）。
+     * 只写 json，不动脚本文件；脚本文件一个字节不动。
      * 已经不存在的本地脚本条目仍由 load() 的 purgeGone 清掉，不会在这里复活。
      */
     public static boolean reset(String dir) {
@@ -584,23 +598,9 @@ public final class LocalScriptSource {
                 }
             }
         }
-        // 初始扫描顺序：本地脚本按绝对路径排序（与 scripts() 一致），远程 URL 排尾部
-        all.sort((a, b) -> sortKey(a).compareTo(sortKey(b)));
+        // 不重排：all 已按 sites 原顺序 + sites_bac 原顺序，保持用户改过/排过的次序
         save(dir, all, new ArrayList<>());
         return true;
-    }
-
-    private static String sortKey(JSONObject item) {
-        String api = item.optString("api");
-        String home = item.optString("homePage");
-        if (api.startsWith("file://")) return api.substring("file://".length());
-        if (home.startsWith("file://")) return home.substring("file://".length());
-        // /file/ 路由里的路径是相对 Path.rootPath()，且只有本机地址才是本地脚本
-        if (home.contains("127.0.0.1")) {
-            int idx = home.indexOf("/file/");
-            if (idx >= 0) return new File(Path.rootPath(), home.substring(idx + 6)).getAbsolutePath();
-        }
-        return "~" + item.optString("key"); // 远程 URL 排在扫描出来的本地脚本之后
     }
 
     /** 按初始扫描时的同一套规则判定 proxy，避免手改 key / name 造成误判 */
