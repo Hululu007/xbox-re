@@ -28,6 +28,7 @@ import com.fongmi.android.tv.impl.Callback;
 import com.fongmi.android.tv.impl.SiteListener;
 import com.fongmi.android.tv.ui.adapter.SiteAdapter;
 import com.fongmi.android.tv.ui.custom.SpaceItemDecoration;
+import com.fongmi.android.tv.utils.LocalScriptSource;
 import com.fongmi.android.tv.utils.Notify;
 import com.fongmi.android.tv.utils.ResUtil;
 import com.github.catvod.crawler.SpiderDebug;
@@ -157,6 +158,10 @@ public class SiteDialog extends BaseAlertDialog implements SiteAdapter.OnClickLi
         binding.keyword.setVisibility(range ? View.VISIBLE : View.GONE);
         binding.selectAll.setVisibility(range ? View.VISIBLE : View.GONE);
         binding.invert.setVisibility(range ? View.VISIBLE : View.GONE);
+        // 仅当当前接口是脚本文件夹时，搜索框后才出现编辑 / 刷新按钮
+        boolean script = LocalScriptSource.isStoreUrl(VodConfig.getUrl());
+        binding.edit.setVisibility(script ? View.VISIBLE : View.GONE);
+        binding.refresh.setVisibility(script ? View.VISIBLE : View.GONE);
         binding.actionGap.setVisibility(View.GONE);
         binding.action.setVisibility(action ? View.VISIBLE : View.GONE);
         binding.search.setVisibility(action ? View.VISIBLE : View.GONE);
@@ -212,6 +217,7 @@ public class SiteDialog extends BaseAlertDialog implements SiteAdapter.OnClickLi
             if (adapter != null) adapter.invert();
         });
         binding.refresh.setOnClickListener(v -> reloadCurrentConfig());
+        binding.edit.setOnClickListener(v -> onEditScript());
         binding.select.setOnClickListener(v -> {
             if (adapter != null) adapter.selectAll();
         });
@@ -328,6 +334,13 @@ public class SiteDialog extends BaseAlertDialog implements SiteAdapter.OnClickLi
     public void onItemClick(Site item) {
         if (listener != null) listener.setSite(item);
         dismiss();
+    }
+
+    /** 关闭切站弹窗并打开脚本管理弹窗。 */
+    private void onEditScript() {
+        FragmentActivity activity = getDialogActivity();
+        dismiss();
+        App.post(() -> ScriptManageDialog.show(activity, null), 100);
     }
 
     /** 重载当前点播配置（脚本文件夹 json 会先重扫再解析）。 */

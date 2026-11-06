@@ -264,10 +264,18 @@ jobs:
               --ks-key-alias "$ALIAS" \
               --ks-pass "pass:$STORE_PASS" \
               --key-pass "pass:$KEY_PASS" \
+              --min-sdk-version 21 \
               --v1-signing-enabled true \
               --v2-signing-enabled true \
+              --v3-signing-enabled true \
               --out "${apk}.signed" "$apk"
             mv "${apk}.signed" "$apk"
+            VERBOSE="$("$APKSIGNER" verify --verbose "$apk" 2>&1)"
+            echo "$VERBOSE" | grep -i "v1 scheme" || true
+            if ! echo "$VERBOSE" | grep -qi "v1 scheme.*: true"; then
+              echo "::error title=v1 re-sign failed::$VERBOSE"
+              exit 1
+            fi
           done
           echo "v1 signature added to all APKs"
 

@@ -365,8 +365,15 @@ public final class LocalScriptSource {
         return root.toString();
     }
 
+    /**
+     * 刷新 = 重新扫描文件夹内所有脚本文件，对比「脚本扫描.json」的 sites / sites_bac：
+     * 新增文件追加到 sites；已删除的文件在两个参数下都移除；远程 URL 条目保留。
+     * 结果无条件回写 json，保证 json 里的脚本数据与文件夹一一对应。
+     * 所有脚本文件夹接口的刷新按钮都走这里。
+     */
     public static void refresh(String dir) {
-        load(dir);
+        Pair<List<JSONObject>, List<JSONObject>> pair = load(dir);
+        save(dir, pair.first, pair.second);
     }
 
     /* ---------------- 分类 ---------------- */

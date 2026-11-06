@@ -14,8 +14,10 @@ import android.view.inputmethod.EditorInfo;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
 import androidx.viewbinding.ViewBinding;
 
+import com.fongmi.android.tv.App;
 import com.fongmi.android.tv.R;
 import com.fongmi.android.tv.api.config.LiveConfig;
 import com.fongmi.android.tv.api.config.VodConfig;
@@ -90,6 +92,7 @@ public class ConfigDialog extends BaseAlertDialog {
     @Override
     protected void initEvent() {
         binding.negative.setOnClickListener(v -> dismiss());
+        binding.importScript.setOnClickListener(v -> onImportScript());
         binding.positive.setOnClickListener(v -> onPositive());
         binding.choose.setEndIconOnClickListener(this::onChoose);
         binding.url.addTextChangedListener(new CustomTextListener() {
@@ -166,6 +169,14 @@ public class ConfigDialog extends BaseAlertDialog {
         } else if (s.isEmpty()) {
             append = true;
         }
+    }
+
+
+    /** 关闭新增点播弹窗并打开脚本管理弹窗。 */
+    private void onImportScript() {
+        FragmentActivity activity = requireActivity();
+        dismiss();
+        App.post(() -> ScriptManageDialog.show(activity, null), 100);
     }
 
     private void onPositive() {

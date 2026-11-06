@@ -117,15 +117,25 @@ public class VodConfig extends BaseConfig {
     @Override
     protected void load(Config config) throws Throwable {
         String url = config.getUrl();
-        // 脚本文件夹订阅源：每次加载前按目录内容重扫并回写「脚本扫描.json」。
-        // 这段是新增逻辑，整体兜底：任何异常都不允许影响点播配置正常加载。
+        String dir = "";
         try {
-            String dir = LocalScriptSource.dirOfUrl(url);
-            if (!TextUtils.isEmpty(dir)) LocalScriptSource.refresh(dir);
+            dir = LocalScriptSource.dirOfUrl(url);
         } catch (Throwable ignored) {
-            // 脚本目录刷新失败时按原逻辑继续读取配置
         }
-        String json = Decoder.getJson(UrlUtil.convert(url), TAG);
+        String json;
+        if (!TextUtils.isEmpty(dir)) {
+            // 脚本文件夹订阅源：重扫目录后直接读只含 sites 的配置。
+            // 不走 file:/ → 本机 HTTP 转换：该路径下 OkHttp 无法解析 file: 协议，
+            // 会让站点列表始终为空（脚本管理弹窗有数据、切站列表没有的根因）。
+            try {
+                LocalScriptSource.refresh(dir);
+                json = LocalScriptSource.buildJson(dir);
+            } catch (Throwable ignored) {
+                json = Decoder.getJson(UrlUtil.convert(url), TAG);
+            }
+        } else {
+            json = Decoder.getJson(UrlUtil.convert(url), TAG);
+        }
         checkJson(config, Json.parse(json).getAsJsonObject());
     }
 

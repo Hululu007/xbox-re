@@ -111,6 +111,7 @@ public class ConfigDialog extends BaseAlertDialog {
         binding.choose.setOnClickListener(this::onChoose);
         binding.positive.setOnClickListener(this::onPositive);
         binding.negative.setOnClickListener(this::onNegative);
+        binding.importScript.setOnClickListener(v -> onImportScript());
         binding.text.addTextChangedListener(new CustomTextListener() {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -183,6 +184,14 @@ public class ConfigDialog extends BaseAlertDialog {
         } else if (s.isEmpty()) {
             append = true;
         }
+    }
+
+
+    /** 关闭新增点播弹窗并打开脚本管理弹窗。 */
+    private void onImportScript() {
+        FragmentActivity activity = requireActivity();
+        dismiss();
+        App.post(() -> ScriptManageDialog.show(activity, null), 100);
     }
 
     private void onPositive(View view) {

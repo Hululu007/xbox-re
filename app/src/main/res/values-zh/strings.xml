@@ -1289,4 +1289,6 @@
     <string name="script_bin_label">回收站</string>
     <string name="script_name_required">请输入名称</string>
     <string name="script_url_duplicate">名称或 url 已存在</string>
+    <string name="script_import">导入脚本</string>
+    <string name="script_edit">编辑脚本</string>
 </resources>

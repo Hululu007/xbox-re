@@ -29,12 +29,28 @@
             android:inputType="text"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
-            android:nextFocusRight="@id/refresh"
+            android:nextFocusRight="@id/edit"
             android:singleLine="true"
             android:textColor="@color/white"
             android:textColorHint="@color/text"
             android:textSize="16sp"
             app:drawableStartCompat="@drawable/ic_site_search" />
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/edit"
+            android:layout_width="36dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/selector_site_action"
+            android:contentDescription="@string/script_edit"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:nextFocusRight="@id/refresh"
+            android:padding="6dp"
+            android:src="@drawable/ic_git_cloud_edit"
+            android:visibility="gone"
+            app:tint="@color/site_action_icon"
+            tools:visibility="visible" />
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/refresh"
@@ -48,7 +64,9 @@
             android:nextFocusRight="@id/selectAll"
             android:padding="6dp"
             android:src="@drawable/ic_setting_refresh"
-            app:tint="@color/site_action_icon" />
+            android:visibility="gone"
+            app:tint="@color/site_action_icon"
+            tools:visibility="visible" />
 
         <View
             android:id="@+id/actionGap"

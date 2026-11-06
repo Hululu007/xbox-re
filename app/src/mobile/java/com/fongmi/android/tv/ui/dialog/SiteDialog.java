@@ -16,12 +16,14 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.widget.LinearLayoutCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewbinding.ViewBinding;
 
+import com.fongmi.android.tv.App;
 import com.fongmi.android.tv.R;
 import com.fongmi.android.tv.api.config.VodConfig;
 import com.fongmi.android.tv.bean.Site;
@@ -33,6 +35,7 @@ import com.fongmi.android.tv.setting.SiteBlockSetting;
 import com.fongmi.android.tv.ui.adapter.SiteAdapter;
 import com.fongmi.android.tv.ui.custom.CustomTextListener;
 import com.fongmi.android.tv.ui.custom.SpaceItemDecoration;
+import com.fongmi.android.tv.utils.LocalScriptSource;
 import com.fongmi.android.tv.utils.Notify;
 import com.fongmi.android.tv.utils.ResUtil;
 import com.fongmi.android.tv.utils.Util;
@@ -108,6 +111,10 @@ public class SiteDialog extends BaseAlertDialog implements SiteAdapter.OnClickLi
         // 范围弹窗显示全选/反选；隐藏与范围无关的两个图标，给筛选框腾出宽度。
         binding.selectAll.setVisibility(range ? View.VISIBLE : View.GONE);
         binding.invert.setVisibility(range ? View.VISIBLE : View.GONE);
+        // 仅当当前接口是脚本文件夹时，搜索框后才出现编辑 / 刷新按钮
+        boolean script = LocalScriptSource.isStoreUrl(VodConfig.getUrl());
+        binding.edit.setVisibility(script ? View.VISIBLE : View.GONE);
+        binding.refresh.setVisibility(script ? View.VISIBLE : View.GONE);
         // 切站列表：把当前站点滚到可见区前端；范围弹窗保持列表顶部。
         binding.recycler.post(() -> binding.recycler.scrollToPosition(search ? 0 : adapter.getSelectedPosition()));
     }
@@ -154,6 +161,14 @@ public class SiteDialog extends BaseAlertDialog implements SiteAdapter.OnClickLi
         binding.selectAll.setOnClickListener(v -> { if (adapter != null) adapter.selectAll(); });
         binding.invert.setOnClickListener(v -> { if (adapter != null) adapter.invert(); });
         binding.refresh.setOnClickListener(v -> reloadCurrentConfig());
+        binding.edit.setOnClickListener(v -> onEditScript());
+    }
+
+    /** 关闭切站弹窗并打开脚本管理弹窗。 */
+    private void onEditScript() {
+        final FragmentActivity activity = requireActivity();
+        dismiss();
+        App.post(() -> ScriptManageDialog.show(activity, null), 100);
     }
 
     /** 通用「重新加载当前配置」：脚本文件夹 json 会先重扫再解析，普通 http 源也会重新拉一次 */

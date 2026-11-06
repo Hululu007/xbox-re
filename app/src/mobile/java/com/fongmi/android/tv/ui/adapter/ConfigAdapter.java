@@ -12,6 +12,7 @@ import com.fongmi.android.tv.bean.Config;
 import com.fongmi.android.tv.databinding.AdapterConfigBinding;
 
 import java.util.List;
+import com.fongmi.android.tv.utils.LocalScriptSource;
 
 public class ConfigAdapter extends RecyclerView.Adapter<ConfigAdapter.ViewHolder> {
 
@@ -28,6 +29,8 @@ public class ConfigAdapter extends RecyclerView.Adapter<ConfigAdapter.ViewHolder
         void onTextClick(Config item);
 
         void onDeleteClick(Config item);
+
+        void onEditClick(Config item);
     }
 
     public ConfigAdapter readOnly(boolean readOnly) {
@@ -73,6 +76,9 @@ public class ConfigAdapter extends RecyclerView.Adapter<ConfigAdapter.ViewHolder
         holder.binding.text.setOnClickListener(v -> listener.onTextClick(item));
         holder.binding.delete.setVisibility(readOnly ? View.GONE : View.VISIBLE);
         holder.binding.delete.setOnClickListener(v -> listener.onDeleteClick(item));
+        // 脚本文件夹接口才显示编辑入口（含只读的历史选择弹窗）
+        holder.binding.edit.setVisibility(LocalScriptSource.isStoreUrl(item.getUrl()) ? View.VISIBLE : View.GONE);
+        holder.binding.edit.setOnClickListener(v -> listener.onEditClick(item));
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
