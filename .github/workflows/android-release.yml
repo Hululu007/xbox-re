@@ -209,18 +209,31 @@ jobs:
           echo "Release signing configured"
 
       - name: Build four release APKs
+        id: build_apks
         env:
           WEBHTV_RELEASE_TAG: ${{ steps.meta.outputs.tag }}
           WEBHTV_APK_SUFFIX: ${{ steps.meta.outputs.apk_suffix }}
         run: |
           chmod +x ./gradlew
           rm -rf Release/apk
+          set -o pipefail
           ./gradlew \
             :app:assembleMobileArm64_v8aRelease \
             :app:assembleMobileArmeabi_v7aRelease \
             :app:assembleLeanbackArm64_v8aRelease \
             :app:assembleLeanbackArmeabi_v7aRelease \
-            --no-daemon
+            --no-daemon 2>&1 | tee /tmp/gradle-build.log
+
+      - name: Report build failure
+        if: failure() && steps.build_apks.outcome == 'failure'
+        run: |
+          echo "::group::Gradle build failure detail"
+          if [ -f /tmp/gradle-build.log ]; then
+            grep -nE "error:|^e: |FAILED|What went wrong|Execution failed|Caused by:|AAPT|Android resource linking failed|cannot find symbol|package .* does not exist|Duplicate resources|Compilation failed|Unresolved reference|resource .* not found" /tmp/gradle-build.log | head -60 | while IFS= read -r l; do echo "::error::$l"; done
+            echo "---- last 80 lines ----"
+            tail -80 /tmp/gradle-build.log
+          fi
+          echo "::endgroup::"
 
       - name: Collect artifacts
         run: |

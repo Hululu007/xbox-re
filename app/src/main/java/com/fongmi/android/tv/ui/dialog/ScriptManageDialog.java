@@ -229,12 +229,12 @@ public final class ScriptManageDialog extends BaseAlertDialog {
         // 第 5 行：工作区 / 移动 / 回收站 三段，纯图标无外圈
         boolean land = ResUtil.isLand(requireContext());
         addLabel(binding.actionLeft, R.string.script_work_label, land);
-        addIcon(binding.actionLeft, R.drawable.ic_action_check, R.string.script_select_keep, v -> onSelect(0), land);
+        addIcon(binding.actionLeft, R.drawable.ic_script_check, R.string.script_select_keep, v -> onSelect(0), land);
         addIcon(binding.actionLeft, R.drawable.ic_setting_refresh, R.string.script_invert_keep, v -> onSelect(1), land);
         addIcon(binding.actionCenter, R.drawable.ic_player_button_up, R.string.script_up, v -> onTool(3), land);
         addIcon(binding.actionCenter, R.drawable.ic_sync_arrow_right, R.string.script_swap, v -> onTool(2), land);
         addIcon(binding.actionCenter, R.drawable.ic_player_button_down, R.string.script_down, v -> onTool(4), land);
-        addIcon(binding.actionRight, R.drawable.ic_action_check, R.string.script_select_bac, v -> onSelect(2), land);
+        addIcon(binding.actionRight, R.drawable.ic_script_check, R.string.script_select_bac, v -> onSelect(2), land);
         addIcon(binding.actionRight, R.drawable.ic_setting_refresh, R.string.script_invert_bac, v -> onSelect(3), land);
         addLabel(binding.actionRight, R.string.script_bin_label, land);
     }
