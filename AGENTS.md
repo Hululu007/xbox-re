@@ -132,6 +132,8 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
 8. **不检查就出包、重复构建一律禁止**。dispatch 前固定预检：该 HEAD 已有 run 数必须为 0、4 个签名 secrets 齐全、workflow YAML 可解析、源码门禁断言本地模拟全过、tag 不冲突、门禁/校验步骤的关键字齐全。一次 HEAD 只 dispatch 一次；修复构建也不许在同一 HEAD 上重复触发。CI `completed/success` 且 8 个资产齐全之后，才允许报「构建成功」。
 9. **CI 全绿 ≠ 用户工具通过**。曾把「apksigner verify 通过 + v1:true + CN 正确」当成验收完成，而测试人员用 MT 管理器看到「签名状态：校验不通过」——方案显示 V1+V2+V3 齐全，说明缺 v1 已修好，但 MT 会逐个校验 `META-INF/` 里的 JAR 签名文件；Gradle 未签名包可能残留第三方 `*.SF/.RSA/.DSA/.EC` 与旧 `MANIFEST.MF`，apksigner 只追加不清理，MT 遇到对不上当前证书的那套就判不通过。**补签前必须先 `zip -d` 清干净所有旧签名条目**；断言从「≥1 个签名文件」收紧为「恰好 1 个签名块 + 无 apksigner WARNING」。
 10. **端到端验证不能只靠 CI 自述**。沙盒出网被网关挡住，Release 资产与 Actions artifact 均下载不了（403），所以每轮都必须如实写明「未做端到端验包」。修复方式：CI 生成 `dist/signature-report.txt`（每个 APK 的 META-INF 清单、apksigner verify 全文、证书、sha256）并作为 Release 资产上传，让用户能直接对照 MT 显示的指纹；不得在未声明这一限制的情况下说「签名已验证/完成」。用户工具报错时先问清具体文字与签名方案，不要凭 CI 结果反推「已经修好」。
+11. **收紧门禁前先看正常输出长什么样**。曾为「更严谨」加了「拒绝任何 apksigner WARNING」，结果 run `42268600502` 倒在验签步骤：AGP 打的包必然对 `META-INF/app-metadata.properties`、`version-control-info.textproto`、`androidx.*.version` 报 `WARNING: ... not protected by signature`，这是标准提示，与签名有效性无关，MT 也不会因此判不通过。断言必须带白名单（只拦截 `not protected by signature` 之外的 WARNING），不能一刀切。新增任何「全量拒绝型」断言前，先跑一次看真实输出。
+
 
 
 ### 每次出包前的固定预检清单
@@ -143,4 +145,5 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
 - 预计 tag 不存在
 - 正式签名 `CN=xbox-re`、applicationId `.xbox` 共存、APK 恰好 4 个
 - 本轮只 dispatch 一次；轮询到 completed 才下结论
+- 断言若用「拒绝任何 WARNING / 任何差异」这种全量口径，必须确认过正常输出里没有该类内容
 - `signature-report.txt` 已生成并上传；若资产下载受限，明确告知「未端到端验包」，附证书 SHA256 指纹供用户对照

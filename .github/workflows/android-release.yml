@@ -348,8 +348,14 @@ jobs:
               echo "::error title=Multiple JAR signatures::$apk has $SIGCOUNT signature blocks; MT reports verification failure"
               exit 1
             fi
-            if echo "$VERBOSE" | grep -qi "WARNING"; then
-              echo "::error title=apksigner warning::$(echo "$VERBOSE" | tr '\n' ' ')"
+            # apksigner 对 AGP 写入 META-INF 的元数据文件总会报
+            # "not protected by signature"（app-metadata.properties、
+            # version-control-info.textproto、androidx.*.version 等）。这是
+            # 标准提示、与签名有效性无关，MT 也不会因此判不通过。
+            # 只拦截除此之外的 WARNING，避免把正常包挡在门外。
+            OTHER_WARN="$(echo "$VERBOSE" | grep -i 'WARNING' | grep -viE 'not protected by signature' || true)"
+            if [ -n "$OTHER_WARN" ]; then
+              echo "::error title=apksigner warning::$(echo "$OTHER_WARN" | tr '\n' ' ')"
               exit 1
             fi
             if echo "$CERTS" | grep -qi "Android Debug"; then
