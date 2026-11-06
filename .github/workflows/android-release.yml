@@ -206,7 +206,14 @@ jobs:
             echo "storePassword=$STORE_PASSWORD"
             echo "keyPassword=$KEY_PASS"
           } > local.properties
-          echo "Release signing configured"
+          # apksigner 无法给已经带 v2/v3 签名的 APK 追加 v1：必须从完全未签名的
+          # APK 开始，一次性签 v1+v2+v3。这里只在 CI 工作副本里关闭 Gradle 签名。
+          sed -i 's|signingConfig = hasReleaseSigning ? signingConfigs.release : signingConfigs.debug|signingConfig = null|' app/build.gradle
+          grep -q 'signingConfig = null' app/build.gradle || {
+            echo "::error title=Unsigned build not configured::Failed to disable Gradle signing in app/build.gradle"
+            exit 1
+          }
+          echo "Release signing configured (Gradle outputs unsigned APKs)"
 
       - name: Build four release APKs
         id: build_apks
@@ -239,10 +246,16 @@ jobs:
         run: |
           rm -rf dist
           mkdir -p dist
-          cp Release/apk/*.apk dist/
+          # 未签名产物可能带 -unsigned 后缀，统一成规范文件名，避免资产名漂移
+          for f in Release/apk/*.apk; do
+            b="$(basename "$f" .apk)"
+            b="${b%-unsigned}"
+            cp "$f" "dist/$b.apk"
+          done
           ls -lh dist/
 
       - name: Add v1 (JAR) signature
+        # 输入是 Gradle 输出的未签名 APK，这里一次性签 v1+v2+v3
         env:
           RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
           RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
@@ -258,7 +271,12 @@ jobs:
           STORE_PASS="${RELEASE_STORE_PASSWORD:-$KEY_PASSWORD}"
           KEY_PASS="${RELEASE_KEY_PASSWORD:-$STORE_PASS}"
           for apk in dist/*.apk; do
-            echo "== adding v1 signature to $apk"
+            echo "== signing $apk with v1+v2+v3"
+            PRE="$("$APKSIGNER" verify --verbose "$apk" 2>&1 || true)"
+            if echo "$PRE" | grep -qi "verified using"; then
+              echo "::error title=APK already signed::$apk already carries signatures; unsigned build is required"
+              exit 1
+            fi
             "$APKSIGNER" sign \
               --ks app/signing/release.jks \
               --ks-key-alias "$ALIAS" \
@@ -277,7 +295,7 @@ jobs:
               exit 1
             fi
           done
-          echo "v1 signature added to all APKs"
+          echo "v1+v2+v3 signing completed for all APKs"
 
       - name: Verify APK signatures and package identity
         run: |
