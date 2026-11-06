@@ -272,7 +272,7 @@ jobs:
           KEY_PASS="${RELEASE_KEY_PASSWORD:-$STORE_PASS}"
           for apk in dist/*.apk; do
             echo "== signing $apk with v1+v2+v3"
-            PRE="$("$APKSIGNER" verify --verbose "$apk" 2>&1 || true)"
+            PRE="$("$APKSIGNER" verify --min-sdk-version 21 --verbose "$apk" 2>&1 || true)"
             if echo "$PRE" | grep -qi "verified using"; then
               echo "::error title=APK already signed::$apk already carries signatures; unsigned build is required"
               exit 1
@@ -288,10 +288,12 @@ jobs:
               --v3-signing-enabled true \
               --out "${apk}.signed" "$apk"
             mv "${apk}.signed" "$apk"
-            VERBOSE="$("$APKSIGNER" verify --verbose "$apk" 2>&1)"
-            echo "$VERBOSE" | grep -i "v1 scheme" || true
-            if ! echo "$VERBOSE" | grep -qi "v1 scheme.*: true"; then
-              echo "::error title=v1 re-sign failed::$VERBOSE"
+            VERBOSE="$("$APKSIGNER" verify --min-sdk-version 21 --verbose "$apk" 2>&1 || true)"
+            SIGFILES="$(unzip -l "$apk" | grep -icE 'META-INF/.*\.(RSA|DSA|EC|SF)' || true)"
+            echo "v1 files in META-INF: $SIGFILES"
+            echo "$(echo "$VERBOSE" | tr '\n' ' ')"
+            if [ "$SIGFILES" -lt 1 ] || ! echo "$VERBOSE" | grep -qi "v1 scheme.*: true"; then
+              echo "::error title=v1 signing failed::$(echo "$VERBOSE" | tr '\n' ' ') | META-INF signature files=$SIGFILES"
               exit 1
             fi
           done
@@ -316,10 +318,11 @@ jobs:
             fi
             CERTS="$("$APKSIGNER" verify --print-certs "$apk" 2>&1)"
             echo "$CERTS"
-            VERBOSE="$("$APKSIGNER" verify --verbose "$apk" 2>&1)"
-            if ! echo "$VERBOSE" | grep -qi "v1 scheme.*: true"; then
-              echo "::error title=V1 signature missing::$apk has no JAR (v1) signature; MT / some installers report it as unsigned."
-              echo "$VERBOSE"
+            VERBOSE="$("$APKSIGNER" verify --min-sdk-version 21 --verbose "$apk" 2>&1)"
+            SIGFILES="$(unzip -l "$apk" | grep -icE 'META-INF/.*\.(RSA|DSA|EC|SF)' || true)"
+            echo "  v1 files in META-INF: $SIGFILES"
+            if [ "$SIGFILES" -lt 1 ] || ! echo "$VERBOSE" | grep -qi "v1 scheme.*: true"; then
+              echo "::error title=V1 signature missing::$apk has no JAR (v1) signature; MT / some installers report it as unsigned. $(echo "$VERBOSE" | tr '\n' ' ') | META-INF signature files=$SIGFILES"
               exit 1
             fi
             if echo "$CERTS" | grep -qi "Android Debug"; then
