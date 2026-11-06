@@ -47,15 +47,17 @@ public final class LocalScriptSource {
 
     public static List<String> dirs() {
         List<String> out = new ArrayList<>();
-        String raw = Prefers.getString(KEY_DIRS, "");
-        if (TextUtils.isEmpty(raw)) return out;
         try {
+            String raw = Prefers.getString(KEY_DIRS, "");
+            if (TextUtils.isEmpty(raw)) return out;
             JSONArray array = new JSONArray(raw);
             for (int i = 0; i < array.length(); i++) {
                 String dir = array.optString(i, "");
                 if (!TextUtils.isEmpty(dir) && new File(dir).isDirectory()) out.add(dir);
             }
-        } catch (Exception ignored) {
+        } catch (Throwable ignored) {
+            // 登记数据异常时当作「没有文件夹」，绝不影响 App 启动
+            return new ArrayList<>();
         }
         return out;
     }
@@ -99,7 +101,10 @@ public final class LocalScriptSource {
 
     public static String dirOfUrl(String url) {
         if (TextUtils.isEmpty(url)) return "";
-        for (String dir : dirs()) if (configUrl(dir).equals(url)) return dir;
+        try {
+            for (String dir : dirs()) if (configUrl(dir).equals(url)) return dir;
+        } catch (Throwable ignored) {
+        }
         return "";
     }
 
