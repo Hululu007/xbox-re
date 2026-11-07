@@ -150,6 +150,7 @@ dependencies {
     implementation project(':quickjs')
     implementation libs.jgit
     implementation libs.commons.compress
+    implementation libs.tukaani.xz
     implementation libs.appcompat
     implementation libs.lifecycle.service
     implementation libs.media

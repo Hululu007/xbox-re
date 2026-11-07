@@ -5,6 +5,7 @@ minSdk = "24"
 targetSdk = "28"
 compileSdk = "37"
 commonsCompress = "1.27.1"
+tukaaniXz = "1.12"
 
 annotation = "1.10.0"
 appcompat = "1.7.1"
@@ -73,6 +74,7 @@ swiperefreshlayout = { group = "androidx.swiperefreshlayout", name = "swiperefre
 viewpager2 = { group = "androidx.viewpager2", name = "viewpager2", version.ref = "viewpager2" }
 webkit = { group = "androidx.webkit", name = "webkit", version.ref = "webkit" }
 commons-compress = { group = "org.apache.commons", name = "commons-compress", version.ref = "commonsCompress" }
+tukaani-xz = { group = "org.tukaani", name = "xz", version.ref = "tukaaniXz" }
 
 android-gif-drawable = { group = "pl.droidsonroids.gif", name = "android-gif-drawable", version.ref = "androidGifDrawable" }
 androidautosize = { group = "com.github.JessYanCoding", name = "AndroidAutoSize", version.ref = "androidautosize" }
