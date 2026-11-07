@@ -149,5 +149,10 @@
             android:name="com.google.android.gms.car.application"
             android:resource="@xml/automotive_app_desc" />
 
-    </application>
+    
+        <activity
+            android:name=".ui.web.CatWebActivity"
+            android:exported="false"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|uiMode" />
+</application>
 </manifest>

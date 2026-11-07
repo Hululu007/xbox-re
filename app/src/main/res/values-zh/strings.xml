@@ -1328,4 +1328,11 @@
     <string name="player_audio_book_notification">有声书后台通知</string>
     <string name="player_music_notification">音乐后台通知</string>
     <string name="player_remember_brightness">记住播放亮度</string>
+
+    <!-- 远程托管 / 猫源设置中心 -->
+    <string name="cat_web_download">正在下载 %1$s 到「下载」目录</string>
+    <string name="cat_web_download_failed">下载失败</string>
+    <string name="cat_web_external">已用浏览器打开</string>
+    <string name="cat_web_failed">页面加载失败：%1$s</string>
+    <string name="cat_web_opening">正在打开设置中心</string>
 </resources>
