@@ -10,6 +10,7 @@ import android.widget.TextView;
 
 import androidx.viewbinding.ViewBinding;
 
+import com.fongmi.android.tv.lab.LabActivity;
 import com.fongmi.android.tv.R;
 import com.fongmi.android.tv.playback.ViewingRecordSyncStore;
 import com.fongmi.android.tv.remote.RemoteStore;
@@ -89,6 +90,7 @@ public class SettingEnhanceActivity extends BaseActivity {
         mBinding.shellProxy.setOnLongClickListener(v -> false);
         mBinding.shellProxyConfig.setVisibility(View.GONE);
         mBinding.customCsp.setOnClickListener(view -> PermissionUtil.requestFile(this, granted -> {
+        mBinding.lab.setOnClickListener(view -> LabActivity.start(this));
             if (isFinishing() || isDestroyed() || getSupportFragmentManager().isStateSaved()) return;
             if (granted) CustomCspDialog.show(this, this::setText);
             else Notify.show(R.string.setting_custom_csp_permission_required);
@@ -104,6 +106,7 @@ public class SettingEnhanceActivity extends BaseActivity {
     private void reorderItems() {
         ViewGroup parent = (ViewGroup) mBinding.customCsp.getParent();
         View[] order = {
+                mBinding.lab,
                 mBinding.customCsp,
                 mBinding.webHomeExtension,
                 mBinding.remoteTrust,

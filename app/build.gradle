@@ -149,6 +149,7 @@ dependencies {
     implementation project(':chaquo')
     implementation project(':quickjs')
     implementation libs.jgit
+    implementation libs.commons.compress
     implementation libs.appcompat
     implementation libs.lifecycle.service
     implementation libs.media
