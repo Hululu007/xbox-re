@@ -761,6 +761,9 @@ public class Setting {
     public static final int DETAIL_STYLE_NATIVE = 2;
     public static final int DETAIL_STYLE_PROFILE = 0;
     public static final int LANGUAGE_SIMPLIFIED = 1;
+    public static final int GLOBAL_HISTORY_OFF = 0;
+    public static final int GLOBAL_HISTORY_AUTO = 1;
+    public static final int GLOBAL_HISTORY_SEARCH = 2;
     public static final int LANGUAGE_TRADITIONAL = 2;
     public static String getAiConfig() {
     return Prefers.getString("ai_config");
@@ -888,6 +891,15 @@ public class Setting {
 
     public static void putWebHomeThemeTrustedUrl(String url) {
         Prefers.put("web_home_theme_trusted_url", url);
+    }
+
+
+    private static int clampGlobalHistoryMode(int mode) {
+        return mode == GLOBAL_HISTORY_AUTO || mode == GLOBAL_HISTORY_SEARCH ? mode : GLOBAL_HISTORY_OFF;
+    }
+
+    private static int clampSearchThread(int thread) {
+        return Math.max(1, Math.min(thread, 100));
     }
 
 }

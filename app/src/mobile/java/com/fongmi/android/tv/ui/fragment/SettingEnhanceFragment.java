@@ -103,11 +103,11 @@ public class SettingEnhanceFragment extends BaseFragment {
         mBinding.shellProxy.setOnLongClickListener(v -> false);
         mBinding.shellProxyConfig.setVisibility(View.GONE);
         mBinding.customCsp.setOnClickListener(view -> PermissionUtil.requestFile(this, granted -> {
-        mBinding.lab.setOnClickListener(view -> LabActivity.start(requireContext()));
             if (!isAdded() || isStateSaved() || getActivity() == null) return;
             if (granted) CustomCspDialog.show(this, this::setText);
             else Notify.show(R.string.setting_custom_csp_permission_required);
         }));
+        mBinding.lab.setOnClickListener(view -> LabActivity.start(requireContext()));
         mBinding.loginState.setOnClickListener(view -> LoginStateLearnDialog.show(this, this::setText));
         mBinding.oneKeySync.setOnClickListener(v -> OneKeySyncDialog.create().show(requireActivity()));
         mBinding.scriptManage.setOnClickListener(view -> ScriptManageDialog.show(this));
