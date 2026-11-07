@@ -750,4 +750,199 @@ public class Setting {
         return ShortDramaConfig.objectFrom(getShortDramaConfig()).isSiteEnabled(key, name);
     }
 
+
+    // ② TMDB / ③ 个性设置（从上游按方法块 cherry-pick）
+    public static final int DETAIL_OPEN_DIRECT = 2;
+    public static final int DETAIL_OPEN_ENHANCED = 1;
+    public static final int DETAIL_OPEN_FUSION = 0;
+    public static final int DETAIL_OPEN_ORIGINAL_ENHANCED = 5;
+    public static final int DETAIL_OPEN_PLAYER = 4;
+    public static final int DETAIL_STYLE_CINEMA = 1;
+    public static final int DETAIL_STYLE_NATIVE = 2;
+    public static final int DETAIL_STYLE_PROFILE = 0;
+    public static final int LANGUAGE_SIMPLIFIED = 1;
+    public static final int LANGUAGE_TRADITIONAL = 2;
+    public static String getAiConfig() {
+    return Prefers.getString("ai_config");
+    }
+    public static String getAudioConfig() {
+    return Prefers.getString("audio_config");
+    }
+    public static int getDetailOpenMode() {
+    int mode;
+    if (Prefers.getPrefers().contains("detail_open_mode")) {
+    int stored = Prefers.getInt("detail_open_mode", DETAIL_OPEN_ENHANCED);
+    if (stored == DETAIL_OPEN_CINEMA) {
+    if (!Prefers.getPrefers().contains("detail_theme_mode") && !Prefers.getPrefers().contains("tmdb_detail_style")) putDetailThemeMode(DETAIL_STYLE_CINEMA);
+    mode = DETAIL_OPEN_ENHANCED;
+    Prefers.put("detail_open_mode", mode);
+    } else {
+    mode = clampDetailOpenMode(stored);
+    }
+    } else if (Prefers.getPrefers().contains("detail_interaction_mode")) {
+    mode = getDetailInteractionMode() == DETAIL_INTERACTION_SYSTEM ? DETAIL_OPEN_ORIGINAL_ENHANCED : DETAIL_OPEN_DIRECT;
+    Prefers.put("detail_open_mode", mode);
+    migrateCurrentDetailTheme(mode);
+    } else if (Prefers.getPrefers().contains("search_detail_page")) {
+    mode = Prefers.getBoolean("search_detail_page") ? DETAIL_OPEN_ENHANCED : DETAIL_OPEN_DIRECT;
+    } else {
+    mode = isTmdbEnabled() ? DETAIL_OPEN_ORIGINAL_ENHANCED : DETAIL_OPEN_DIRECT;
+    migrateCurrentDetailTheme(mode);
+    }
+    return mode;
+    }
+    public static int getFullscreenMenuKey() {
+    return Prefers.getInt("fullscreen_menu_key", 0);
+    }
+    public static int getGlobalHistoryMode() {
+    return clampGlobalHistoryMode(Prefers.getInt("global_history_mode", GLOBAL_HISTORY_OFF));
+    }
+    public static int getHomeMenuKey() {
+    int menuKey = Prefers.getInt("home_menu_key", 0);
+    return menuKey < 0 || menuKey > 9 ? 0 : menuKey;
+    }
+    public static int getInterfaceFailoverMode() {
+    return InterfaceFailoverPolicy.clampMode(Prefers.getInt("interface_failover_mode", InterfaceFailoverPolicy.DEFAULT_MODE));
+    }
+    public static int getSearchResultSort() {
+    return Prefers.getInt("search_result_sort", 0);
+    }
+    public static int getSearchThread() {
+    return clampSearchThread(Prefers.getInt("search_thread", 20));
+    }
+    public static int getSearchUi() {
+    return Prefers.getInt("search_ui", 1) == 0 ? 0 : 1;
+    }
+    public static String getTmdbConfig() {
+    return Prefers.getString("tmdb_config");
+    }
+    public static int getTmdbDetailStyle() {
+    return getDetailThemeMode();
+    }
+    public static int getTmdbMatchMode() {
+    if (Prefers.getPrefers().contains("tmdb_match_mode")) return clampTmdbMatchMode(Prefers.getInt("tmdb_match_mode", TMDB_MATCH_SMART));
+    if (Prefers.getPrefers().contains("tmdb_match_dialog")) return Prefers.getBoolean("tmdb_match_dialog", true) ? TMDB_MATCH_STRICT_DIALOG : TMDB_MATCH_STRICT;
+    return TMDB_MATCH_SMART;
+    }
+    public static boolean isAutoBackup() {
+    return Prefers.getBoolean("auto_backup", false);
+    }
+    public static boolean isEpisodeHistory() {
+    return Prefers.getBoolean("episode_history", true);
+    }
+    public static boolean isHistoryAggregationByTmdb() {
+    return isTmdbReady() && Prefers.getBoolean("history_aggregation_by_tmdb", true);
+    }
+    public static boolean isHomeHistory() {
+    return Prefers.getBoolean("home_history", true);
+    }
+    public static boolean isHomeSiteLock() {
+    return Prefers.getBoolean("home_site_lock", false);
+    }
+    public static boolean isHomeVodAutoLoad() {
+    return Prefers.getBoolean("home_vod_auto_load", true);
+    }
+    public static boolean isPersonalRecommendation() {
+    if (Prefers.getPrefers().contains("personal_recommendation")) return Prefers.getBoolean("personal_recommendation", false);
+    return Prefers.getBoolean("ai_recommendation", false);
+    }
+    public static boolean isPlayBackToDetail() {
+    return Prefers.getBoolean("play_back_to_detail");
+    }
+    public static boolean isPlaybackOverlayEnabled() {
+    return Prefers.getBoolean("playback_overlay_enabled", true);
+    }
+    public static boolean isTmdbEpisodeFileSize() {
+    return Prefers.getBoolean("tmdb_episode_file_size", false);
+    }
+    public static boolean isTmdbMode(int mode) {
+    return mode == DETAIL_OPEN_FUSION || mode == DETAIL_OPEN_ENHANCED || mode == DETAIL_OPEN_PLAYER || mode == DETAIL_OPEN_ORIGINAL_ENHANCED;
+    }
+    public static boolean isTmdbReady() {
+    return com.fongmi.android.tv.bean.TmdbConfig.objectFrom(getTmdbConfig()).isReady();
+    }
+    public static boolean isTmdbSmartMatch() {
+    int mode = getTmdbMatchMode();
+    return mode == TMDB_MATCH_SMART || mode == TMDB_MATCH_SMART_DIALOG;
+    }
+    public static boolean isTouchOptimized() {
+    return Util.isLeanback() && Prefers.getBoolean("touch_optimized");
+    }
+    public static void putAutoBackup(boolean autoBackup) {
+    Prefers.put("auto_backup", autoBackup);
+    }
+    public static void putDetailOpenMode(int mode) {
+    if (mode == DETAIL_OPEN_CINEMA) {
+    putDetailThemeMode(DETAIL_STYLE_CINEMA);
+    mode = DETAIL_OPEN_ENHANCED;
+    } else if (mode == DETAIL_OPEN_FUSION) {
+    putDetailThemeMode(DETAIL_STYLE_PROFILE);
+    } else if (mode == DETAIL_OPEN_ORIGINAL_ENHANCED) {
+    putDetailThemeMode(DETAIL_STYLE_NATIVE);
+    }
+    int value = clampDetailOpenMode(mode);
+    Prefers.put("detail_open_mode", value);
+    Prefers.put("detail_interaction_mode", isTmdbMode(value) ? DETAIL_INTERACTION_SYSTEM : DETAIL_INTERACTION_ORIGINAL);
+    putTmdbEnabled(isTmdbMode(value));
+    }
+    public static void putEpisodeHistory(boolean episodeHistory) {
+    Prefers.put("episode_history", episodeHistory);
+    }
+    public static void putFullscreenMenuKey(int menuKey) {
+    Prefers.put("fullscreen_menu_key", menuKey);
+    }
+    public static void putGlobalHistoryMode(int mode) {
+    Prefers.put("global_history_mode", clampGlobalHistoryMode(mode));
+    }
+    public static void putHistoryAggregationByTmdb(boolean value) {
+    Prefers.put("history_aggregation_by_tmdb", value);
+    }
+    public static void putHomeHistory(boolean homeHistory) {
+    Prefers.put("home_history", homeHistory);
+    }
+    public static void putHomeMenuKey(int menuKey) {
+    Prefers.put("home_menu_key", menuKey);
+    }
+    public static void putHomeSiteLock(boolean homeSiteLock) {
+    Prefers.put("home_site_lock", homeSiteLock);
+    }
+    public static void putHomeVodAutoLoad(boolean autoLoad) {
+    Prefers.put("home_vod_auto_load", autoLoad);
+    }
+    public static void putInterfaceFailoverMode(int mode) {
+    int value = InterfaceFailoverPolicy.clampMode(mode);
+    Prefers.put("interface_failover_mode", value);
+    if (value == InterfaceFailoverPolicy.OFF) VodConfig.cancelFailover();
+    }
+    public static void putPlayBackToDetail(boolean backToDetail) {
+    Prefers.put("play_back_to_detail", backToDetail);
+    }
+    public static void putPlaybackOverlayEnabled(boolean enabled) {
+    Prefers.put("playback_overlay_enabled", enabled);
+    }
+    public static void putSearchResultSort(int sort) {
+    Prefers.put("search_result_sort", sort == 0 ? 0 : 1);
+    }
+    public static void putSearchThread(int thread) {
+    Prefers.put("search_thread", clampSearchThread(thread));
+    }
+    public static void putSearchUi(int ui) {
+    Prefers.put("search_ui", ui == 0 ? 0 : 1);
+    }
+    public static void putTmdbConfig(String value) {
+    Prefers.put("tmdb_config", value);
+    }
+    public static void putTmdbDetailStyle(int style) {
+    putDetailThemeMode(style);
+    }
+    public static void putTmdbEpisodeFileSize(boolean enabled) {
+    Prefers.put("tmdb_episode_file_size", enabled);
+    }
+    public static void putTmdbMatchMode(int mode) {
+    Prefers.put("tmdb_match_mode", clampTmdbMatchMode(mode));
+    }
+    public static void putTouchOptimized(boolean enabled) {
+    Prefers.put("touch_optimized", enabled);
+    }
+
 }

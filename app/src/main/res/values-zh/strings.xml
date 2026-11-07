@@ -1335,4 +1335,212 @@
     <string name="cat_web_external">已用浏览器打开</string>
     <string name="cat_web_failed">页面加载失败：%1$s</string>
     <string name="cat_web_opening">正在打开设置中心</string>
+
+    <!-- ② TMDB / ③ 个性设置 -->
+    <string name="ai_recommendation_info_title">推荐详情</string>
+    <string name="ai_recommendation_reason_label">推荐理由</string>
+    <string name="app_branding_icon_current">默认图标</string>
+    <string name="app_branding_icon_history">原版图标</string>
+    <string name="backup_permission_denied">需要存储权限才能备份或恢复数据</string>
+    <string name="cancel">取消</string>
+    <string name="detail_media_movie">电影</string>
+    <string name="detail_media_tv">剧集</string>
+    <string name="dialog_omdb_api_key_hint">输入 OMDb API Key</string>
+    <string name="dialog_omdb_api_key_label">OMDb API Key（可选，用于 IMDB 评分）</string>
+    <string name="dialog_omdb_api_key_tip">免费获取 API Key（每天1000次）: https://www.omdbapi.com/apikey.aspx</string>
+    <string name="dialog_reset_app">重置App?</string>
+    <string name="dialog_reset_app_data">所有数据将会被重置，App即将被关闭.</string>
+    <string name="dialog_tmdb_add">添加</string>
+    <string name="dialog_tmdb_add_disabled_rule_hint">添加排除关键词或站点…</string>
+    <string name="dialog_tmdb_add_rule_hint">添加关键词或站点…</string>
+    <string name="dialog_tmdb_all_sites">全部站点</string>
+    <string name="dialog_tmdb_api_host_hint">例如 https://api.tmdb.org</string>
+    <string name="dialog_tmdb_api_host_label">API 域名</string>
+    <string name="dialog_tmdb_api_key_hint">输入 API Key 或 v4 Access Token</string>
+    <string name="dialog_tmdb_api_key_label">TMDB API Key 或 Access Token</string>
+    <string name="dialog_tmdb_api_key_tip">免费获取 API Key: https://www.themoviedb.org/settings/api</string>
+    <string name="dialog_tmdb_disabled_sites_label">排除规则</string>
+    <string name="dialog_tmdb_enable_tip">这里仅配置 TMDB 数据源、语言、图片域名与站点规则；启用状态在「详情页模式」中控制。</string>
+    <string name="dialog_tmdb_enabled_sites_label">启用站点规则</string>
+    <string name="dialog_tmdb_image_host_hint">例如 https://images.tmdb.org</string>
+    <string name="dialog_tmdb_image_host_label">图片域名</string>
+    <string name="dialog_tmdb_language_hint">例如 zh-CN</string>
+    <string name="dialog_tmdb_language_label">TMDB 语言</string>
+    <string name="dialog_tmdb_reset_default">恢复默认</string>
+    <string name="dialog_tmdb_section_data">数据源</string>
+    <string name="dialog_tmdb_section_ratings">评分扩展</string>
+    <string name="dialog_tmdb_section_rules">站点规则</string>
+    <string name="dialog_tmdb_site_manage">选择站点</string>
+    <string name="dialog_tmdb_test_api_failed">TMDB API：测试失败（%1$s，%2$d 毫秒）</string>
+    <string name="dialog_tmdb_test_api_success">TMDB API：连接成功并返回有效数据（%1$d 毫秒）</string>
+    <string name="dialog_tmdb_test_config">测试配置</string>
+    <string name="dialog_tmdb_test_image_failed">图片域名：测试失败（%1$s，%2$d 毫秒）</string>
+    <string name="dialog_tmdb_test_image_success">图片域名：连接成功并返回有效图片（%1$d 毫秒）</string>
+    <string name="dialog_tmdb_test_omdb_failed">OMDb API：测试失败（%1$s，%2$d 毫秒）</string>
+    <string name="dialog_tmdb_test_omdb_success">OMDb API：连接成功并返回有效数据（%1$d 毫秒）</string>
+    <string name="dialog_tmdb_test_result_title">配置测试结果</string>
+    <string name="group_rule_add">新增规则</string>
+    <string name="group_rule_ai_analyzing_message">正在分析 %1$d 个源名称…候选规则会先在本地验证，再进入预览。</string>
+    <string name="group_rule_ai_analyzing_title">AI 正在识别分组</string>
+    <string name="group_rule_ai_apply">应用规则</string>
+    <string name="group_rule_ai_config_changed">识别期间点播接口已切换，请重新识别。</string>
+    <string name="group_rule_ai_config_incomplete">AI 服务配置不完整，请先到“增强功能 → AI 通用配置”补全端点、API key 和模型。</string>
+    <string name="group_rule_ai_current_interface">当前点播接口</string>
+    <string name="group_rule_ai_error_generic">AI 识别失败。</string>
+    <string name="group_rule_ai_error_http">AI 服务返回 HTTP %1$s。</string>
+    <string name="group_rule_ai_error_invalid_response">AI 返回的规则内容无效，可以点击重试。</string>
+    <string name="group_rule_ai_error_network">无法连接 AI 服务。</string>
+    <string name="group_rule_ai_error_no_valid_rules">AI 没有生成安全且有效的分组规则。</string>
+    <string name="group_rule_ai_error_prompt_too_large">自定义分组规则提示词过长，请在 AI 提示词配置中精简。</string>
+    <string name="group_rule_ai_error_timeout">AI 识别请求超时。</string>
+    <string name="group_rule_ai_error_too_many_sources">源名称数量过多，无法在安全请求范围内完成分析，请精简当前接口后重试。</string>
+    <string name="group_rule_ai_failed_title">AI 识别失败</string>
+    <string name="group_rule_ai_groups_title">提取后的分组</string>
+    <string name="group_rule_ai_identify">AI 识别</string>
+    <string name="group_rule_ai_label">智能 · %1$s\\n%2$s</string>
+    <string name="group_rule_ai_more_groups">……还有 %1$d 个分组</string>
+    <string name="group_rule_ai_no_sources">当前点播接口没有可分析的可见源名称。</string>
+    <string name="group_rule_ai_preview_note">应用后只替换当前点播接口的 AI 规则，内置规则、接口规则和手动规则不会改变。</string>
+    <string name="group_rule_ai_preview_summary">%1$d 个源 · %2$d 条候选规则 · 最终覆盖 %3$d/%4$d（%5$d%%）</string>
+    <string name="group_rule_ai_preview_title">AI 分组预览</string>
+    <string name="group_rule_ai_privacy_message">将把当前点播接口中可见的源名称发送到你配置的 AI 服务；源较多时可能自动拆分为多次请求（最多 8 次）。接口地址、源 API、扩展配置、播放记录和 AI 密钥不会写入分析内容。</string>
+    <string name="group_rule_ai_privacy_title">使用 AI 识别分组</string>
+    <string name="group_rule_ai_reidentify">AI 重识别</string>
+    <string name="group_rule_ai_retry">重试</string>
+    <string name="group_rule_ai_rule_summary">%1$s\\n%2$s\\n命中 %3$d 个源 · %4$d 个分组 · 新增覆盖 %5$d 个 · 稳定覆盖 %6$d 个</string>
+    <string name="group_rule_ai_rules_title">生成的规则</string>
+    <string name="group_rule_ai_saved">已为“%2$s”保存 %1$d 条 AI 分组规则</string>
+    <string name="group_rule_ai_select_required">请至少保留一条候选规则后再应用。</string>
+    <string name="group_rule_ai_start">开始识别</string>
+    <string name="group_rule_ai_unmatched">未分组 · %1$d 个源</string>
+    <string name="group_rule_delete">删除</string>
+    <string name="group_rule_edit">编辑规则</string>
+    <string name="group_rule_edit_item">编辑 · %1$s\\n%2$s</string>
+    <string name="group_rule_empty_custom">暂无自定义或接口规则</string>
+    <string name="group_rule_interface_item">接口 · %1$s\\n%2$s</string>
+    <string name="group_rule_manage">管理</string>
+    <string name="group_rule_name">规则名称</string>
+    <string name="group_rule_regex">正则表达式</string>
+    <string name="group_rule_regex_hint">第 1 个捕获组作为分组名。多个已启用规则为或关系，命中即独立分组。</string>
+    <string name="group_rule_regex_invalid">正则表达式无效</string>
+    <string name="group_rule_regex_required">请填写正则表达式</string>
+    <string name="home_buttons_selected">已选首页按钮</string>
+    <string name="home_cast">投屏</string>
+    <string name="home_custom_csp">自定义 CSP</string>
+    <string name="home_following">追更</string>
+    <string name="home_history_button">历史按钮</string>
+    <string name="home_keep">收藏</string>
+    <string name="home_live">直播</string>
+    <string name="home_push">推送</string>
+    <string name="home_search">搜索</string>
+    <string name="home_setting">设置</string>
+    <string name="home_vod">点播</string>
+    <string name="recommendation_data_douban_matched">豆瓣评分已匹配</string>
+    <string name="recommendation_data_douban_only">豆瓣条目已匹配</string>
+    <string name="recommendation_data_douban_unavailable">未匹配到豆瓣评分</string>
+    <string name="recommendation_data_metadata_only">仅有推荐基础信息</string>
+    <string name="recommendation_data_no_poster">暂无可用海报</string>
+    <string name="recommendation_data_tmdb">TMDB 条目 #%1$d</string>
+    <string name="recommendation_not_interested">不感兴趣</string>
+    <string name="recommendation_not_interested_recorded">已暂时隐藏 90 天，可在个性设置中恢复</string>
+    <string name="recommendation_overview_label">内容简介</string>
+    <string name="recommendation_overview_unavailable">当前缓存暂无内容简介</string>
+    <string name="recommendation_source_ai">智能推荐</string>
+    <string name="recommendation_source_douban">个性推荐 · 豆瓣</string>
+    <string name="recommendation_source_related">猜你喜欢</string>
+    <string name="recommendation_source_tmdb">个性推荐 · TMDB</string>
+    <string name="reset_app_failed">重置失败，请重试。</string>
+    <string name="setting_app_branding">APP 图标</string>
+    <string name="setting_auto_backup">自动备份</string>
+    <string name="setting_configured">已配置</string>
+    <string name="setting_detail_open_direct">影视原生</string>
+    <string name="setting_detail_open_enhanced">炫彩详情</string>
+    <string name="setting_detail_open_fusion">沉浸融合</string>
+    <string name="setting_detail_open_mode">详情页模式</string>
+    <string name="setting_detail_open_native">TMDB 内嵌增强</string>
+    <string name="setting_detail_open_original_enhanced">原生增强</string>
+    <string name="setting_detail_open_player">详情直放</string>
+    <string name="setting_detail_theme_cinema">光影剧幕</string>
+    <string name="setting_detail_theme_current">当前主题</string>
+    <string name="setting_detail_theme_mode">详情页主题</string>
+    <string name="setting_detail_theme_native">原生暗色</string>
+    <string name="setting_detail_theme_profile">清透流彩</string>
+    <string name="setting_episode_history">记录分集进度</string>
+    <string name="setting_following">追更更新</string>
+    <string name="setting_fullscreen_menu_key">全屏菜单键</string>
+    <string name="setting_global_history">全局历史续播</string>
+    <string name="setting_group_rule">分组规则</string>
+    <string name="setting_group_rule_summary">已启用 %1$d / %2$d</string>
+    <string name="setting_history_aggregation">历史记录跨源聚合</string>
+    <string name="setting_home_buttons">首页按钮</string>
+    <string name="setting_home_history">首页最近观看</string>
+    <string name="setting_home_menu_key">首页菜单键</string>
+    <string name="setting_home_site_lock">首页源锁定</string>
+    <string name="setting_home_vod_auto_load">默认加载点播</string>
+    <string name="setting_interface_failover">点播接口容灾</string>
+    <string name="setting_personal">个性设置</string>
+    <string name="setting_play_back_to_detail">播放返回详情</string>
+    <string name="setting_play_speed">播放倍速</string>
+    <string name="setting_playback_overlay">播放菜单遮盖层</string>
+    <string name="setting_reset_app">重置APP</string>
+    <string name="setting_search_column">搜索结果列数</string>
+    <string name="setting_search_result_sort">搜索结果模式</string>
+    <string name="setting_search_thread">搜索线程</string>
+    <string name="setting_search_ui">搜索布局</string>
+    <string name="setting_site_column">站点展示模式</string>
+    <string name="setting_tmdb">TMDB</string>
+    <string name="setting_tmdb_episode_file_size">TMDB 剧集保留文件大小</string>
+    <string name="setting_tmdb_match_mode">TMDB 匹配模式</string>
+    <string name="setting_tmdb_source">TMDB 数据配置</string>
+    <string name="setting_touch_optimization">触屏优化</string>
+    <string name="setting_unconfigured">未配置</string>
+    <string-array name="select_fullscreen_menu_key">
+        <item>控制栏</item>
+        <item>选集</item>
+    </string-array>
+    <string-array name="select_global_history_mode">
+        <item>关闭</item>
+        <item>自动匹配播放源</item>
+        <item>搜索后选择播放源</item>
+    </string-array>
+    <string-array name="select_home_menu_key">
+        <item>选项弹窗</item>
+        <item>切换站源</item>
+        <item>切换线路</item>
+        <item>直播页面</item>
+        <item>历史页面</item>
+        <item>搜索页面</item>
+        <item>推送页面</item>
+        <item>投屏页面</item>
+        <item>收藏页面</item>
+        <item>设置页面</item>
+    </string-array>
+    <string-array name="select_interface_failover_mode">
+        <item>关闭</item>
+        <item>自动容灾</item>
+        <item>手动确认</item>
+    </string-array>
+    <string-array name="select_search_column">
+        <item>自适应</item>
+        <item>1个</item>
+        <item>2个</item>
+    </string-array>
+    <string-array name="select_search_result_sort">
+        <item>动态模式（谁快谁在前）</item>
+        <item>固定模式（按配置顺序）</item>
+    </string-array>
+    <string-array name="select_search_ui">
+        <item>横屏</item>
+        <item>竖屏</item>
+    </string-array>
+    <string-array name="select_site_column">
+        <item>单行</item>
+        <item>双行</item>
+    </string-array>
+    <string-array name="select_tmdb_match_mode">
+        <item>严格</item>
+        <item>智能</item>
+        <item>严格 + 弹窗</item>
+        <item>智能 + 弹窗</item>
+    </string-array>
 </resources>

@@ -185,5 +185,18 @@
             android:exported="false"
             android:foregroundServiceType="dataSync"
             android:stopWithTask="false" />
+
+        <activity
+            android:name=".ui.activity.AppBrandingActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.activity.SettingPersonalActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.activity.SettingTmdbActivity"
+            android:exported="false" />
+
 </application>
 </manifest>
