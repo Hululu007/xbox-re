@@ -1471,4 +1471,9 @@
     <string name="setting_search_ui">搜索布局</string>
     <string name="setting_site_column">站点展示模式</string>
     <string name="setting_touch_optimization">触屏优化</string>
+
+
+    <!-- 上游 webhtv 原样搬回，未做英译中改写 -->
+    <string name="app_branding_icon_select">选择图标</string>
+    <string name="home_buttons_reset">重置</string>
 </resources>

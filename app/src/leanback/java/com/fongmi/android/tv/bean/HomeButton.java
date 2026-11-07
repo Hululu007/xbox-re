@@ -6,7 +6,6 @@ import androidx.annotation.Nullable;
 
 import com.fongmi.android.tv.R;
 import com.fongmi.android.tv.api.config.LiveConfig;
-import com.fongmi.android.tv.following.FollowingSettings;
 import com.fongmi.android.tv.impl.Diffable;
 import com.fongmi.android.tv.setting.Setting;
 import com.fongmi.android.tv.utils.ResUtil;
@@ -51,7 +50,7 @@ public class HomeButton implements Diffable<HomeButton> {
         List<HomeButton> items = new ArrayList<>();
         for (HomeButton button : getButtons()) {
             if (button.getResId() == R.string.home_live && !LiveConfig.hasUrl()) continue;
-            if (button.getResId() == R.string.home_following && !FollowingSettings.isEnabled()) continue;
+            if (button.getResId() == R.string.home_following) continue;
             items.add(button);
         }
         return items;

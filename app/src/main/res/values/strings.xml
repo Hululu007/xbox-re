@@ -1494,4 +1494,9 @@
     <string name="setting_search_ui">Search layout</string>
     <string name="setting_site_column">Site display mode</string>
     <string name="setting_touch_optimization">Touch optimization</string>
+
+
+    <!-- 上游 webhtv 原样搬回，未做英译中改写 -->
+    <string name="app_branding_icon_select">Select icon</string>
+    <string name="home_buttons_reset">Reset</string>
 </resources>
