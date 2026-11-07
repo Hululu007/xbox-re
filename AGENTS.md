@@ -170,3 +170,11 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
     - 新增 / 启用 Fragment 分支（如 `case 5 -> SettingPersonalFragment`）必须同步 `mobile HomeActivity.onBackInvoked()` 的返回分支；漏了就会一路落到 `mManager.canBack(0)` → `super.onBackInvoked()` → `finish()`，表现为「个性设置按返回直接关掉 app」。返回分支要覆盖所有设置子页 position。
     - 自定义窗口尺寸的 Dialog（如 `AboutDialog`）必须在 `dialog.show()` **之前** `configureWindow()`，并显式 `setOnShowListener(d -> configureWindow(...))` 覆盖 `LightDialog.create` 的幂等回调；否则首帧先按 LightDialog 默认尺寸居中，show 后被改成本页尺寸，整窗「闪移」。此规则同样适用于任何绕过 `BaseAlertDialog` 直接用 `Dialog` 的弹窗。
     - 脚本 json 首次生成 / 新增条目必须按 `py -> js -> html -> url` 插入对应分组尾部（`insertPos()`），不能一律 `sites.add(...)` append——已有 url 条目时新 py 会排到 url 后面。同时已有条目的相对次序一律不动（用户改过 / 排过的 json 保持现状），`reset()` 不重排。
+
+23. **在已有方法前插入代码时，不得改动原方法的声明（可见性 / static / 返回类型 / 参数）**。
+    本轮为给 LocalScriptSource 加 insertPos/typeRank，用「替换 kindOf 声明行」的方式插入，
+    new_string 里把 `public static String kindOf` 误写成 `private static`，CI 直接报
+    `ScriptManageDialog.java:400 error: kindOf(JSONObject) has private access`。
+    插入辅助方法一律用「锚点前追加」而非「替换原声明为 private」；改完必须全库扫一遍
+    `LocalScriptSource.kindOf(` 之类的外部调用点，确认可见性没被降。任何对现有方法签名的改动，
+    先 grep 调用点再提交，不要等 CI 编译来发现。

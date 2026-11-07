@@ -452,7 +452,7 @@ public final class LocalScriptSource {
         }
     }
 
-    private static String kindOf(JSONObject item) {
+    public static String kindOf(JSONObject item) {
         String key = item.optString("key");
         if (key.endsWith("[url]")) return "url";
         if (key.endsWith("[py]")) return "py";
