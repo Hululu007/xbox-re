@@ -32,7 +32,6 @@ import java.util.Locale;
 public class SettingPersonalFragment extends BaseFragment {
 
     private FragmentSettingPersonalBinding mBinding;
-    private String[] searchUi;
     private String[] searchColumn;
     private String[] siteColumn;
     private String[] globalHistoryMode;
@@ -62,13 +61,11 @@ public class SettingPersonalFragment extends BaseFragment {
         mBinding.searchThread.setOnClickListener(this::setSearchThread);
         mBinding.autoBackup.setOnClickListener(this::setAutoBackup);
         mBinding.playbackOverlay.setOnClickListener(this::setPlaybackOverlay);
-        mBinding.playBackToDetail.setOnClickListener(this::setPlayBackToDetail);
         mBinding.episodeHistory.setOnClickListener(this::setEpisodeHistory);
         mBinding.globalHistory.setOnClickListener(this::setGlobalHistory);
         mBinding.interfaceFailover.setOnClickListener(this::setInterfaceFailover);
         mBinding.playSpeed.setOnClickListener(this::setPlaySpeed);
         mBinding.groupRule.setOnClickListener(this::setGroupRule);
-        mBinding.searchUi.setOnClickListener(this::setSearchUi);
         mBinding.searchColumn.setOnClickListener(this::setSearchColumn);
         mBinding.siteColumn.setOnClickListener(this::setSiteColumn);
         mBinding.searchResultSort.setOnClickListener(this::setSearchResultSort);
@@ -81,13 +78,11 @@ public class SettingPersonalFragment extends BaseFragment {
         mBinding.searchThreadText.setText(String.valueOf(Setting.getSearchThread()));
         mBinding.autoBackupText.setText(getSwitch(isAutoBackupEnabled()));
         mBinding.playbackOverlayText.setText(getSwitch(Setting.isPlaybackOverlayEnabled()));
-        mBinding.playBackToDetailText.setText(getSwitch(Setting.isPlayBackToDetail()));
         mBinding.episodeHistoryText.setText(getSwitch(Setting.isEpisodeHistory()));
         mBinding.globalHistoryText.setText((globalHistoryMode = getResources().getStringArray(R.array.select_global_history_mode))[Setting.getGlobalHistoryMode()]);
         mBinding.interfaceFailoverText.setText((interfaceFailoverMode = getResources().getStringArray(R.array.select_interface_failover_mode))[Setting.getInterfaceFailoverMode()]);
         mBinding.playSpeedText.setText(getSpeedText(PlayerSetting.getDefaultSpeed()));
         mBinding.groupRuleText.setText(getString(R.string.setting_group_rule_summary, GroupRuleConfig.enabledCount(), GroupRuleConfig.totalCount()));
-        mBinding.searchUiText.setText((searchUi = getResources().getStringArray(R.array.select_search_ui))[Setting.getSearchUi()]);
         mBinding.searchColumnText.setText(getSearchColumnText());
         mBinding.siteColumnText.setText((siteColumn = getResources().getStringArray(R.array.select_site_column))[Setting.getSiteColumn() - 1]);
         mBinding.searchResultSortText.setText((searchResultSort = getResources().getStringArray(R.array.select_search_result_sort))[Setting.getSearchResultSort()]);
@@ -141,11 +136,6 @@ public class SettingPersonalFragment extends BaseFragment {
         setText();
     }
 
-    private void setPlayBackToDetail(View view) {
-        Setting.putPlayBackToDetail(!Setting.isPlayBackToDetail());
-        setText();
-    }
-
     private void setEpisodeHistory(View view) {
         Setting.putEpisodeHistory(!Setting.isEpisodeHistory());
         setText();
@@ -171,11 +161,6 @@ public class SettingPersonalFragment extends BaseFragment {
 
     private void setGroupRule(View view) {
         GroupRuleDialog.create(requireActivity()).onChanged(this::setText).show();
-    }
-
-    private void setSearchUi(View view) {
-        Setting.putSearchUi((Setting.getSearchUi() + 1) % searchUi.length);
-        setText();
     }
 
     private void setSearchColumn(View view) {

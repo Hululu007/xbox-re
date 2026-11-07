@@ -165,3 +165,8 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
     tree 重算后才发现 188 项缺失。每批搬入后必须核对「新增文件 + modified 文件 diff 新增行」
     的全部 `R.x.y` / `@x/y` 引用。另：GitHub compare API 对大文件不返回 patch，
     必须直接取 main 基线内容做本地 diff，不能只看 API patch。
+
+22. **交互类回归三条（本轮实测）**：
+    - 新增 / 启用 Fragment 分支（如 `case 5 -> SettingPersonalFragment`）必须同步 `mobile HomeActivity.onBackInvoked()` 的返回分支；漏了就会一路落到 `mManager.canBack(0)` → `super.onBackInvoked()` → `finish()`，表现为「个性设置按返回直接关掉 app」。返回分支要覆盖所有设置子页 position。
+    - 自定义窗口尺寸的 Dialog（如 `AboutDialog`）必须在 `dialog.show()` **之前** `configureWindow()`，并显式 `setOnShowListener(d -> configureWindow(...))` 覆盖 `LightDialog.create` 的幂等回调；否则首帧先按 LightDialog 默认尺寸居中，show 后被改成本页尺寸，整窗「闪移」。此规则同样适用于任何绕过 `BaseAlertDialog` 直接用 `Dialog` 的弹窗。
+    - 脚本 json 首次生成 / 新增条目必须按 `py -> js -> html -> url` 插入对应分组尾部（`insertPos()`），不能一律 `sites.add(...)` append——已有 url 条目时新 py 会排到 url 后面。同时已有条目的相对次序一律不动（用户改过 / 排过的 json 保持现状），`reset()` 不重排。

@@ -36,7 +36,6 @@ public class SettingPersonalActivity extends BaseActivity {
     private ActivitySettingPersonalBinding mBinding;
     private String[] fullscreenMenuKey;
     private String[] homeMenuKey;
-    private String[] searchUi;
     private String[] searchColumn;
     private String[] searchResultSort;
     private String[] globalHistoryMode;
@@ -69,7 +68,6 @@ public class SettingPersonalActivity extends BaseActivity {
         mBinding.homeButtons.setOnClickListener(this::onHomeButtons);
         mBinding.fullscreenMenuKey.setOnClickListener(this::setFullscreenMenuKey);
         mBinding.homeMenuKey.setOnClickListener(this::setHomeMenuKey);
-        mBinding.playBackToDetail.setOnClickListener(this::setPlayBackToDetail);
         mBinding.playbackOverlay.setOnClickListener(this::setPlaybackOverlay);
         mBinding.episodeHistory.setOnClickListener(this::setEpisodeHistory);
         mBinding.globalHistory.setOnClickListener(this::setGlobalHistory);
@@ -78,7 +76,6 @@ public class SettingPersonalActivity extends BaseActivity {
         mBinding.groupRule.setOnClickListener(this::setGroupRule);
         mBinding.homeHistory.setOnClickListener(this::setHomeHistory);
         mBinding.searchThread.setOnClickListener(this::setSearchThread);
-        mBinding.searchUi.setOnClickListener(this::setSearchUi);
         mBinding.searchResultSort.setOnClickListener(this::setSearchResultSort);
         // mBinding.searchColumn.setOnClickListener(this::setSearchColumn); // 在搜索页面切换更方便
         mBinding.appBranding.setOnClickListener(this::startAppBranding);
@@ -99,7 +96,6 @@ public class SettingPersonalActivity extends BaseActivity {
         mBinding.homeButtonsText.setText(getString(R.string.home_buttons_selected, HomeButton.getButtons().size(), HomeButton.all().size()));
         mBinding.fullscreenMenuKeyText.setText((fullscreenMenuKey = getResources().getStringArray(R.array.select_fullscreen_menu_key))[Setting.getFullscreenMenuKey()]);
         mBinding.homeMenuKeyText.setText((homeMenuKey = getResources().getStringArray(R.array.select_home_menu_key))[Setting.getHomeMenuKey()]);
-        mBinding.playBackToDetailText.setText(getSwitch(Setting.isPlayBackToDetail()));
         mBinding.playbackOverlayText.setText(getSwitch(Setting.isPlaybackOverlayEnabled()));
         mBinding.episodeHistoryText.setText(getSwitch(Setting.isEpisodeHistory()));
         mBinding.globalHistoryText.setText((globalHistoryMode = getResources().getStringArray(R.array.select_global_history_mode))[Setting.getGlobalHistoryMode()]);
@@ -108,7 +104,6 @@ public class SettingPersonalActivity extends BaseActivity {
         mBinding.groupRuleText.setText(getString(R.string.setting_group_rule_summary, GroupRuleConfig.enabledCount(), GroupRuleConfig.totalCount()));
         mBinding.homeHistoryText.setText(getSwitch(Setting.isHomeHistory()));
         mBinding.searchThreadText.setText(String.valueOf(Setting.getSearchThread()));
-        mBinding.searchUiText.setText((searchUi = getResources().getStringArray(R.array.select_search_ui))[Setting.getSearchUi()]);
         mBinding.searchResultSortText.setText((searchResultSort = getResources().getStringArray(R.array.select_search_result_sort))[Setting.getSearchResultSort()]);
         // mBinding.searchColumnText.setText(getSearchColumnText()); // 在搜索页面切换更方便
         mBinding.appBrandingText.setText(AppBranding.getSummary(this));
@@ -177,11 +172,6 @@ public class SettingPersonalActivity extends BaseActivity {
         setText();
     }
 
-    private void setPlayBackToDetail(View view) {
-        Setting.putPlayBackToDetail(!Setting.isPlayBackToDetail());
-        setText();
-    }
-
     private void setEpisodeHistory(View view) {
         Setting.putEpisodeHistory(!Setting.isEpisodeHistory());
         setText();
@@ -220,11 +210,6 @@ public class SettingPersonalActivity extends BaseActivity {
             Setting.putSearchThread(value);
             setText();
         });
-    }
-
-    private void setSearchUi(View view) {
-        Setting.putSearchUi((Setting.getSearchUi() + 1) % searchUi.length);
-        setText();
     }
 
     private void setSearchResultSort(View view) {

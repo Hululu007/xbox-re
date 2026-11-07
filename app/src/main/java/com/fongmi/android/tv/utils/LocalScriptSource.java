@@ -116,7 +116,7 @@ public final class LocalScriptSource {
         File root = new File(dir);
         if (!root.isDirectory()) return out;
         collect(root, out);
-        // 首次生成 json 的次序：py -> js -> html -> url（url 是后来手工追加的，天然在尾部）；
+        // 首次生成 json 的次序：py -> js -> html -> url（url 恒排最后，见 insertPos()）；
         // 组内按绝对路径。已有 json 的次序由 load() 保留，不在这里重排。
         out.sort((a, b) -> {
             int byExt = extRank(a) - extRank(b);
@@ -374,12 +374,14 @@ public final class LocalScriptSource {
         for (JSONObject item : sites) migrated |= migrateHome(item);
         for (JSONObject item : bac) migrated |= migrateHome(item);
 
-        // 规则 3：新文件追加进 sites（规则 1、2 自然满足——已在里面就不动，保留手改的 name/ext/proxy）
+        // 规则 3：新增脚本按 py -> js -> html -> url 插入对应分组尾部；
+        // 已有条目的相对次序一律不动（用户改过 / 排过的 json 保持现状）。
         boolean changed = false;
         for (File file : found) {
             String key = keyOf(root, file);
             if (liveKeys.contains(key)) continue;
-            sites.add(newItem(root, file));
+            JSONObject item = newItem(root, file);
+            sites.add(insertPos(sites, item), item);
             liveKeys.add(key);
             changed = true;
         }
@@ -434,7 +436,23 @@ public final class LocalScriptSource {
 
     /* ---------------- 分类 ---------------- */
 
-    public static String kindOf(JSONObject item) {
+    /** 生成 / 新增条目时的类型次序：py(0) -> js(1) -> html(2) -> url(3)。 */
+    private static int insertPos(List<JSONObject> sites, JSONObject item) {
+        int rank = typeRank(item);
+        for (int i = 0; i < sites.size(); i++) if (typeRank(sites.get(i)) > rank) return i;
+        return sites.size();
+    }
+
+    private static int typeRank(JSONObject item) {
+        switch (kindOf(item)) {
+            case "py": return 0;
+            case "js": return 1;
+            case "html": return 2;
+            default: return 3;
+        }
+    }
+
+    private static String kindOf(JSONObject item) {
         String key = item.optString("key");
         if (key.endsWith("[url]")) return "url";
         if (key.endsWith("[py]")) return "py";
