@@ -215,7 +215,7 @@ jobs:
           }
           echo "Release signing configured (Gradle outputs unsigned APKs)"
 
-      - name: Build four release APKs
+      - name: Build two release APKs
         id: build_apks
         env:
           WEBHTV_RELEASE_TAG: ${{ steps.meta.outputs.tag }}
@@ -226,8 +226,6 @@ jobs:
           set -o pipefail
           ./gradlew \
             :app:assembleMobileArm64_v8aRelease \
-            :app:assembleMobileArmeabi_v7aRelease \
-            :app:assembleLeanbackArm64_v8aRelease \
             :app:assembleLeanbackArmeabi_v7aRelease \
             --no-daemon 2>&1 | tee /tmp/gradle-build.log
 
@@ -330,7 +328,7 @@ jobs:
             echo "== $apk"
             PKG="$("$AAPT2" dump packagename "$apk")"
             echo "  package: $PKG"
-            if [ "$PKG" != "com.fongmi.android.tv.xbox" ]; then
+            if [ "$PKG" != "com.fongmi.android.oktv" ]; then
               echo "::error title=Wrong applicationId::$PKG"
               exit 1
             fi
@@ -368,8 +366,8 @@ jobs:
             fi
             count=$((count+1))
           done
-          test "$count" -eq 4 || { echo "::error title=APK count::Expected 4 APKs, got $count"; exit 1; }
-          echo "Verified $count release-signed APKs with the xbox applicationId"
+          test "$count" -eq 2 || { echo "::error title=APK count::Expected 2 APKs, got $count"; exit 1; }
+          echo "Verified $count release-signed APKs with the oktv applicationId"
           # 可下载的自检报告：用户能拿 MT 显示的证书指纹 / 签名方案直接对照，
           # 不必依赖 CI 自述，也不必下载几十 MB 的 APK 去验。
           {
