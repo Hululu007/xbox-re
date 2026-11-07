@@ -1323,4 +1323,9 @@
     <string name="setting_web_home_theme_retry_message">重试已回退的主题版本？如果首次加载再次失败，将自动恢复稳定版本。</string>
     <string name="setting_web_home_theme_rollback_message">回退到上一个已验证的主题版本？当前版本会保留，之后仍可重试。</string>
     <string name="setting_web_home_theme_url_hint">https://example.com/webhome.html</string>
+
+    <!-- 播放设置：后台通知与亮度开关 -->
+    <string name="player_audio_book_notification">有声书后台通知</string>
+    <string name="player_music_notification">音乐后台通知</string>
+    <string name="player_remember_brightness">记住播放亮度</string>
 </resources>
