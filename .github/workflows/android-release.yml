@@ -114,6 +114,23 @@ jobs:
           # 远程托管弹窗：6 个子弹窗的窗口参数必须在 show 之前应用
           test "$(grep -c '窗口参数必须在 show 之前定好' app/src/main/java/com/fongmi/android/tv/ui/dialog/RemoteTrustDialog.java)" -eq 6
           echo "Remote trust dialog windows applied before show"
+          # OK影视+ / 星辰皮肤集成门禁（最新 restore-upstream 基线）
+          grep -q 'applicationId "com.fongmi.android.oktv"' app/build.gradle
+          grep -q 'versionCode 560' app/build.gradle
+          grep -q 'name="app_name">OK影视+' app/src/main/res/values/strings.xml
+          grep -q 'ThemeManager.init(this)' app/src/main/java/com/fongmi/android/tv/App.java
+          grep -q 'isSkinWallpaperActive' app/src/mobile/java/com/fongmi/android/tv/ui/base/BaseActivity.java
+          grep -q 'UiSettingsActivity' app/src/mobile/AndroidManifest.xml
+          grep -q '@+id/xcSkin' app/src/mobile/res/layout/fragment_setting.xml
+          grep -q 'mBinding.xcSkin' app/src/mobile/java/com/fongmi/android/tv/ui/fragment/SettingFragment.java
+          grep -q 'name="xc_skin_title"' app/src/main/res/values/strings.xml
+          grep -q '@+id/switch_skin_enable' app/src/mobile/res/layout/activity_ui_settings.xml
+          test -f app/src/mobile/res/drawable-nodpi/poster_shanjian.jpg
+          test -f app/src/mobile/res/drawable-nodpi/poster_shanjian_blur_soft.jpg
+          test -f app/src/main/java/com/fongmi/android/tv/web/WebThemePage.java
+          test -f app/src/main/java/com/fongmi/android/tv/web/WebThemeCapabilityRegistry.java
+          test -f app/src/main/res/layout/activity_app_branding.xml
+          echo "OK影视+ xingchen integration verified"
 
       - name: Run WebSocket danmaku tests
         id: unit_tests
@@ -215,7 +232,7 @@ jobs:
           }
           echo "Release signing configured (Gradle outputs unsigned APKs)"
 
-      - name: Build four release APKs
+      - name: Build two release APKs
         id: build_apks
         env:
           WEBHTV_RELEASE_TAG: ${{ steps.meta.outputs.tag }}
@@ -226,8 +243,6 @@ jobs:
           set -o pipefail
           ./gradlew \
             :app:assembleMobileArm64_v8aRelease \
-            :app:assembleMobileArmeabi_v7aRelease \
-            :app:assembleLeanbackArm64_v8aRelease \
             :app:assembleLeanbackArmeabi_v7aRelease \
             --no-daemon 2>&1 | tee /tmp/gradle-build.log
 
@@ -330,7 +345,7 @@ jobs:
             echo "== $apk"
             PKG="$("$AAPT2" dump packagename "$apk")"
             echo "  package: $PKG"
-            if [ "$PKG" != "com.fongmi.android.tv.xbox" ]; then
+            if [ "$PKG" != "com.fongmi.android.oktv" ]; then
               echo "::error title=Wrong applicationId::$PKG"
               exit 1
             fi
@@ -368,8 +383,8 @@ jobs:
             fi
             count=$((count+1))
           done
-          test "$count" -eq 4 || { echo "::error title=APK count::Expected 4 APKs, got $count"; exit 1; }
-          echo "Verified $count release-signed APKs with the xbox applicationId"
+          test "$count" -eq 2 || { echo "::error title=APK count::Expected 2 APKs, got $count"; exit 1; }
+          echo "Verified $count release-signed APKs with the oktv applicationId"
           # 可下载的自检报告：用户能拿 MT 显示的证书指纹 / 签名方案直接对照，
           # 不必依赖 CI 自述，也不必下载几十 MB 的 APK 去验。
           {

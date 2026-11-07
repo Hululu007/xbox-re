@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  星辰皮肤 · 变量层
+  用法：在布局里引 @color/xc_gold、@dimen/xc_corner_card 等即可；
+  想整体换主色，把 Theme.App 的父主题换成 Theme.App.XingChen（见文件末尾）。
+-->
+<resources>
+
+    <!-- 星辰金（原壳主色 #f0a400） -->
+    <color name="xc_gold">#F0A400</color>
+    <color name="xc_gold_dark">#C07F00</color>
+    <color name="xc_gold_light">#E8C547</color>
+
+    <!-- 毛玻璃面板：白底半透明 + 细描边，叠在壁纸上就是磨砂 -->
+    <color name="xc_glass_fill">#57FFFFFF</color>
+    <color name="xc_glass_stroke">#61FFFFFF</color>
+    <color name="xc_glass_fill_strong">#8CFFFFFF</color>
+
+    <!-- 深色毛玻璃（对话框用） -->
+    <color name="xc_glass_dark_fill">#CC1F2230</color>
+    <color name="xc_glass_dark_stroke">#33FFFFFF</color>
+
+    <!-- 文字 -->
+    <color name="xc_text_primary">#0C0E12</color>
+    <color name="xc_text_secondary">#5A6472</color>
+    <color name="xc_text_on_gold">#FFFFFF</color>
+
+    <!-- 圆角：胶囊 28 / 卡片 22 / 常规 16 / 小 12 -->
+    <dimen name="xc_corner_capsule">28dp</dimen>
+    <dimen name="xc_corner_card">22dp</dimen>
+    <dimen name="xc_corner_normal">16dp</dimen>
+    <dimen name="xc_corner_small">12dp</dimen>
+
+    <!-- 间距 -->
+    <dimen name="xc_margin">16dp</dimen>
+    <dimen name="xc_margin_small">12dp</dimen>
+    <dimen name="xc_margin_large">24dp</dimen>
+    <dimen name="xc_elevation_float">8dp</dimen>
+
+    <!-- 壁纸模糊半径（与 WallpaperBlur 的 18 一致，仅作参考） -->
+    <dimen name="xc_blur_radius">18dp</dimen>
+
+    <!--
+      可选主题：主色换成星辰金。
+      开启方式二选一：
+        1) 把 mobile/res/values/styles.xml 里 <style name="Theme.App" parent="Theme.Base" />
+           改成 <style name="Theme.App" parent="Theme.App.XingChen" />
+        2) 直接在你自己的主题里加 <item name="colorPrimary">@color/xc_gold</item>
+    -->
+    <style name="Theme.App.XingChen" parent="Theme.Base">
+        <item name="colorPrimary">@color/xc_gold</item>
+        <item name="colorPrimaryVariant">@color/xc_gold_dark</item>
+        <item name="colorOnPrimary">@color/xc_text_on_gold</item>
+        <item name="android:colorAccent">@color/xc_gold</item>
+    </style>
+
+</resources>

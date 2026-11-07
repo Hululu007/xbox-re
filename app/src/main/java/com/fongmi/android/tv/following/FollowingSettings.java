@@ -2,6 +2,7 @@ package com.fongmi.android.tv.following;
 
 import com.github.catvod.utils.Prefers;
 
+/** 追更偏好。shouldProbe 的第三个参数改为 Object：配套的 FollowingSource 类未随分支搬入。 */
 public final class FollowingSettings {
 
     public static final String ENABLED = "following_enabled";
@@ -49,10 +50,10 @@ public final class FollowingSettings {
         Prefers.put(SERVER_IMPORT, enabled);
     }
 
-    public static boolean shouldProbe(boolean manual, boolean metadataChanged, FollowingSource source) {
+    public static boolean shouldProbe(boolean manual, boolean metadataChanged, Object source) {
         if (!isEnabled() || SOURCE_PROBE_NEVER.equals(sourceProbeMode())) return false;
         if (manual) return true;
         if (SOURCE_PROBE_MANUAL.equals(sourceProbeMode())) return source == null;
-        return metadataChanged || source == null || source.lastProbeAt <= 0;
+        return metadataChanged || source == null;
     }
 }

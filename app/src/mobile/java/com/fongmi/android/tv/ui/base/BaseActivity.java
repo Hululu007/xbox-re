@@ -65,7 +65,8 @@ public abstract class BaseActivity extends AppCompatActivity {
     }
 
     protected boolean customWall() {
-        return true;
+        // 星辰皮肤接管壁纸时，不再叠原生 CustomWallView，否则那层 View 会盖住 Window 壁纸
+        return !com.xingchen.tv.theme.ThemeManager.isSkinWallpaperActive();
     }
 
     protected boolean customWallMotion() {

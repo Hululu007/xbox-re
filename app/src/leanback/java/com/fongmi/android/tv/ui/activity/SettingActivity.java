@@ -352,7 +352,7 @@ public class SettingActivity extends BaseActivity implements ConfigListener, Sit
         mBinding.wallUrl.setText(Setting.getWallDesc(WallConfig.getDesc()));
     }
 
-}
         private void onPersonal(View view) {
         SettingPersonalActivity.start(this);
     }
+}

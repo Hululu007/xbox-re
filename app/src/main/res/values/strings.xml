@@ -1,7 +1,7 @@
 <resources xmlns:xliff="http://schemas.android.com/apk/res-auto">
 
     <!-- App -->
-    <string name="app_name">TV xbox</string>
+    <string name="app_name">OK影视+</string>
 
     <!-- Live -->
     <string name="live_pass">Pass</string>
@@ -687,10 +687,10 @@
     <string name="setting_on">On</string>
 
     <!-- About -->
-    <string name="about_title">About xbox</string>
+    <string name="about_title">About OK影视+</string>
     <string name="about_free_badge">Lite</string>
     <string name="about_version">Version %1$s · %2$s/%3$s</string>
-    <string name="about_disclaimer">xbox is a stripped-down independent branch based on webhtv (package com.fongmi.android.tv.xbox) and can be installed alongside the original app.\n\nThis build does not provide online updates and will never check or install packages from the upstream project. Do not overwrite it with the upstream app. For new versions, use releases published by this project only.\n\nThe app itself is completely free and provides no paid services, video content, live sources, API sources, resource storage or content distribution. It is for technical learning, research and personal testing only; please uninstall it within 24 hours of downloading, installing or trying it. All consequences of continued use are borne by the user.\n\nThe app does not embed, sell or distribute any video resources, and is not responsible for interfaces, site sources, plugins, scripts, links, cloud-drive resources or third-party service content added by users. Users must comply with local laws and respect the rights of copyright owners and content providers.\n\nSelling, traffic diversion, paid maintenance, membership services, advertising monetisation, box preinstallation, TV box bundling or any other profit-making in the name of this app is strictly prohibited.\n\nIf you do not agree to the above, stop using and uninstall the app immediately.</string>
+    <string name="about_disclaimer">OK影视+ is a stripped-down independent branch based on webhtv (package com.fongmi.android.oktv) and can be installed over an older OK影视+ build and alongside the original app.\n\nThis build does not provide online updates and will never check or install packages from the upstream project. Do not overwrite it with the upstream app. For new versions, use releases published by this project only.\n\nThe app itself is completely free and provides no paid services, video content, live sources, API sources, resource storage or content distribution. It is for technical learning, research and personal testing only; please uninstall it within 24 hours of downloading, installing or trying it. All consequences of continued use are borne by the user.\n\nThe app does not embed, sell or distribute any video resources, and is not responsible for interfaces, site sources, plugins, scripts, links, cloud-drive resources or third-party service content added by users. Users must comply with local laws and respect the rights of copyright owners and content providers.\n\nSelling, traffic diversion, paid maintenance, membership services, advertising monetisation, box preinstallation, TV box bundling or any other profit-making in the name of this app is strictly prohibited.\n\nIf you do not agree to the above, stop using and uninstall the app immediately.</string>
     <string name="about_acknowledge">I understand</string>
 
     <!-- Backup & Restore -->
@@ -1367,4 +1367,12 @@
     <string name="detail_work_global_searching">当前站源无结果，正在全局搜索 %1$s...</string>
     <string name="detail_work_searching">正在当前站源搜索 %1$s...</string>
 
+    <string name="setting_app_branding">App icon</string>
+    <string name="app_branding_icon_current">Default icon</string>
+    <string name="app_branding_icon_history">Original icon</string>
+    <string name="app_branding_icon_select">Select icon</string>
+    <string name="xc_skin_title">星辰皮肤</string>
+    <string name="xc_skin_summary">壁纸 / 毛玻璃 / 封面</string>
+    <string name="xc_skin_enable">启用星辰皮肤</string>
+    <string name="xc_skin_enable_summary">关闭后恢复 OK影视+ 原有壁纸（自动返回首页）</string>
 </resources>

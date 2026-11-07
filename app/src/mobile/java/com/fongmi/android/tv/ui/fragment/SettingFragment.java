@@ -113,6 +113,7 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
         mBinding.live.setOnClickListener(this::onLive);
         mBinding.wall.setOnClickListener(this::onWall);
         mBinding.appearance.setOnClickListener(this::onAppearance);
+        mBinding.xcSkin.setOnClickListener(v -> com.fongmi.android.tv.ui.activity.UiSettingsActivity.start(requireActivity()));
         mBinding.cache.setOnClickListener(this::onCache);
         mBinding.backup.setOnClickListener(this::onBackup);
         mBinding.enhance.setOnClickListener(this::onEnhance);
@@ -365,7 +366,7 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
         super.onDestroyView();
         EventBus.getDefault().unregister(this);
     }
-}
         private void onPersonal(View view) {
         getRoot().change(5);
     }
+}
