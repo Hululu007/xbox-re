@@ -102,7 +102,6 @@ import com.fongmi.android.tv.setting.PlayerButtonSetting;
 import com.fongmi.android.tv.setting.PlayerSetting;
 import com.fongmi.android.tv.setting.Setting;
 import com.fongmi.android.tv.setting.SiteHealthStore;
-import com.fongmi.android.tv.ui.helper.TmdbInfoPanel;
 import com.fongmi.android.tv.ui.adapter.ArrayAdapter;
 import com.fongmi.android.tv.ui.adapter.EpisodeAdapter;
 import com.fongmi.android.tv.ui.adapter.FlagAdapter;
@@ -183,7 +182,6 @@ public class VideoActivity extends PlaybackActivity implements CustomKeyDownVod.
     private static final long AUDIO_SEEK_STEP_MAX_MS = 15000L;
 
     private ActivityVideoBinding mBinding;
-    private TmdbInfoPanel mTmdbInfo;
     private ViewGroup.LayoutParams mFrameParams;
     private Observer<Result> mObserveDetail;
     private Observer<Result> mObservePlayer;
@@ -496,7 +494,6 @@ public class VideoActivity extends PlaybackActivity implements CustomKeyDownVod.
 
     @Override
     protected void initView(Bundle savedInstanceState) {
-        mTmdbInfo = new TmdbInfoPanel(this, mBinding.flag);
         long start = System.currentTimeMillis();
         SpiderDebug.log("video-flow", "initView start sinceLaunch=%dms key=%s id=%s", getLaunchCost(start), getKey(), getId());
         if (!isCast() && hasInitialPreview()) showInitialPreview();
@@ -950,7 +947,6 @@ public class VideoActivity extends PlaybackActivity implements CustomKeyDownVod.
         item.checkContent(getContent());
         mBinding.progressLayout.showContent();
         mBinding.name.setText(item.getName());
-        if (mTmdbInfo != null) mTmdbInfo.load(item.getName());
         mFlagAdapter.addAll(item.getFlags());
         mBinding.video.requestFocus();
         App.removeCallbacks(mR4);
@@ -4859,7 +4855,6 @@ public class VideoActivity extends PlaybackActivity implements CustomKeyDownVod.
 
     @Override
     protected void onDestroy() {
-        if (mTmdbInfo != null) mTmdbInfo.cancel();
         mLyricsRefreshSeq++;
         if (mLyrics != null) mLyrics.release();
         mClock.release();

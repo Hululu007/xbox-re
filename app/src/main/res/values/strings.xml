@@ -1359,7 +1359,6 @@
     <string name="cat_web_failed">页面加载失败：%1$s</string>
     <string name="cat_web_opening">正在打开设置中心</string>
 
-    <!-- ② TMDB 详情核心（第八批底座） -->
     <string name="detail_image_permission_denied">存储权限被拒绝</string>
     <string name="detail_image_save_failed">图片保存失败</string>
     <string name="detail_image_save_success">已保存至：%1$s</string>
@@ -1367,33 +1366,5 @@
     <string name="detail_person_photos">相册</string>
     <string name="detail_work_global_searching">当前站源无结果，正在全局搜索 %1$s...</string>
     <string name="detail_work_searching">正在当前站源搜索 %1$s...</string>
-    <string name="tmdb_episode_canceled">已取消 · 共 %1$d 集</string>
-    <string name="tmdb_episode_compact_episode">TMDB 第 %1$d 集</string>
-    <string name="tmdb_episode_compact_planned">TMDB 待播</string>
-    <string name="tmdb_episode_compact_progress">TMDB %1$d/%2$d 集</string>
-    <string name="tmdb_episode_compact_season">TMDB S%1$d · %2$d 集</string>
-    <string name="tmdb_episode_compact_season_progress">TMDB S%1$d %2$d/%3$d 集</string>
-    <string name="tmdb_episode_compact_series">TMDB S%1$dE%2$d</string>
-    <string name="tmdb_episode_compact_series_total">TMDB S%1$dE%2$d · %3$d 集</string>
-    <string name="tmdb_episode_compact_total">TMDB %1$d 集</string>
-    <string name="tmdb_episode_complete">全 %1$d 集</string>
-    <string name="tmdb_episode_ongoing">更新至 %1$d 集</string>
-    <string name="tmdb_episode_ongoing_total">更新至 %1$d / 共 %2$d 集</string>
-    <string name="tmdb_episode_planned">待播</string>
-    <string name="tmdb_episode_planned_total">待播 · 计划 %1$d 集</string>
-    <string name="tmdb_episode_season_complete">第 %1$d 季 · 全 %2$d 集</string>
-    <string name="tmdb_episode_season_ongoing">第 %1$d 季 · 更新至 %2$d 集</string>
-    <string name="tmdb_episode_season_ongoing_total">第 %1$d 季 · 更新至 %2$d / 共 %3$d 集</string>
-    <string name="tmdb_episode_season_total">第 %1$d 季 · 共 %2$d 集</string>
-    <string name="tmdb_episode_series_ongoing">更新至 S%1$dE%2$d</string>
-    <string name="tmdb_episode_series_ongoing_total">更新至 S%1$dE%2$d · 全剧 %3$d 集</string>
-    <string name="tmdb_episode_total">共 %1$d 集</string>
-    <string name="tmdb_photos_label">剧照</string>
-    <string name="tmdb_posters_label">海报</string>
 
-    <!-- ② TMDB 信息区（第九批） -->
-    <string name="tmdb_info_cast">演职员</string>
-    <string name="tmdb_info_related">相关推荐</string>
-    <string name="tmdb_info_episodes">剧集信息</string>
-    <string name="tmdb_info_no_data">暂无资料</string>
 </resources>

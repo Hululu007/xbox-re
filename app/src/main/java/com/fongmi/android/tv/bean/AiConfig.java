@@ -33,13 +33,13 @@ public class AiConfig {
     public static final int DEFAULT_TITLE_EXTRACTION_PROMPT_VERSION = 2;
     public static final String LEGACY_TITLE_EXTRACTION_PROMPT_V1 = "你是影视资源标题解析器。你的任务是从网盘/资源站标题中提取真实影视作品名。\n"
             + "要求：只返回严格 JSON，不要 Markdown，不要解释；不要保留清晰度、编码、字幕、语言版本、更新状态、集数、合集、资源组、平台名；"
-            + "如果标题是拼音缩写、谐音、防和谐写法，请尽量还原为中文正式片名；学习样本来自用户本机手动修正，相关时优先，但不要强行套用；不要编造 TMDB ID。\n"
+            + "如果标题是拼音缩写、谐音、防和谐写法，请尽量还原为中文正式片名；学习样本来自用户本机手动修正，相关时优先，但不要强行套用；不要编造影视数据库 ID。\n"
             + "返回格式：{\"canonicalTitle\":\"剧名\",\"originalTitle\":\"\",\"mediaType\":\"tv|movie|unknown\",\"year\":0,\"seasonNumber\":-1,\"episodeNumber\":-1,\"episodeTitle\":\"\",\"aliases\":[\"别名\"],\"confidence\":0.0,\"reasonCode\":\"clean|homophone|pinyin|uncertain\"}";
     public static final String DEFAULT_TITLE_EXTRACTION_PROMPT = "你是影视资源标题解析器。你的任务是从网盘、资源站、推送链接标题中提取真实影视作品名。\n"
             + "要求：只返回严格 JSON，不要 Markdown，不要解释；不要保留清晰度、编码、字幕、语言版本、更新状态、集数、合集、资源组、平台名、线路名或分类词。"
             + "标题中的 #、空格、点、短横线、竖线常用于分隔或防和谐；如果两侧中文片段能组成正式片名，请合并还原，例如“凡人#修仙传”应提取为“凡人修仙传”。"
             + "开头或结尾的单字母、A/B/C、动漫、电影、电视剧、剧集等通常是资源分组或分类，不属于作品名。"
-            + "如果标题是拼音缩写、谐音、防和谐写法，请尽量还原为中文正式片名；学习样本来自用户本机手动修正，相关时优先，但不要强行套用；不要编造 TMDB ID。\n"
+            + "如果标题是拼音缩写、谐音、防和谐写法，请尽量还原为中文正式片名；学习样本来自用户本机手动修正，相关时优先，但不要强行套用；不要编造影视数据库 ID。\n"
             + "返回格式：{\"canonicalTitle\":\"剧名\",\"originalTitle\":\"\",\"mediaType\":\"tv|movie|unknown\",\"year\":0,\"seasonNumber\":-1,\"episodeNumber\":-1,\"episodeTitle\":\"\",\"aliases\":[\"别名\"],\"confidence\":0.0,\"reasonCode\":\"clean|homophone|pinyin|separator|uncertain\"}";
     public static final int DEFAULT_VIEWING_REPORT_PROMPT_VERSION = 2;
     public static final String LEGACY_VIEWING_REPORT_PROMPT_V1 = "你是观影行为分析专家。根据用户的观影统计数据和片单，生成深度个性化的观影画像报告。\n"

@@ -193,10 +193,5 @@
         <activity
             android:name=".ui.activity.SettingPersonalActivity"
             android:exported="false" />
-
-        <activity
-            android:name=".ui.activity.SettingTmdbActivity"
-            android:exported="false" />
-
 </application>
 </manifest>
