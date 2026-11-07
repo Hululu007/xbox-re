@@ -178,3 +178,16 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
     插入辅助方法一律用「锚点前追加」而非「替换原声明为 private」；改完必须全库扫一遍
     `LocalScriptSource.kindOf(` 之类的外部调用点，确认可见性没被降。任何对现有方法签名的改动，
     先 grep 调用点再提交，不要等 CI 编译来发现。
+
+24. **代理总闸的三根线不许再退回「jar 自行判定」**：
+    - 第 1 根线：`OkProxySelector.installAsDefault()` 在 `App.onCreate()` 调一次，
+      进程内所有 `openConnection(null)` 都命中 `global`；`clear()` **不得**再
+      `Authenticator.setDefault(null)`（selector 常驻后认证器要保留）。`system`
+      构造时已存系统原默认，`fallback()` 不会递归。
+    - 第 2 根线：`chaquo/ProxyEnv.apply()` 直接改写 CPython `os.environ` 的 6 个代理键，
+      py 的 requests 立即生效；`Python.isStarted()` 未启动就跳过，由 `PyLoader.getSpider()`
+      首次加载时再应用。**不要**改成往 ext 塞 proxy 字段、也不要清 spider 缓存重建。
+    - js 走 quickjs `Connect` 里的 `OkHttp.client()`、播放走 `MediaSourceFactory` 的
+      `OkHttp.player()`，二者构建时都挂了同一个 selector，天然跟随总闸，不要另加分支。
+    - 第 3 根线（反射 jar 的 MenuProxy）只作实测漏网兜底，**不预置**，避免绑死混淆类名。
+    - 口径不变：亮暗仍由 per-site 老逻辑判定、切站重新算、json 写回规则不动。
