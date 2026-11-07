@@ -20,6 +20,7 @@ import com.fongmi.android.tv.player.PlaybackRecoveryMonitor;
 import com.fongmi.android.tv.remote.RemoteAgent;
 import com.fongmi.android.tv.setting.ProxySetting;
 import com.fongmi.android.tv.setting.SiteFeature;
+import com.fongmi.android.tv.setting.ChalkSkin;
 import com.fongmi.android.tv.setting.Setting;
 import com.fongmi.android.tv.utils.DanmakuSearchListFocusFixer;
 import com.fongmi.android.tv.utils.NsdDeviceDiscovery;
@@ -100,6 +101,7 @@ public class App extends Application implements Application.ActivityLifecycleCal
         PlaybackMemoryMonitor.process().initialize(this);
         PlaybackSystemConditionMonitor.process().initialize(this);
         Setting.applyLanguage();
+        ChalkSkin.applyMode();
         DebugLogStore.restoreEnabled();
         if (DebugLogStore.isEnabled()) {
             PlaybackRecoveryMonitor.logPreviousResult(this);

@@ -4,6 +4,38 @@
         <item name="android:statusBarColor">@color/transparent</item>
         <item name="android:navigationBarColor">@color/transparent</item>
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+
+        <!-- Chalk: 锁定黑白灰，覆盖 DynamicColors 的系统取色 -->
+        <item name="colorPrimary">@color/chalk_ink</item>
+        <item name="colorOnPrimary">@color/chalk_on_badge</item>
+        <item name="colorPrimaryContainer">@color/chalk_selected</item>
+        <item name="colorOnPrimaryContainer">@color/chalk_on_selected</item>
+        <item name="colorSecondaryContainer">@color/chalk_selected</item>
+        <item name="colorOnSecondaryContainer">@color/chalk_on_selected</item>
+        <item name="colorTertiaryContainer">@color/chalk_selected_soft</item>
+        <item name="colorSurface">@color/chalk_card</item>
+        <item name="colorSurfaceVariant">@color/chalk_surface</item>
+        <item name="colorOnSurface">@color/chalk_ink</item>
+        <item name="colorOnSurfaceVariant">@color/chalk_sub</item>
+        <item name="colorError">@color/chalk_ink</item>
+        <item name="colorOnError">@color/chalk_on_badge</item>
+        <item name="colorErrorContainer">@color/chalk_selected_soft</item>
+        <item name="colorOnErrorContainer">@color/chalk_ink</item>
+        <item name="colorOutline">@color/chalk_line</item>
+        <item name="android:colorBackground">@color/chalk_bg</item>
+        <item name="android:windowBackground">@color/chalk_bg</item>
+        <item name="android:textColorPrimary">@color/chalk_ink</item>
+        <item name="android:textColorSecondary">@color/chalk_sub</item>
+        <item name="android:textColorHint">@color/chalk_sub</item>
+        <item name="android:statusBarColor">@color/chalk_bg</item>
+        <item name="android:navigationBarColor">@color/chalk_bg</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="colorControlNormal">@color/chalk_sub</item>
+        <item name="colorControlActivated">@color/chalk_ink</item>
+        <item name="colorControlHighlight">#1A16181B</item>
+        <item name="isLightTheme">true</item>
     </style>
 
     <style name="Theme.Splash" parent="Theme.Base">
@@ -86,8 +118,8 @@
 
     <style name="ToolbarTextAppearance" parent="TextAppearance.Material3.TitleLarge">
         <item name="android:textSize">20sp</item>
-        <item name="android:textColor">@color/white</item>
-        <item name="titleTextColor">@color/white</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="titleTextColor">?attr/colorOnSurface</item>
     </style>
 
     <style name="ToolbarPopupTheme" parent="ThemeOverlay.Material3.Light">

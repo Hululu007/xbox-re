@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Chalk 黑白皮肤：新增色板。放到 main 供两个 flavor 共用；不影响项目原有颜色名。 -->
+<resources>
+    <color name="chalk_bg">#FFFFFFFF</color>
+    <color name="chalk_card">#FFFFFFFF</color>
+    <color name="chalk_surface">#FFF5F6F7</color>
+    <color name="chalk_ink">#FF16181B</color>
+    <color name="chalk_sub">#FF6B7280</color>
+    <color name="chalk_line">#FFE3E6EA</color>
+    <color name="chalk_selected">#FF16181B</color>
+    <color name="chalk_selected_soft">#FFF0F1F3</color>
+    <color name="chalk_on_selected">#FFFFFFFF</color>
+    <color name="chalk_dark_bg">#FF0E1012</color>
+    <color name="chalk_dark_card">#FF1A1D21</color>
+    <color name="chalk_dark_ink">#FFF2F4F6</color>
+    <color name="chalk_dark_sub">#FF9AA2AC</color>
+    <color name="chalk_dark_line">#FF2C3138</color>
+    <color name="chalk_dark_selected">#FFF2F4F6</color>
+    <color name="chalk_dark_on_selected">#FF0E1012</color>
+    <color name="chalk_badge">#FF16181B</color>
+    <color name="chalk_on_badge">#FFFFFFFF</color>
+</resources>

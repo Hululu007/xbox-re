@@ -9,7 +9,7 @@
     <com.google.android.material.appbar.MaterialToolbar
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        app:navigationIconTint="@android:color/white"
+        app:navigationIconTint="?attr/colorOnSurface"
         app:title="@string/nav_setting"
         app:titleTextAppearance="@style/ToolbarTextAppearance" />
 
@@ -47,7 +47,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="16dp"
                         android:text="@string/setting_vod"
-                        android:textColor="@color/white"
+                        android:textColor="?attr/colorOnSurface"
                         android:textSize="16sp" />
 
                     <com.google.android.material.textview.MaterialTextView
@@ -57,7 +57,7 @@
                         android:ellipsize="middle"
                         android:gravity="end"
                         android:singleLine="true"
-                        android:textColor="@color/white"
+                        android:textColor="?attr/colorOnSurface"
                         android:textSize="16sp"
                         tools:text="https://" />
 
@@ -103,7 +103,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="16dp"
                         android:text="@string/setting_live"
-                        android:textColor="@color/white"
+                        android:textColor="?attr/colorOnSurface"
                         android:textSize="16sp" />
 
                     <com.google.android.material.textview.MaterialTextView
@@ -113,7 +113,7 @@
                         android:ellipsize="middle"
                         android:gravity="end"
                         android:singleLine="true"
-                        android:textColor="@color/white"
+                        android:textColor="?attr/colorOnSurface"
                         android:textSize="16sp"
                         tools:text="https://" />
 
@@ -159,7 +159,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="16dp"
                         android:text="@string/setting_wall"
-                        android:textColor="@color/white"
+                        android:textColor="?attr/colorOnSurface"
                         android:textSize="16sp" />
 
                     <com.google.android.material.textview.MaterialTextView
@@ -169,7 +169,7 @@
                         android:ellipsize="middle"
                         android:gravity="end"
                         android:singleLine="true"
-                        android:textColor="@color/white"
+                        android:textColor="?attr/colorOnSurface"
                         android:textSize="16sp"
                         tools:text="https://" />
 
@@ -206,7 +206,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/setting_enhance"
-                    android:textColor="@color/white"
+                    android:textColor="?attr/colorOnSurface"
                     android:textSize="16sp" />
 
             </androidx.appcompat.widget.LinearLayoutCompat>
@@ -223,7 +223,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/setting_player"
-                    android:textColor="@color/white"
+                    android:textColor="?attr/colorOnSurface"
                     android:textSize="16sp" />
 
             </androidx.appcompat.widget.LinearLayoutCompat>
@@ -240,7 +240,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/setting_danmaku"
-                    android:textColor="@color/white"
+                    android:textColor="?attr/colorOnSurface"
                     android:textSize="16sp" />
 
             </androidx.appcompat.widget.LinearLayoutCompat>
@@ -258,7 +258,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="16dp"
                     android:text="@string/setting_appearance"
-                    android:textColor="@color/white"
+                    android:textColor="?attr/colorOnSurface"
                     android:textSize="16sp" />
 
                 <com.google.android.material.textview.MaterialTextView
@@ -267,7 +267,7 @@
                     android:gravity="end"
                     android:singleLine="true"
                     android:text="@string/setting_appearance_summary"
-                    android:textColor="@color/white"
+                    android:textColor="?attr/colorOnSurface"
                     android:textSize="16sp" />
 
             </androidx.appcompat.widget.LinearLayoutCompat>
@@ -285,7 +285,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="16dp"
                     android:text="@string/setting_incognito"
-                    android:textColor="@color/white"
+                    android:textColor="?attr/colorOnSurface"
                     android:textSize="16sp" />
 
                 <com.google.android.material.textview.MaterialTextView
@@ -293,7 +293,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="end"
-                    android:textColor="@color/white"
+                    android:textColor="?attr/colorOnSurface"
                     android:textSize="16sp"
                     tools:text="Off" />
 
@@ -312,7 +312,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="16dp"
                     android:text="@string/setting_doh"
-                    android:textColor="@color/white"
+                    android:textColor="?attr/colorOnSurface"
                     android:textSize="16sp" />
 
                 <com.google.android.material.textview.MaterialTextView
@@ -320,7 +320,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="end"
-                    android:textColor="@color/white"
+                    android:textColor="?attr/colorOnSurface"
                     android:textSize="16sp"
                     tools:text="Google" />
 
@@ -339,7 +339,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="16dp"
                     android:text="@string/setting_cache"
-                    android:textColor="@color/white"
+                    android:textColor="?attr/colorOnSurface"
                     android:textSize="16sp" />
 
                 <com.google.android.material.textview.MaterialTextView
@@ -347,7 +347,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="end"
-                    android:textColor="@color/white"
+                    android:textColor="?attr/colorOnSurface"
                     android:textSize="16sp"
                     tools:text="1.0 MB" />
 
@@ -372,7 +372,7 @@
                     android:paddingEnd="12dp"
                     android:paddingBottom="8dp"
                     android:text="@string/setting_backup"
-                    android:textColor="@color/white"
+                    android:textColor="?attr/colorOnSurface"
                     android:textSize="16sp" />
 
                 <com.google.android.material.textview.MaterialTextView
@@ -387,7 +387,7 @@
                     android:paddingEnd="12dp"
                     android:paddingBottom="8dp"
                     android:text="@string/setting_restore"
-                    android:textColor="@color/white"
+                    android:textColor="?attr/colorOnSurface"
                     android:textSize="16sp" />
 
             </androidx.appcompat.widget.LinearLayoutCompat>
@@ -405,7 +405,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="16dp"
                     android:text="@string/setting_about"
-                    android:textColor="@color/white"
+                    android:textColor="?attr/colorOnSurface"
                     android:textSize="16sp" />
 
                 <com.google.android.material.textview.MaterialTextView
@@ -413,11 +413,39 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="end"
-                    android:textColor="@color/white"
+                    android:textColor="?attr/colorOnSurface"
                     android:textSize="16sp"
                     tools:text="1.2.1" />
 
             </androidx.appcompat.widget.LinearLayoutCompat>
+            <androidx.appcompat.widget.LinearLayoutCompat
+                android:id="@+id/chalk"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/shape_item"
+                android:orientation="horizontal">
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="16dp"
+                    android:text="@string/setting_chalk_skin"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="16sp" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/chalkValue"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="end"
+                    android:singleLine="true"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="16sp"
+                    tools:text="开" />
+
+            </androidx.appcompat.widget.LinearLayoutCompat>
+
         </androidx.appcompat.widget.LinearLayoutCompat>
     </androidx.core.widget.NestedScrollView>
 </androidx.appcompat.widget.LinearLayoutCompat>

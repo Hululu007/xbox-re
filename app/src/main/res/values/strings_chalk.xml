@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Chalk 黑白皮肤：新增文案。独立文件，不改庞大的 strings.xml。 -->
+<resources>
+    <string name="setting_chalk_skin">黑白皮肤（Chalk）</string>
+    <string name="setting_chalk_skin_summary">白底黑字 / 黑底白字选中态</string>
+    <string name="chalk_skin_hint">开启：强制浅色黑白；关闭：跟随系统深浅（仍为黑白配色）</string>
+</resources>

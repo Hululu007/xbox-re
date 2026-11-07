@@ -15,8 +15,10 @@
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:layout_alignParentBottom="true"
-        android:background="@color/transparent"
+        android:background="@color/chalk_card"
         app:elevation="0dp"
+        app:itemBackground="@drawable/chalk_nav_item"
+        app:itemRippleColor="@color/chalk_selected_soft"
         app:itemIconTint="@color/selector_nav"
         app:labelVisibilityMode="unlabeled"
         app:menu="@menu/menu_nav" />

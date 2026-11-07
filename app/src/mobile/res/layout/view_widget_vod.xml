@@ -13,7 +13,7 @@
         android:layout_marginTop="24dp"
         android:background="@drawable/shape_widget"
         android:gravity="center"
-        android:textColor="@color/white"
+        android:textColor="?attr/colorOnSurface"
         android:textSize="14sp"
         android:visibility="gone"
         tools:text="@string/error_play_url"
@@ -43,7 +43,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:fontFeatureSettings="tnum"
-            android:textColor="@color/white"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="14sp"
             tools:text="00:00:00" />
 

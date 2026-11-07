@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Chalk: 深色档仍是纯黑白灰；由 ChalkSkin 关掉强制浅色后生效 -->
+<resources>
+    <style name="Theme.Base" parent="Theme.Material3.DynamicColors.DayNight.NoActionBar">
+        <item name="android:statusBarColor">@color/transparent</item>
+        <item name="android:navigationBarColor">@color/transparent</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+
+        <!-- Chalk 深色：仍是纯黑白灰，无彩色 -->
+        <item name="colorPrimary">@color/chalk_dark_selected</item>
+        <item name="colorOnPrimary">@color/chalk_dark_on_selected</item>
+        <item name="colorPrimaryContainer">@color/chalk_dark_selected</item>
+        <item name="colorOnPrimaryContainer">@color/chalk_dark_on_selected</item>
+        <item name="colorSecondaryContainer">@color/chalk_dark_selected</item>
+        <item name="colorOnSecondaryContainer">@color/chalk_dark_on_selected</item>
+        <item name="colorTertiaryContainer">@color/chalk_dark_card</item>
+        <item name="colorSurface">@color/chalk_dark_card</item>
+        <item name="colorSurfaceVariant">@color/chalk_dark_card</item>
+        <item name="colorOnSurface">@color/chalk_dark_ink</item>
+        <item name="colorOnSurfaceVariant">@color/chalk_dark_sub</item>
+        <item name="colorError">@color/chalk_dark_ink</item>
+        <item name="colorOnError">@color/chalk_dark_on_selected</item>
+        <item name="colorErrorContainer">@color/chalk_dark_card</item>
+        <item name="colorOnErrorContainer">@color/chalk_dark_ink</item>
+        <item name="colorOutline">@color/chalk_dark_line</item>
+        <item name="android:colorBackground">@color/chalk_dark_bg</item>
+        <item name="android:windowBackground">@color/chalk_dark_bg</item>
+        <item name="android:textColorPrimary">@color/chalk_dark_ink</item>
+        <item name="android:textColorSecondary">@color/chalk_dark_sub</item>
+        <item name="android:textColorHint">@color/chalk_dark_sub</item>
+        <item name="android:statusBarColor">@color/chalk_dark_bg</item>
+        <item name="android:navigationBarColor">@color/chalk_dark_bg</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="colorControlNormal">@color/chalk_dark_sub</item>
+        <item name="colorControlActivated">@color/chalk_dark_ink</item>
+        <item name="colorControlHighlight">#33F2F4F6</item>
+    </style>
+</resources>

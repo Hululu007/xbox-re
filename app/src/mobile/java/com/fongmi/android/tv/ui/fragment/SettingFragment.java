@@ -25,6 +25,7 @@ import com.fongmi.android.tv.impl.ConfigListener;
 import com.fongmi.android.tv.impl.LiveListener;
 import com.fongmi.android.tv.impl.SiteListener;
 import com.fongmi.android.tv.setting.Setting;
+import com.fongmi.android.tv.setting.ChalkSkin;
 import com.fongmi.android.tv.ui.activity.HomeActivity;
 import com.fongmi.android.tv.ui.base.BaseFragment;
 import com.fongmi.android.tv.ui.dialog.AboutDialog;
@@ -89,7 +90,17 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
         setWallText();
         mBinding.versionText.setText(AppVersion.fullName());
         setOtherText();
+        setChalkText();
         setCacheText();
+    }
+
+    private void setChalkText() {
+        mBinding.chalkValue.setText(getSwitch(ChalkSkin.isEnabled()));
+    }
+
+    private void toggleChalk(View view) {
+        ChalkSkin.setEnabled(!ChalkSkin.isEnabled());
+        setChalkText();
     }
 
     private void setOtherText() {
@@ -126,6 +137,7 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
         mBinding.liveHome.setOnClickListener(this::onLiveHome);
         mBinding.wall.setOnLongClickListener(this::onWallEdit);
         mBinding.incognito.setOnClickListener(this::setIncognito);
+        mBinding.chalk.setOnClickListener(this::toggleChalk);
         mBinding.vodHistory.setOnClickListener(this::onVodHistory);
         mBinding.liveHistory.setOnClickListener(this::onLiveHistory);
         mBinding.wallDefault.setOnClickListener(this::setWallDefault);

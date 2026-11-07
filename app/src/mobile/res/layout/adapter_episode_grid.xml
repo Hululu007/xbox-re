@@ -4,7 +4,7 @@
     android:id="@+id/text"
     android:layout_width="match_parent"
     android:layout_height="40dp"
-    android:background="@drawable/shape_video_episode_grid"
+    android:background="@drawable/chalk_episode"
     android:ellipsize="start"
     android:focusable="true"
     android:gravity="center"

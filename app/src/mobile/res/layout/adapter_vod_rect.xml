@@ -11,7 +11,7 @@
         android:id="@+id/image"
         android:layout_width="match_parent"
         android:layout_height="80dp"
-        android:background="@color/black_20"
+        android:background="@color/chalk_surface"
         app:shapeAppearanceOverlay="@style/Vod.Grid" />
 
     <com.google.android.material.textview.MaterialTextView
@@ -61,7 +61,7 @@
         android:ellipsize="end"
         android:gravity="center"
         android:maxLines="1"
-        android:textColor="@color/white"
+        android:textColor="?attr/colorOnSurface"
         app:autoSizeMaxTextSize="14sp"
         app:autoSizeMinTextSize="12sp"
         app:autoSizeStepGranularity="1sp"

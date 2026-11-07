@@ -12,7 +12,7 @@
         android:id="@+id/name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/shape_live"
+        android:background="@drawable/chalk_group"
         android:duplicateParentState="true"
         android:ellipsize="marquee"
         android:gravity="center"
