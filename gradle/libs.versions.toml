@@ -52,6 +52,7 @@ simpleXml = "2.7.1"
 smbj = "0.14.0"
 textdrawable = "1.0.3"
 zxingCore = "3.5.4"
+jgit = "6.10.0.202406032230-r"
 
 [libraries]
 annotation = { group = "androidx.annotation", name = "annotation", version.ref = "annotation" }
@@ -129,6 +130,7 @@ simple-xml = { group = "org.simpleframework", name = "simple-xml", version.ref =
 smbj = { group = "com.hierynomus", name = "smbj", version.ref = "smbj" }
 textdrawable = { group = "com.github.jahirfiquitiva", name = "TextDrawable", version.ref = "textdrawable" }
 zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxingCore" }
+jgit = { group = "org.eclipse.jgit", name = "org.eclipse.jgit", version.ref = "jgit" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

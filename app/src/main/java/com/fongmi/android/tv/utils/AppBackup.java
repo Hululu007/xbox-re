@@ -60,6 +60,10 @@ public final class AppBackup {
         return hasBackupPrefix(name) && name.endsWith(SUFFIX);
     }
 
+    public static boolean isPartialBackupName(String name) {
+        return isBackupZipName(name) && name.endsWith("-partial" + SUFFIX);
+    }
+
     public static boolean isBackupManifestName(String name) {
         return hasBackupPrefix(name) && name.endsWith(".json");
     }
@@ -68,6 +72,12 @@ public final class AppBackup {
         if (!isBackupZipName(name)) return "";
         int prefixLength = name.startsWith(PREFIX) ? PREFIX.length() : LEGACY_PREFIX.length();
         return name.substring(prefixLength, name.length() - SUFFIX.length());
+    }
+
+    public static int compareBackupNames(String left, String right) {
+        int timestamp = backupSortKey(left).compareToIgnoreCase(backupSortKey(right));
+        if (timestamp != 0) return timestamp;
+        return Boolean.compare(isPartialBackupName(right), isPartialBackupName(left));
     }
 
     private static boolean hasBackupPrefix(String name) {
@@ -82,6 +92,11 @@ public final class AppBackup {
         File file = File.createTempFile(PREFIX, SUFFIX, Path.cache());
         create(file, progress);
         return file;
+    }
+
+    public static CreatedBackup createTempResult(Progress progress) throws IOException {
+        File file = File.createTempFile(PREFIX, SUFFIX, Path.cache());
+        return new CreatedBackup(file, create(file, progress));
     }
 
     public static CreateResult create(File target) throws IOException {
@@ -426,6 +441,29 @@ public final class AppBackup {
     public interface Progress {
 
         void onProgress(String stage, int percent, long bytes, long total);
+    }
+
+    public static final class CreatedBackup {
+
+        private final File file;
+        private final CreateResult result;
+
+        CreatedBackup(File file, CreateResult result) {
+            this.file = file;
+            this.result = result;
+        }
+
+        public File getFile() {
+            return file;
+        }
+
+        public CreateResult getResult() {
+            return result;
+        }
+
+        public boolean hasWarning() {
+            return result != null && result.hasWarning();
+        }
     }
 
     public static final class CreateResult {

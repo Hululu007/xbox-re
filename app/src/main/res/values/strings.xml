@@ -1330,4 +1330,5 @@
     <string name="dialog_short_drama_site_default">默认 [短]/短剧</string>
     <string name="dialog_short_drama_site_manage">选择短剧源</string>
     <string name="dialog_short_drama_site_disabled">已排除：%1$s</string>
+    <string name="git_cloud_account_count">账号 %1$d</string>
 </resources>
