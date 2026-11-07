@@ -39,6 +39,7 @@ import com.fongmi.android.tv.bean.ShortDramaConfig;
 import com.fongmi.android.tv.ui.dialog.ShortDramaSourceDialog;
 import com.fongmi.android.tv.gitcloud.GitCloudAccountStore;
 import com.fongmi.android.tv.ui.dialog.GitCloudDialog;
+import com.fongmi.android.tv.ui.dialog.WebHomeThemeDialog;
 import com.github.catvod.crawler.SpiderDebug;
 
 public class SettingEnhanceActivity extends BaseActivity {
@@ -97,6 +98,7 @@ public class SettingEnhanceActivity extends BaseActivity {
         mBinding.scriptManage.setOnClickListener(view -> ScriptManageDialog.show(this, this::setText));
         mBinding.shortDramaSource.setOnClickListener(this::setShortDramaSource);
         mBinding.gitCloud.setOnClickListener(view -> GitCloudDialog.show(this, this::setText));
+        mBinding.webHomeTheme.setOnClickListener(view -> WebHomeThemeDialog.show(this, this::setText));
     }
 
     private void reorderItems() {
@@ -117,6 +119,7 @@ public class SettingEnhanceActivity extends BaseActivity {
                 mBinding.siteHealthSort,
                 mBinding.shortDramaSource,
         mBinding.gitCloud,
+        mBinding.webHomeTheme,
         mBinding.debugLog,
                 mBinding.playbackWebhook
         };
@@ -134,6 +137,7 @@ public class SettingEnhanceActivity extends BaseActivity {
         safeSet("debugLog", mBinding.debugLogText, () -> getSwitch(Setting.isDebugLog()));
         safeSet("shortDramaSource", mBinding.shortDramaSourceText, () -> getSwitch(!ShortDramaConfig.objectFrom(Setting.getShortDramaConfig()).getDisplayRules().isEmpty()));
         safeSet("gitCloud", mBinding.gitCloudText, () -> getString(R.string.git_cloud_account_count, GitCloudAccountStore.list().size()));
+        safeSet("webHomeTheme", mBinding.webHomeThemeText, () -> WebHomeThemeDialog.summary(this));
         safeSet("siteHealthSort", mBinding.siteHealthSortText, () -> getSwitch(Setting.isSiteHealthSort()));
         safeSet("webHomeExtension", mBinding.webHomeExtensionText, () -> {
             WebHomeExtensionRegistry.Snapshot webHomeExtension = WebHomeExtensionRegistry.get().snapshot();

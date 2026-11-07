@@ -43,6 +43,7 @@ import com.fongmi.android.tv.bean.ShortDramaConfig;
 import com.fongmi.android.tv.ui.dialog.ShortDramaSourceDialog;
 import com.fongmi.android.tv.gitcloud.GitCloudAccountStore;
 import com.fongmi.android.tv.ui.dialog.GitCloudDialog;
+import com.fongmi.android.tv.ui.dialog.WebHomeThemeDialog;
 import com.github.catvod.crawler.SpiderDebug;
 import com.google.gson.JsonObject;
 
@@ -110,6 +111,7 @@ public class SettingEnhanceFragment extends BaseFragment {
         mBinding.scriptManage.setOnClickListener(view -> ScriptManageDialog.show(this));
         mBinding.shortDramaSource.setOnClickListener(this::setShortDramaSource);
         mBinding.gitCloud.setOnClickListener(view -> GitCloudDialog.show(this, this::setText));
+        mBinding.webHomeTheme.setOnClickListener(view -> WebHomeThemeDialog.show(requireActivity(), this::setText));
         mBinding.defaultProxy.setOnClickListener(view -> SiteFeatureDialog.proxyUrl(requireActivity(), this::setText));
     }
 
@@ -132,6 +134,7 @@ public class SettingEnhanceFragment extends BaseFragment {
                 mBinding.siteHealthSort,
                 mBinding.shortDramaSource,
         mBinding.gitCloud,
+        mBinding.webHomeTheme,
         mBinding.debugLog,
                 mBinding.playbackWebhook
         };
@@ -149,6 +152,7 @@ public class SettingEnhanceFragment extends BaseFragment {
         safeSet("debugLog", mBinding.debugLogText, () -> getSwitch(Setting.isDebugLog()));
         safeSet("shortDramaSource", mBinding.shortDramaSourceText, () -> getSwitch(!ShortDramaConfig.objectFrom(Setting.getShortDramaConfig()).getDisplayRules().isEmpty()));
         safeSet("gitCloud", mBinding.gitCloudText, () -> getString(R.string.git_cloud_account_count, GitCloudAccountStore.list().size()));
+        safeSet("webHomeTheme", mBinding.webHomeThemeText, () -> WebHomeThemeDialog.summary(requireContext()));
         safeSet("siteHealthSort", mBinding.siteHealthSortText, () -> getSwitch(Setting.isSiteHealthSort()));
         safeSet("webHomeExtension", mBinding.webHomeExtensionText, () -> {
             WebHomeExtensionRegistry.Snapshot webHomeExtension = WebHomeExtensionRegistry.get().snapshot();
