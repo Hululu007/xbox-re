@@ -47,7 +47,11 @@ public final class AppBackup {
     }
 
     public static String fileName() {
-        return PREFIX + LocalDateTime.now().format(STAMP) + SUFFIX;
+        return fileName(false);
+    }
+
+    public static String fileName(boolean partial) {
+        return PREFIX + LocalDateTime.now().format(STAMP) + (partial ? "-partial" : "") + SUFFIX;
     }
 
     public static boolean isBackup(File file) {
