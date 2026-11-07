@@ -134,6 +134,7 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
 10. **端到端验证不能只靠 CI 自述**。沙盒出网被网关挡住，Release 资产与 Actions artifact 均下载不了（403），所以每轮都必须如实写明「未做端到端验包」。修复方式：CI 生成 `dist/signature-report.txt`（每个 APK 的 META-INF 清单、apksigner verify 全文、证书、sha256）并作为 Release 资产上传，让用户能直接对照 MT 显示的指纹；不得在未声明这一限制的情况下说「签名已验证/完成」。用户工具报错时先问清具体文字与签名方案，不要凭 CI 结果反推「已经修好」。
 11. **收紧门禁前先看正常输出长什么样**。曾为「更严谨」加了「拒绝任何 apksigner WARNING」，结果 run `42268600502` 倒在验签步骤：AGP 打的包必然对 `META-INF/app-metadata.properties`、`version-control-info.textproto`、`androidx.*.version` 报 `WARNING: ... not protected by signature`，这是标准提示，与签名有效性无关，MT 也不会因此判不通过。断言必须带白名单（只拦截 `not protected by signature` 之外的 WARNING），不能一刀切。新增任何「全量拒绝型」断言前，先跑一次看真实输出。
 
+12. **APK 变体数与校验断言不得硬编码**。曾把构建任务写死四行 `assemble*Release`、验签步骤写死 `test "$count" -eq 4`；用户只要「手机 v8a + TV v7a」两个包时就必须改 workflow，否则会多构建两个、或倒在该断言上白耗一轮 Actions。构建任务由 `workflow_dispatch` 输入 `apk_variants` 拼装（`all` = 四包，或逗号分隔指定），`expected_apk_count` 写进 `steps.build_apks.outputs`，验签步骤按输出值断言。collect / 补签 / 验签 / manifests / 发版全部用 `dist/*.apk` glob 动态遍历，增减变体不再需要改脚本。
 
 
 ### 每次出包前的固定预检清单
@@ -143,7 +144,7 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
 - workflow YAML 可解析；关键步骤计数正确（未签名构建、补签、v1 校验、REST 发版）
 - 源码门禁断言逐条本地模拟，失败项为 0
 - 预计 tag 不存在
-- 正式签名 `CN=xbox-re`、applicationId `.xbox` 共存、APK 恰好 4 个
+- 正式签名 `CN=xbox-re`、applicationId `.xbox` 共存、APK 数量与本次 `apk_variants` 输入一致（默认 4，可指定 2）
 - 本轮只 dispatch 一次；轮询到 completed 才下结论
 - 断言若用「拒绝任何 WARNING / 任何差异」这种全量口径，必须确认过正常输出里没有该类内容
 - `signature-report.txt` 已生成并上传；若资产下载受限，明确告知「未端到端验包」，附证书 SHA256 指纹供用户对照

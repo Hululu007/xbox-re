@@ -35,6 +35,11 @@ on:
         required: false
         default: true
         type: boolean
+      apk_variants:
+        description: "APK variants: all (four APKs) or comma separated mobile-arm64_v8a / mobile-armeabi_v7a / leanback-arm64_v8a / leanback-armeabi_v7a"
+        required: false
+        default: all
+        type: string
 
 permissions:
   contents: write
@@ -215,21 +220,46 @@ jobs:
           }
           echo "Release signing configured (Gradle outputs unsigned APKs)"
 
-      - name: Build four release APKs
+      - name: Build release APKs
         id: build_apks
         env:
           WEBHTV_RELEASE_TAG: ${{ steps.meta.outputs.tag }}
           WEBHTV_APK_SUFFIX: ${{ steps.meta.outputs.apk_suffix }}
+          APK_VARIANTS: ${{ inputs.apk_variants }}
         run: |
+          set -euo pipefail
           chmod +x ./gradlew
           rm -rf Release/apk
-          set -o pipefail
-          ./gradlew \
-            :app:assembleMobileArm64_v8aRelease \
-            :app:assembleMobileArmeabi_v7aRelease \
-            :app:assembleLeanbackArm64_v8aRelease \
-            :app:assembleLeanbackArmeabi_v7aRelease \
-            --no-daemon 2>&1 | tee /tmp/gradle-build.log
+          # 变体由 dispatch 输入决定：all = 四包；或逗号分隔指定，避免为只出一两个包重复改 workflow
+          VARIANTS="${APK_VARIANTS:-all}"
+          case "$VARIANTS" in
+            all|ALL|"")
+              TASKS=":app:assembleMobileArm64_v8aRelease :app:assembleMobileArmeabi_v7aRelease :app:assembleLeanbackArm64_v8aRelease :app:assembleLeanbackArmeabi_v7aRelease"
+              EXPECTED=4
+              ;;
+            *)
+              TASKS=""
+              EXPECTED=0
+              IFS=',' read -ra LIST <<< "$VARIANTS"
+              for v in "${LIST[@]}"; do
+                v="$(printf '%s' "$v" | tr -d '[:space:]')"
+                [ -z "$v" ] && continue
+                case "$v" in
+                  mobile-arm64_v8a)      t=":app:assembleMobileArm64_v8aRelease" ;;
+                  mobile-armeabi_v7a)    t=":app:assembleMobileArmeabi_v7aRelease" ;;
+                  leanback-arm64_v8a)    t=":app:assembleLeanbackArm64_v8aRelease" ;;
+                  leanback-armeabi_v7a)  t=":app:assembleLeanbackArmeabi_v7aRelease" ;;
+                  *) echo "::error title=Unknown APK variant::$v"; exit 1 ;;
+                esac
+                TASKS="$TASKS $t"
+                EXPECTED=$((EXPECTED+1))
+              done
+              ;;
+          esac
+          [ "$EXPECTED" -ge 1 ] || { echo "::error title=No APK variant selected::apk_variants resolved to zero variants"; exit 1; }
+          echo "expected_apk_count=$EXPECTED" >> "$GITHUB_OUTPUT"
+          echo "Building $EXPECTED APK(s):$TASKS"
+          ./gradlew $TASKS --no-daemon 2>&1 | tee /tmp/gradle-build.log
 
       - name: Report build failure
         if: failure() && steps.build_apks.outcome == 'failure'
@@ -368,7 +398,9 @@ jobs:
             fi
             count=$((count+1))
           done
-          test "$count" -eq 4 || { echo "::error title=APK count::Expected 4 APKs, got $count"; exit 1; }
+          EXPECTED="${{ steps.build_apks.outputs.expected_apk_count }}"
+          [ -n "$EXPECTED" ] || EXPECTED=4
+          test "$count" -eq "$EXPECTED" || { echo "::error title=APK count::Expected $EXPECTED APKs, got $count"; exit 1; }
           echo "Verified $count release-signed APKs with the xbox applicationId"
           # 可下载的自检报告：用户能拿 MT 显示的证书指纹 / 签名方案直接对照，
           # 不必依赖 CI 自述，也不必下载几十 MB 的 APK 去验。
@@ -542,7 +574,7 @@ jobs:
                   raise SystemExit(1)
               print("Release created:", tag)
           upload_url = rel["upload_url"].split("{")[0]
-          assets = sorted(set(glob.glob("dist/*.apk") + glob.glob("dist/*.json")))
+          assets = sorted(set(glob.glob("dist/*.apk") + glob.glob("dist/*.json") + glob.glob("dist/*.txt")))
           print("assets:", assets)
           if not assets:
               raise SystemExit("::error title=No release assets::dist is empty")
