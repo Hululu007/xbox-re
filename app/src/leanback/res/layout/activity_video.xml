@@ -743,8 +743,6 @@
         android:orientation="vertical"
         android:paddingBottom="8dp">
 
-<include layout="@layout/view_tmdb_info" />
-
         <androidx.leanback.widget.HorizontalGridView
             android:id="@+id/flag"
             android:layout_width="match_parent"

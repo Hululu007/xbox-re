@@ -496,7 +496,7 @@ public class VideoActivity extends PlaybackActivity implements CustomKeyDownVod.
 
     @Override
     protected void initView(Bundle savedInstanceState) {
-        mTmdbInfo = new TmdbInfoPanel(this, mBinding.getRoot());
+        mTmdbInfo = new TmdbInfoPanel(this, mBinding.flag);
         long start = System.currentTimeMillis();
         SpiderDebug.log("video-flow", "initView start sinceLaunch=%dms key=%s id=%s", getLaunchCost(start), getKey(), getId());
         if (!isCast() && hasInitialPreview()) showInitialPreview();

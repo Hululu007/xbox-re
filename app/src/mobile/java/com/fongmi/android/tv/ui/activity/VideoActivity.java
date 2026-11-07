@@ -512,7 +512,7 @@ public class VideoActivity extends PlaybackActivity implements Clock.Callback, C
 
     @Override
     protected void initView(Bundle savedInstanceState) {
-        mTmdbInfo = new TmdbInfoPanel(this, mBinding.getRoot());
+        mTmdbInfo = new TmdbInfoPanel(this, mBinding.flag);
         super.initView(savedInstanceState);
         mRestoringConfigurationPlayback = savedInstanceState != null;
         ViewCompat.setOnApplyWindowInsetsListener(mBinding.getRoot(), (v, insets) -> setStatusBar(insets));
