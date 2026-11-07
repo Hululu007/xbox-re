@@ -365,7 +365,8 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
         super.onDestroyView();
         EventBus.getDefault().unregister(this);
     }
-}
-        private void onPersonal(View view) {
-        getRoot().change(5);
+
+    private void onPersonal(View view) {
+    getRoot().change(5);
     }
+}
