@@ -221,7 +221,6 @@
                 android:focusableInTouchMode="true"
                 android:nextFocusLeft="@id/appearance"
                 android:nextFocusRight="@id/personal"
-                android:nextFocusUp="@id/ai"
                 android:nextFocusDown="@id/doh"
                 android:orientation="horizontal">
 

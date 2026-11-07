@@ -137,6 +137,7 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
 
 
 12. **搬入上游 Java 必须做「方法级可达性」检查，不能只查 import**。`import` 可达 ≠ 方法存在：第七/八批搬入 44+31 个类后，本地只校验了 import 与 R 引用，漏掉 若干公共类方法 / `Setting.resolveTmdbDetailLightTheme(int,boolean)` / `Util.resetApp()` 三个静态调用，以及 `Setting.clampTmdbDetailTheme(int)` 这个被调私有方法——这些只有到 CI 编译才会报 `cannot find symbol`。规定：每批搬入后，扫描新增 Java 对 `Setting` / `PlayerSetting` / `Prefers` / `Util` / `App` / `ResUtil` / `Notify` / `ImgUtil` / `VodConfig` / `SiteApi` 等公共类的 `Cls.method(` 调用，逐一对齐**当前分支状态**（含同批已补成员）里定义的方法；同时核对跨变体同名类（如 `VideoActivity.start(...)`）的重载参数在两个变体都存在。曾踩：`TmdbPersonDialog` 调 5 参 start、`TmdbNavigation` 调 6 参 start，两变体重载不齐就会编译失败。
+13. **APK 变体数与校验断言不得硬编码**。曾把构建任务写死四行 `assemble*Release`、验签步骤写死 `test "$count" -eq 4`；用户只要「手机 v8a + TV v7a」两个包时就必须改 workflow，否则会多构建两个、或倒在该断言上白耗一轮 Actions。构建任务由 `workflow_dispatch` 输入 `apk_variants` 拼装（`all` = 四包，或逗号分隔指定），`expected_apk_count` 写进 `steps.build_apks.outputs`，验签步骤按输出值断言。collect / 补签 / 验签 / manifests / 发版全部用 `dist/*.apk` glob 动态遍历，增减变体不再需要改脚本。
 
 
 ### 每次出包前的固定预检清单
@@ -146,7 +147,7 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
 - workflow YAML 可解析；关键步骤计数正确（未签名构建、补签、v1 校验、REST 发版）
 - 源码门禁断言逐条本地模拟，失败项为 0
 - 预计 tag 不存在
-- 正式签名 `CN=xbox-re`、applicationId `.xbox` 共存、APK 恰好 4 个
+- 正式签名 `CN=xbox-re`、applicationId `.xbox` 共存、APK 数量与本次 `apk_variants` 输入一致（默认 4，可指定 2）
 - 本轮只 dispatch 一次；轮询到 completed 才下结论
 - 断言若用「拒绝任何 WARNING / 任何差异」这种全量口径，必须确认过正常输出里没有该类内容
 - `signature-report.txt` 已生成并上传；若资产下载受限，明确告知「未端到端验包」，附证书 SHA256 指纹供用户对照

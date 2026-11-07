@@ -5,13 +5,9 @@ import android.text.TextUtils;
 import com.fongmi.android.tv.api.config.VodConfig;
 import com.fongmi.android.tv.bean.Site;
 import com.fongmi.android.tv.utils.LocalScriptSource;
-import com.github.catvod.bean.Proxy;
 import com.github.catvod.net.OkHttp;
-import com.github.catvod.utils.Json;
 import com.github.catvod.utils.Prefers;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 
 /**
@@ -27,16 +23,15 @@ import org.json.JSONObject;
  *     空 / 无参数才写 "proxy":"proxy"；关闭时统一写 ""；
  *     绝不把 app 默认代理地址（2080）写进 json。
  *   - 运行时归一：proxy 字段非空（占位或任意有效地址）一律使用默认代理地址。
- *   - 生效复用本项目 OkHttp.selector() + Proxy.bean：按「当前访问站点」挂一条
- *     通配 * 规则（与 xbox applyGlobal 一致），脚本内部请求任意 host 都走代理，
- *     本地 py/js/html 脚本同样生效；切站点时重挂，按各自配置亮暗。
+ *   - 生效：亮 = 全 app 总闸开（OkProxySelector.setGlobal），所有非本机请求
+ *     一律走默认代理地址；暗 = 总闸关。总闸优先于配置自带 / shell 的代理规则。
+ *     亮暗仍由上面的老逻辑判定，切站 / 回前台都会按新站点重算。
  */
 public final class SiteFeature {
 
     public static final String DEFAULT_PROXY_URL = "http://127.0.0.1:2080";
     public static final String PROXY_FLAG = "proxy";
 
-    private static final String RULE_NAME = "site_proxy";
     private static final String K_URL = "site_feature_proxy_url";
     private static final String K_PROXY = "site_feature_proxy|";
     private static final String K_EXT = "site_feature_ext|";
@@ -151,26 +146,23 @@ public final class SiteFeature {
         write("ext", site, text);
     }
 
-    /* ---------------- 生效：按站点各自的 host 生成规则集 ---------------- */
+    /* ---------------- 生效：全 app 总闸 ---------------- */
 
     /**
-     * 按「当前访问站点」挂 / 摘一条通配规则（与 xbox applyGlobal 一致）。
-     * 通配 * 让脚本内部请求任意 host 都走代理，本地 py/js/html 脚本同样生效；
-     * 切站点由 VodConfig.setHome 重挂，onResume / 默认代理保存后同步重挂。
-     * 运行时地址一律用默认代理地址（app 后台替换），不采信 json 里的有效地址值。
+     * 总闸：图标亮（当前站点配置含代理条件）→ 全 app 非本机请求一律走代理。
+     * 亮 / 暗由老的 per-site 逻辑决定（onConfigParsed / toggle / json 写回全保留），
+     * 这里只把结果翻译成 selector 的全局强制规则，不再另挂会被排序挤到最后的通配规则。
+     * 切站由 VodConfig.setHome 重算，回前台由 VodFragment.onResume 重算，
+     * 默认代理地址保存后由 SiteFeatureDialog 重算 —— 每次都覆盖写，必然「重新算」。
+     * global 分支在 select() 最前面返回，配置自带规则 / shell 规则一律不插队。
+     * 本机 127.0.0.1 仍直连（app 自己的 9980 服务），但服务内部走 OkHttp.client()
+     * 会命中总闸，所以本地 py/js 脚本链路仍生效。
+     * 地址非法由 setGlobal 记入 proxy 日志，不再静默吞异常后仍显示亮。
      */
     public static void apply() {
-        try {
-            OkHttp.selector().remove(RULE_NAME);
-            OkHttp.closeIdleConnections();
-            if (!isOn(VodConfig.get().getHome())) return;
-            JSONObject rule = new JSONObject();
-            rule.put("name", RULE_NAME);
-            rule.put("hosts", new JSONArray().put("*"));
-            rule.put("urls", new JSONArray().put(proxyUrl()));
-            OkHttp.selector().addAll(Proxy.arrayFrom(Json.parse(new JSONArray().put(rule).toString())));
-        } catch (Throwable ignored) {
-        }
+        String url = isOn(VodConfig.get().getHome()) ? proxyUrl() : "";
+        OkHttp.selector().setGlobal(url);
+        OkHttp.closeIdleConnections();
     }
 
 }

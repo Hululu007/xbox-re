@@ -7,6 +7,7 @@ import com.github.catvod.utils.Util;
 
 import java.io.IOException;
 import java.net.Authenticator;
+import java.net.InetSocketAddress;
 import java.net.ProxySelector;
 import java.net.SocketAddress;
 import java.net.URI;
@@ -22,6 +23,8 @@ public class OkProxySelector extends ProxySelector {
     private final ProxySelector system;
     private final DebugEventLimiter debugLogLimiter;
     private boolean authSet;
+    /** 全 app 总闸：亮时所有非本机请求强制走它，优先于下方所有规则。clear() 不清空。 */
+    private volatile List<java.net.Proxy> global = List.of();
 
     public OkProxySelector() {
         proxy = new CopyOnWriteArrayList<>();
@@ -46,9 +49,44 @@ public class OkProxySelector extends ProxySelector {
         if (removed > 0) SpiderDebug.log("proxy", "selector remove name=%s removed=%s total=%s", name, removed, proxy.size());
     }
 
+
+    /**
+     * 设置 / 关闭全 app 总闸。图标亮时由 SiteFeature.apply() 传入默认代理地址，
+     * 暗时传空串。地址非法会记入 proxy 日志并置为关闭，不抛异常、不静默谎报成功。
+     */
+    public synchronized void setGlobal(String url) {
+        global = List.of();
+        if (url == null || url.trim().isEmpty()) {
+            SpiderDebug.log("proxy", "global off");
+            return;
+        }
+        try {
+            URI u = URI.create(url.trim());
+            String scheme = u.getScheme();
+            String host = u.getHost();
+            int port = u.getPort();
+            if (scheme == null || host == null || port <= 0) {
+                SpiderDebug.log("proxy", "global invalid url rejected");
+                return;
+            }
+            java.net.Proxy.Type type;
+            if (scheme.startsWith("http")) type = java.net.Proxy.Type.HTTP;
+            else if (scheme.startsWith("socks")) type = java.net.Proxy.Type.SOCKS;
+            else {
+                SpiderDebug.log("proxy", "global unsupported scheme rejected");
+                return;
+            }
+            global = List.of(new java.net.Proxy(type, InetSocketAddress.createUnresolved(host, port)));
+            SpiderDebug.log("proxy", "global on scheme=%s host=%s port=%s", scheme, OkHttpLogPolicy.redactHost(host), port);
+        } catch (Throwable e) {
+            SpiderDebug.log("proxy", "global parse failed error=%s", e.getMessage());
+        }
+    }
+
     public synchronized void clear() {
         Authenticator.setDefault(null);
         proxy.clear();
+        // global 不清：页面销毁 / 重建时总闸状态保持，由 App.onCreate 与 onResume 重算
         SpiderDebug.log("proxy", "selector clear");
     }
 
@@ -63,6 +101,14 @@ public class OkProxySelector extends ProxySelector {
     @Override
     public List<java.net.Proxy> select(URI uri) {
         String host = uri.getHost();
+        // 总闸最优先：图标亮时所有非本机请求一律走代理，配置自带 / shell 规则不插队
+        List<java.net.Proxy> forced = global;
+        if (!forced.isEmpty()) {
+            if (host == null) return fallback(uri, "no-host");
+            if ("127.0.0.1".equals(host) || "localhost".equalsIgnoreCase(host)) return fallback(uri, "local-target");
+            logSelection(uri, "global", host, "*", "global", forced.size());
+            return forced;
+        }
         if (proxy.isEmpty()) return fallback(uri, "no-rule");
         if (host == null) return fallback(uri, "no-host");
         if ("127.0.0.1".equals(host) || "localhost".equalsIgnoreCase(host)) return fallback(uri, "local-target");

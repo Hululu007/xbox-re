@@ -841,7 +841,6 @@ public class Setting {
     public static void putInterfaceFailoverMode(int mode) {
     int value = InterfaceFailoverPolicy.clampMode(mode);
     Prefers.put("interface_failover_mode", value);
-    if (value == InterfaceFailoverPolicy.OFF) VodConfig.cancelFailover();
     }
     public static void putPlayBackToDetail(boolean backToDetail) {
     Prefers.put("play_back_to_detail", backToDetail);
@@ -861,4 +860,34 @@ public class Setting {
     public static void putTouchOptimized(boolean enabled) {
     Prefers.put("touch_optimized", enabled);
     }
+
+    public static boolean isWebHomeThemeEnabled() {
+        return Prefers.getBoolean("web_home_theme_enabled");
+    }
+
+    public static void putWebHomeThemeEnabled(boolean enabled) {
+        Prefers.put("web_home_theme_enabled", enabled);
+    }
+
+    public static String getWebHomeThemeUrl() {
+        String legacy = "file:///android_asset/webhome/eclipse.html";
+        String current = Prefers.getString("web_home_theme_url", "file:///android_asset/webhome/theme.json");
+        if (!legacy.equals(current)) return current;
+        current = "file:///android_asset/webhome/theme.json";
+        Prefers.put("web_home_theme_url", current);
+        return current;
+    }
+
+    public static void putWebHomeThemeUrl(String url) {
+        Prefers.put("web_home_theme_url", url);
+    }
+
+    public static String getWebHomeThemeTrustedUrl() {
+        return Prefers.getString("web_home_theme_trusted_url");
+    }
+
+    public static void putWebHomeThemeTrustedUrl(String url) {
+        Prefers.put("web_home_theme_trusted_url", url);
+    }
+
 }

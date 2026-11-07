@@ -1367,4 +1367,131 @@
     <string name="detail_work_global_searching">当前站源无结果，正在全局搜索 %1$s...</string>
     <string name="detail_work_searching">正在当前站源搜索 %1$s...</string>
 
+
+
+    <!-- 从上游 webhtv 主分支原样搬回（不做英译中改写） -->
+    <string name="app_branding_icon_current">Default icon</string>
+    <string name="app_branding_icon_history">Original icon</string>
+    <string name="backup_permission_denied">Storage permission is required to back up or restore data</string>
+    <string name="dialog_reset_app">Reset app?</string>
+    <string name="dialog_reset_app_data">All app data will be reset, and app will be shutdown.</string>
+    <string name="group_rule_add">Add rule</string>
+    <string name="group_rule_ai_analyzing_message">Analyzing %1$d source names… Candidate rules will be validated locally before preview.</string>
+    <string name="group_rule_ai_analyzing_title">AI is identifying groups</string>
+    <string name="group_rule_ai_apply">Apply rules</string>
+    <string name="group_rule_ai_config_changed">The VOD configuration changed during analysis. Run identification again.</string>
+    <string name="group_rule_ai_config_incomplete">AI service configuration is incomplete. Complete endpoint, API key, and model in Enhance → AI configuration.</string>
+    <string name="group_rule_ai_current_interface">Current VOD configuration</string>
+    <string name="group_rule_ai_error_generic">AI identification failed.</string>
+    <string name="group_rule_ai_error_http">AI service returned HTTP %1$s.</string>
+    <string name="group_rule_ai_error_invalid_response">AI returned an invalid rule response. Try again.</string>
+    <string name="group_rule_ai_error_network">Unable to connect to the AI service.</string>
+    <string name="group_rule_ai_error_no_valid_rules">AI did not produce any safe and useful group rules.</string>
+    <string name="group_rule_ai_error_prompt_too_large">The custom group-rule prompt is too long. Shorten it in AI prompt configuration.</string>
+    <string name="group_rule_ai_error_timeout">AI identification timed out.</string>
+    <string name="group_rule_ai_error_too_many_sources">There are too many source names to analyze safely. Reduce the current VOD source list and try again.</string>
+    <string name="group_rule_ai_failed_title">AI identification failed</string>
+    <string name="group_rule_ai_groups_title">Extracted groups</string>
+    <string name="group_rule_ai_identify">AI identify</string>
+    <string name="group_rule_ai_label">AI · %1$s\n%2$s</string>
+    <string name="group_rule_ai_more_groups">…and %1$d more groups</string>
+    <string name="group_rule_ai_no_sources">The current VOD configuration has no visible source names to analyze.</string>
+    <string name="group_rule_ai_preview_note">Applying replaces only AI rules for the current VOD configuration. Built-in, interface, and manual rules are unchanged.</string>
+    <string name="group_rule_ai_preview_summary">%1$d sources · %2$d candidate rules · final coverage %3$d/%4$d (%5$d%%)</string>
+    <string name="group_rule_ai_preview_title">AI group preview</string>
+    <string name="group_rule_ai_privacy_message">Visible source names from the current VOD configuration will be sent to your configured AI service. Large lists may be split into multiple requests (up to 8). Source APIs, interface URLs, extension settings, playback history, and AI credentials are not included in the analysis content.</string>
+    <string name="group_rule_ai_privacy_title">Use AI group identification</string>
+    <string name="group_rule_ai_reidentify">AI re-identify</string>
+    <string name="group_rule_ai_retry">Retry</string>
+    <string name="group_rule_ai_rule_summary">%1$s\n%2$s\nMatched %3$d sources · %4$d groups · %5$d newly covered · %6$d in repeated groups</string>
+    <string name="group_rule_ai_rules_title">Generated rules</string>
+    <string name="group_rule_ai_saved">Saved %1$d AI group rules for “%2$s”</string>
+    <string name="group_rule_ai_select_required">Keep at least one candidate rule before applying.</string>
+    <string name="group_rule_ai_start">Start</string>
+    <string name="group_rule_ai_unmatched">Ungrouped · %1$d sources</string>
+    <string name="group_rule_delete">Delete</string>
+    <string name="group_rule_edit">Edit rule</string>
+    <string name="group_rule_edit_item">Edit · %1$s\n%2$s</string>
+    <string name="group_rule_empty_custom">No custom or interface rules</string>
+    <string name="group_rule_interface_item">Interface · %1$s\n%2$s</string>
+    <string name="group_rule_manage">Manage</string>
+    <string name="group_rule_name">Rule name</string>
+    <string name="group_rule_regex">Regular expression</string>
+    <string name="group_rule_regex_hint">Capture group 1 is used as the group name. Multiple enabled rules use OR matching.</string>
+    <string name="group_rule_regex_invalid">Invalid regular expression</string>
+    <string name="group_rule_regex_required">Regex is required</string>
+    <string name="home_buttons_selected">%1$d/%2$d enabled</string>
+    <string name="home_cast">Cast</string>
+    <string name="home_custom_csp">Site injection</string>
+    <string name="home_following">Following</string>
+    <string name="home_history_button">History</string>
+    <string name="reset_app_failed">Unable to reset app data. Please try again.</string>
+    <string-array name="select_fullscreen_menu_key">
+        <item>Control</item>
+        <item>Episodes</item>
+    </string-array>
+    <string-array name="select_global_history_mode">
+        <item>Off</item>
+        <item>Auto-match source</item>
+        <item>Choose source from search</item>
+    </string-array>
+    <string-array name="select_home_menu_key">
+        <item>Select dialog</item>
+        <item>Change site</item>
+        <item>Change config</item>
+        <item>Live page</item>
+        <item>History page</item>
+        <item>Search page</item>
+        <item>Push page</item>
+        <item>Cast page</item>
+        <item>Keep page</item>
+        <item>Setting page</item>
+    </string-array>
+    <string-array name="select_interface_failover_mode">
+        <item>Off</item>
+        <item>Auto</item>
+        <item>Confirm</item>
+    </string-array>
+    <string-array name="select_search_column">
+        <item>Auto</item>
+        <item>1 item</item>
+        <item>2 items</item>
+    </string-array>
+    <string-array name="select_search_result_sort">
+        <item>Dynamic (first returned first)</item>
+        <item>Fixed (by source order)</item>
+    </string-array>
+    <string-array name="select_search_ui">
+        <item>Landscape</item>
+        <item>Portrait</item>
+    </string-array>
+    <string-array name="select_site_column">
+        <item>Single row</item>
+        <item>Double row</item>
+    </string-array>
+    <string name="setting_app_branding">App icon</string>
+    <string name="setting_auto_backup">Automatic backup</string>
+    <string name="setting_episode_history">Remember episode progress</string>
+    <string name="setting_following">Following updates</string>
+    <string name="setting_fullscreen_menu_key">Fullscreen menu key</string>
+    <string name="setting_global_history">Global history resume</string>
+    <string name="setting_group_rule">Group rules</string>
+    <string name="setting_group_rule_summary">Enabled %1$d / %2$d</string>
+    <string name="setting_home_buttons">Home buttons</string>
+    <string name="setting_home_history">Home recent history</string>
+    <string name="setting_home_menu_key">Home menu key</string>
+    <string name="setting_home_site_lock">Home source lock</string>
+    <string name="setting_home_vod_auto_load">Auto-load VOD</string>
+    <string name="setting_interface_failover">VOD config failover</string>
+    <string name="setting_personal">Personal</string>
+    <string name="setting_play_back_to_detail">Return playback to detail</string>
+    <string name="setting_play_speed">Playback speed</string>
+    <string name="setting_playback_overlay">Playback menu overlay</string>
+    <string name="setting_reset_app">Reset app</string>
+    <string name="setting_search_column">Search results per row</string>
+    <string name="setting_search_result_sort">Search result mode</string>
+    <string name="setting_search_thread">Search threads</string>
+    <string name="setting_search_ui">Search layout</string>
+    <string name="setting_site_column">Site display mode</string>
+    <string name="setting_touch_optimization">Touch optimization</string>
 </resources>
