@@ -1297,4 +1297,14 @@
     <string name="setting_default_proxy_hint">代理地址</string>
     <string name="toast_proxy_on">代理已开启</string>
     <string name="toast_proxy_off">代理已关闭</string>
+
+    <!-- 短剧源配置 -->
+    <string name="setting_short_drama_source">短剧源配置</string>
+    <string name="dialog_short_drama_add">添加</string>
+    <string name="dialog_short_drama_add_hint">添加关键词或站点…</string>
+    <string name="dialog_short_drama_disabled_label">已排除</string>
+    <string name="dialog_short_drama_enabled_label">启用规则</string>
+    <string name="dialog_short_drama_site_default">默认 [短]/短剧</string>
+    <string name="dialog_short_drama_site_manage">选择短剧源</string>
+    <string name="dialog_short_drama_site_disabled">已排除：%1$s</string>
 </resources>

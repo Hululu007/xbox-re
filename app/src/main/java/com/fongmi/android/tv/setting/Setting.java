@@ -17,6 +17,7 @@ import androidx.core.content.ContextCompat;
 import com.fongmi.android.tv.App;
 import com.fongmi.android.tv.BuildConfig;
 import com.fongmi.android.tv.bean.Update;
+import com.fongmi.android.tv.bean.ShortDramaConfig;
 import com.fongmi.android.tv.update.GithubProxy;
 import com.fongmi.android.tv.update.OciMirror;
 import com.fongmi.android.tv.update.UpdateSource;
@@ -737,4 +738,16 @@ public class Setting {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return false;
         return new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, Uri.parse("package:" + App.get().getPackageName())).resolveActivity(App.get().getPackageManager()) != null || new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION).resolveActivity(App.get().getPackageManager()) != null;
     }
+    public static String getShortDramaConfig() {
+        return Prefers.getString("short_drama_config");
+    }
+
+    public static void putShortDramaConfig(String value) {
+        Prefers.put("short_drama_config", value);
+    }
+
+    public static boolean isShortDramaSiteEnabled(String key, String name) {
+        return ShortDramaConfig.objectFrom(getShortDramaConfig()).isSiteEnabled(key, name);
+    }
+
 }

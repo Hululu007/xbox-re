@@ -39,6 +39,8 @@ import com.fongmi.android.tv.utils.LoginStateSync;
 import com.fongmi.android.tv.utils.Notify;
 import com.fongmi.android.tv.utils.PermissionUtil;
 import com.fongmi.android.tv.web.ext.WebHomeExtensionRegistry;
+import com.fongmi.android.tv.bean.ShortDramaConfig;
+import com.fongmi.android.tv.ui.dialog.ShortDramaSourceDialog;
 import com.github.catvod.crawler.SpiderDebug;
 import com.google.gson.JsonObject;
 
@@ -104,6 +106,7 @@ public class SettingEnhanceFragment extends BaseFragment {
         mBinding.loginState.setOnClickListener(view -> LoginStateLearnDialog.show(this, this::setText));
         mBinding.oneKeySync.setOnClickListener(v -> OneKeySyncDialog.create().show(requireActivity()));
         mBinding.scriptManage.setOnClickListener(view -> ScriptManageDialog.show(this));
+        mBinding.shortDramaSource.setOnClickListener(this::setShortDramaSource);
         mBinding.defaultProxy.setOnClickListener(view -> SiteFeatureDialog.proxyUrl(requireActivity(), this::setText));
     }
 
@@ -124,17 +127,23 @@ public class SettingEnhanceFragment extends BaseFragment {
                 mBinding.playbackArtworkWall,
                 mBinding.driveCheck,
                 mBinding.siteHealthSort,
-                mBinding.debugLog,
+                mBinding.shortDramaSource,
+        mBinding.debugLog,
                 mBinding.playbackWebhook
         };
         for (View view : order) parent.removeView(view);
         for (View view : order) parent.addView(view);
     }
 
+    private void setShortDramaSource(View view) {
+        ShortDramaSourceDialog.create(requireActivity()).onDismiss(this::setText).show();
+    }
+
     private void setText() {
         if (!canSetText()) return;
         safeSet("driveCheck", mBinding.driveCheckText, () -> getSwitch(Setting.isDriveCheck()));
         safeSet("debugLog", mBinding.debugLogText, () -> getSwitch(Setting.isDebugLog()));
+        safeSet("shortDramaSource", mBinding.shortDramaSourceText, () -> getSwitch(!ShortDramaConfig.objectFrom(Setting.getShortDramaConfig()).getDisplayRules().isEmpty()));
         safeSet("siteHealthSort", mBinding.siteHealthSortText, () -> getSwitch(Setting.isSiteHealthSort()));
         safeSet("webHomeExtension", mBinding.webHomeExtensionText, () -> {
             WebHomeExtensionRegistry.Snapshot webHomeExtension = WebHomeExtensionRegistry.get().snapshot();
