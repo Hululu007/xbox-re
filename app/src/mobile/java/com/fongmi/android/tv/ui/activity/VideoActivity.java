@@ -110,6 +110,7 @@ import com.fongmi.android.tv.setting.PlayerButtonSetting;
 import com.fongmi.android.tv.setting.PlayerSetting;
 import com.fongmi.android.tv.setting.Setting;
 import com.fongmi.android.tv.setting.SiteHealthStore;
+import com.fongmi.android.tv.ui.helper.TmdbInfoPanel;
 import com.fongmi.android.tv.ui.adapter.EpisodeAdapter;
 import com.fongmi.android.tv.ui.adapter.EpisodeGroupAdapter;
 import com.fongmi.android.tv.ui.adapter.FlagAdapter;
@@ -192,6 +193,7 @@ public class VideoActivity extends PlaybackActivity implements Clock.Callback, C
     private static final int SHEET_CONTROL_STROKE_SELECTED = 0x4DFFFFFF;
 
     private ActivityVideoBinding mBinding;
+    private TmdbInfoPanel mTmdbInfo;
     private ViewGroup.LayoutParams mFrameParams;
     private int mFrameHeight;
     private Observer<Result> mObserveDetail;
@@ -510,6 +512,7 @@ public class VideoActivity extends PlaybackActivity implements Clock.Callback, C
 
     @Override
     protected void initView(Bundle savedInstanceState) {
+        mTmdbInfo = new TmdbInfoPanel(this, mBinding.getRoot());
         super.initView(savedInstanceState);
         mRestoringConfigurationPlayback = savedInstanceState != null;
         ViewCompat.setOnApplyWindowInsetsListener(mBinding.getRoot(), (v, insets) -> setStatusBar(insets));
@@ -1058,6 +1061,7 @@ public class VideoActivity extends PlaybackActivity implements Clock.Callback, C
         item.checkName(getName());
         item.checkContent(getContent());
         mBinding.name.setText(item.getName());
+        if (mTmdbInfo != null) mTmdbInfo.load(item.getName());
         mFlagAdapter.addAll(item.getFlags());
         App.removeCallbacks(mR4);
         checkHistory(item);
@@ -5083,6 +5087,7 @@ public class VideoActivity extends PlaybackActivity implements Clock.Callback, C
 
     @Override
     protected void onDestroy() {
+        if (mTmdbInfo != null) mTmdbInfo.cancel();
         stopAudioCoverRotation();
         if (mLyrics != null) {
             mLyrics.setListener(null);

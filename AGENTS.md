@@ -136,6 +136,9 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
 
 
 
+12. **搬入上游 Java 必须做「方法级可达性」检查，不能只查 import**。`import` 可达 ≠ 方法存在：第七/八批搬入 44+31 个类后，本地只校验了 import 与 R 引用，漏掉 `Setting.getTmdbDetailTheme()` / `Setting.resolveTmdbDetailLightTheme(int,boolean)` / `Util.resetApp()` 三个静态调用，以及 `Setting.clampTmdbDetailTheme(int)` 这个被调私有方法——这些只有到 CI 编译才会报 `cannot find symbol`。规定：每批搬入后，扫描新增 Java 对 `Setting` / `PlayerSetting` / `Prefers` / `Util` / `App` / `ResUtil` / `Notify` / `ImgUtil` / `VodConfig` / `SiteApi` 等公共类的 `Cls.method(` 调用，逐一对齐**当前分支状态**（含同批已补成员）里定义的方法；同时核对跨变体同名类（如 `VideoActivity.start(...)`）的重载参数在两个变体都存在。曾踩：`TmdbPersonDialog` 调 5 参 start、`TmdbNavigation` 调 6 参 start，两变体重载不齐就会编译失败。
+
+
 ### 每次出包前的固定预检清单
 
 - 当前 `main` HEAD 与预期一致，且 `actions/runs?head_sha=<HEAD>` 返回 0

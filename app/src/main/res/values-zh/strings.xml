@@ -1367,4 +1367,10 @@
     <string name="tmdb_episode_total">共 %1$d 集</string>
     <string name="tmdb_photos_label">剧照</string>
     <string name="tmdb_posters_label">海报</string>
+
+    <!-- ② TMDB 信息区（第九批） -->
+    <string name="tmdb_info_cast">演职员</string>
+    <string name="tmdb_info_related">相关推荐</string>
+    <string name="tmdb_info_episodes">剧集信息</string>
+    <string name="tmdb_info_no_data">暂无资料</string>
 </resources>

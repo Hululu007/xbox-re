@@ -945,4 +945,19 @@ public class Setting {
     Prefers.put("touch_optimized", enabled);
     }
 
+
+    // ② TMDB 详情主题（第九批补齐方法级缺口）
+    public static int getTmdbDetailTheme() {
+        return clampTmdbDetailTheme(Prefers.getInt("tmdb_detail_theme", 2));
+    }
+
+    public static boolean resolveTmdbDetailLightTheme(int theme, boolean systemNight) {
+        int value = clampTmdbDetailTheme(theme);
+        return value != 1;
+    }
+
+    static int clampTmdbDetailTheme(int theme) {
+        return theme < 0 || theme > 2 ? 2 : theme;
+    }
+
 }

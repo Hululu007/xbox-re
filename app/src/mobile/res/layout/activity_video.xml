@@ -622,6 +622,8 @@
 
                     </androidx.appcompat.widget.LinearLayoutCompat>
 
+<include layout="@layout/view_tmdb_info" />
+
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/flag"
                         android:layout_width="match_parent"
