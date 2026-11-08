@@ -220,7 +220,9 @@ public class Setting {
         if (wall == WALL_DREAM_PURPLE) return 0xFF7560CA;
         if (wall == WALL_SKY_MINT) return 0xFF6DA6B1;
         if (wall == WALL_FOREST_MIST) return 0xFF4E8750;
-        if (wall == WALL_DAYLIGHT_MINIMAL) return 0xFF9DB6CC;
+        // 雾蓝极简重调色：原 0xFF9DB6CC 偏亮偏蓝、白字发虚且晃眼；
+        // 与新的柔和雾蓝渐变壁纸主色对齐（低亮度、低饱和、带灰）。
+        if (wall == WALL_DAYLIGHT_MINIMAL) return 0xFF93A9BA;
         if (wall == WALL_DEEP_SEA) return 0xFF2F7290;
         if (wall == WALL_VIOLET_SMOKE) return 0xFF7C4BE2;
         if (wall == WALL_ROSE_VEIL) return 0xFFB27FAE;

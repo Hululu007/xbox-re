@@ -251,7 +251,9 @@ public class HomeActivity extends BaseActivity implements NavigationBarView.OnIt
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onRefreshEvent(RefreshEvent event) {
-        if (event.getType() == RefreshEvent.Type.THEME) recreate();
+        // 主题色/图标来自 DialogFragment 的回调：同步 recreate 会和 dismiss 事务撞车，
+        // 也会在 enableDynamicColor 尚未就绪时重建。post 到下一帧再重建，避免退出。
+        if (event.getType() == RefreshEvent.Type.THEME) App.post(this::recreate, 100);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)

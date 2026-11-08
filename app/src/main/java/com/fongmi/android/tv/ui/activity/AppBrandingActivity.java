@@ -61,9 +61,15 @@ public class AppBrandingActivity extends BaseActivity {
         AppBranding.putIconMode(selectedIconMode);
         AppBranding.applyLauncherIcon(this);
         setResult(RESULT_OK);
-        Intent intent = AppBranding.launcherIntent(this)
-                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity(intent);
+        try {
+            // 两个 launcher alias 已在 Manifest 声明；即使个别 ROM 上组件状态异常，
+            // 也只降级为「不重启」，绝不把 ActivityNotFoundException 抛给用户。
+            Intent intent = AppBranding.launcherIntent(this)
+                    .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+        } catch (RuntimeException ignored) {
+            // 图标偏好已保存，下次冷启动由 AppBranding.applyLauncherIcon 生效。
+        }
         finish();
     }
 }
