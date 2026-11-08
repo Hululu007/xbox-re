@@ -238,3 +238,18 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
       和 `focusableInTouchMode="true"` 的 TextView（那是「取消要点两下」的根因）。
       默认焦点给 `android.R.id.button2`（取消），TV 上不误退出。
       `dialog_exit_confirm.xml` 与 5 个 shape/selector/color 已删除，不要再搬回来。
+
+28. **实验室（lab）修复约束，别再退回上游 VodPlus 版的写法**：
+    - 自启必须在 `App.startBackgroundServices()` 里、`Server.get().start()` **之后**调
+      `LabAutoStart.start(this)`。放 onCreate 太早，命令里的 `{serverPort}` 会拿到 -1；
+      不调则 `auto_install` / `auto_execute` 全是死开关。
+    - 根目录**只认** `LabConfig.get().getRoot()`（默认 `/storage/emulated/0/WebHTV`，
+      与 `lab_template.json` 的 `root` 一致）。禁止再写死
+      `/storage/emulated/0/VodPlus/...`、`peekpro/...` 这些别的 app 的目录；
+      `syncVodPlusAssets()` 是空实现（本分支不带 assets/VodPlus）。
+    - `menu_nav.xml` 只有 vod/live/setting 三项，`getNavEntry()` 没有消费方；
+      实验室设置弹窗里的 `navEntryRow` 必须永久 GONE。要么接线要么切断，**别留死开关**。
+    - 实验室的「全局代理」(默认 7890，注入 rootfs 进程环境变量) 与 app 的
+      `OkProxySelector` 总闸 (默认 2080，管 OkHttp) 是两套独立体系，不要互相覆盖。
+    - `LabConfig.serverPort()` 依赖 `Server.startManage()` / `Proxy.getPort()`，
+      这条链路本分支完整，不要切断。

@@ -20,6 +20,7 @@ import com.fongmi.android.tv.player.PlaybackRecoveryMonitor;
 import com.fongmi.android.tv.remote.RemoteAgent;
 import com.fongmi.android.tv.setting.ProxySetting;
 import com.fongmi.android.tv.setting.SiteFeature;
+import com.fongmi.android.tv.lab.LabAutoStart;
 import com.fongmi.android.tv.setting.Setting;
 import com.fongmi.android.tv.utils.DanmakuSearchListFocusFixer;
 import com.fongmi.android.tv.utils.NsdDeviceDiscovery;
@@ -134,6 +135,9 @@ public class App extends Application implements Application.ActivityLifecycleCal
     private void startBackgroundServices() {
         SpiderDebug.log("startup", "background services start cost=%sms", System.currentTimeMillis() - time);
         Server.get().start();
+        // 实验室自启：Server 已起来，命令里的 {serverPort} 才能拿到真实端口。
+        // auto_install / auto_execute 由这里驱动，否则那两个开关永远不生效。
+        LabAutoStart.start(this);
         PlaybackRemoteSyncer.start();
         RemoteAgent.get().start();
         NsdDeviceDiscovery.register();

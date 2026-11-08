@@ -364,7 +364,8 @@ public class LabActivity extends AppCompatActivity implements LabPackageAdapter.
         EditText proxyNoProxy = root.findViewById(R.id.proxyNoProxy);
         View navEntryRow = root.findViewById(R.id.navEntryRow);
         MaterialSwitch navEntry = root.findViewById(R.id.navEntrySwitch);
-        navEntryRow.setVisibility(Util.isMobile() ? View.VISIBLE : View.GONE);
+        // 本 app 底部导航已精简，没有实验室项；隐藏这个没人消费的开关，避免误导。
+        navEntryRow.setVisibility(View.GONE);
         String[] items = {getString(R.string.lab_source_local), getString(R.string.lab_source_url)};
         dropdown.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, items));
         int source = LabConfig.get().getSource();
@@ -399,7 +400,6 @@ public class LabActivity extends AppCompatActivity implements LabPackageAdapter.
                     LabConfig.get().setRoot(rootText);
                     LabConfig.get().setForeground(foreground.isChecked());
                     LabConfig.get().setBattery(battery.isChecked());
-                    LabConfig.get().setNavEntry(navEntry.isChecked());
                     LabConfig.get().setGlobalProxy(proxy.isChecked());
                     int port = 7890;
                     if (proxyPort.getText() != null) {
