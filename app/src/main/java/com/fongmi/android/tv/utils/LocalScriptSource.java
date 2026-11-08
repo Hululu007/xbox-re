@@ -3,6 +3,7 @@ package com.fongmi.android.tv.utils;
 import android.text.TextUtils;
 import android.util.Pair;
 
+import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.utils.Path;
 import com.github.catvod.utils.Prefers;
 
@@ -414,13 +415,51 @@ public final class LocalScriptSource {
         JSONObject root = new JSONObject();
         try {
             root.put("warningText", "本地脚本目录：" + dir);
-            root.put("sites", toArray(pair.first));
+            root.put("sites", parseSites(pair.first));
             JSONArray lives = new JSONArray();
             lives.put(new JSONObject());
             root.put("lives", lives);
         } catch (Exception ignored) {
         }
         return root.toString();
+    }
+
+    /**
+     * 解析用副本：磁盘上的 json 一个字节不改（key / name / 次序 / sites_bac 都保持现状），
+     * 只保证每条都能被 VodConfig 解析、并且一定留在站点切换列表里。
+     *   - key 为空 / 重复 → 补唯一副本 key：Site.equals 按 key 去重，空 key 会让多条
+     *     解析失败的站点被 .distinct() 吞成一条，表现为「工作区有、站点列表没有」。
+     *   - name 为空 → 用 key 兜底：否则列表项空白、搜索也匹配不到。
+     *   - hide 强制 0：旧数据里残留 hide=1 时 SiteBlockSetting.filter 会直接丢掉该站点。
+     *   - ext / proxy / api / homePage 等统一成字符串：非 primitive 会让 ExtAdapter /
+     *     Gson 解析抛异常，objectFrom 的 catch 返回空 Site，同样被去重吞掉。
+     * 输出条数记入 proxy 日志，便于实机对照「工作区条数 vs 站点列表条数」。
+     */
+    private static JSONArray parseSites(List<JSONObject> sites) {
+        JSONArray out = new JSONArray();
+        Set<String> keys = new HashSet<>();
+        int index = 0;
+        for (JSONObject item : sites) {
+            try {
+                JSONObject copy = new JSONObject(item.toString());
+                String key = copy.optString("key").trim();
+                if (key.isEmpty()) key = "script_" + index;
+                if (!keys.add(key)) key = key + "#" + index;
+                copy.put("key", key);
+                if (copy.optString("name").trim().isEmpty()) copy.put("name", key);
+                copy.put("hide", 0);
+                String[] fields = {"ext", "proxy", "api", "homePage", "jar", "click", "playUrl", "chromeMode"};
+                for (String field : fields) {
+                    Object value = copy.opt(field);
+                    if (value != null && !(value instanceof String)) copy.put(field, value.toString());
+                }
+                out.put(copy);
+                index++;
+            } catch (Exception ignored) {
+            }
+        }
+        SpiderDebug.log("script", "buildJson sites in=%s out=%s", sites.size(), out.length());
+        return out;
     }
 
     /**
@@ -562,7 +601,7 @@ public final class LocalScriptSource {
             item.put("quickSearch", 1);
         } catch (Exception ignored) {
         }
-        pair.first.add(item);
+        pair.first.add(insertPos(pair.first, item), item);
         save(dir, pair.first, pair.second);
         return true;
     }

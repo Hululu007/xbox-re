@@ -191,3 +191,19 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
       `OkHttp.player()`，二者构建时都挂了同一个 selector，天然跟随总闸，不要另加分支。
     - 第 3 根线（反射 jar 的 MenuProxy）只作实测漏网兜底，**不预置**，避免绑死混淆类名。
     - 口径不变：亮暗仍由 per-site 老逻辑判定、切站重新算、json 写回规则不动。
+
+25. **脚本站点「工作区有、站点切换列表没有」的排查口径**：核心显示链
+    （`VodConfig.initSite` 的 `Site.objectFrom().distinct()`、`SiteAdapter.addAll` 的
+    `SiteBlockSetting.filter`、`SiteDialog`、`SiteAdapter`）在 main / OK影视+ / restore-upstream
+    三个分支逐字节相同，差异不在这里；不要在没对比 tree 的情况下去改这些类。
+    真正会丢站点的只有四处：① `Site.equals` 按 key 去重，多个空 / 重复 key 被吞成一条；
+    ② `Site.objectFrom` 的 catch 返回 `new Site()`（空 key）；
+    ③ `SiteBlockSetting.filter` 的 `site.isHide()` 与旧屏蔽记录；
+    ④ 当前 home 不是脚本配置。
+    统一在 `LocalScriptSource.buildJson()` 的 `parseSites()` 做「解析用副本规范化」：
+    key 唯一、name 兜底、hide=0、ext/proxy/api/homePage 统一字符串，
+    **磁盘 json 的 key / name / 次序 / sites_bac 一律不动**。同时把 in/out 条数写进日志，
+    实机可对照工作区与站点列表条数。
+    另：脚本管理第 5 行 `actionRow` 必须用 `weight=1` 左右撑满（固定 264dp 居中会让
+    两侧留白、段标签被压成「工…区」），`addLabel()` 不得设 ellipsize + 固定 34dp。
+    新增 url 也要走 `insertPos()`，否则 py/js/html/url 次序在手工录入时会破。
