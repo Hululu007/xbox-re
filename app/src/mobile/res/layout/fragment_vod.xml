@@ -17,15 +17,19 @@
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
+            android:layout_height="48dp"
+            android:theme="@style/CompactToolbarTheme"
+            app:contentInsetStart="8dp"
+            app:contentInsetStartWithNavigation="8dp"
+            app:contentInsetEnd="2dp"
             app:menu="@menu/menu_vod"
             app:popupTheme="@style/ToolbarPopupTheme">
 
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/logo"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:layout_marginEnd="12dp"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginEnd="8dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_logo" />
 
@@ -47,7 +51,7 @@
             android:clipChildren="false"
             android:clipToPadding="false"
             android:orientation="horizontal"
-            android:paddingEnd="4dp">
+            android:paddingEnd="2dp">
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/type"
@@ -57,25 +61,25 @@
                 android:clipChildren="true"
                 android:clipToPadding="true"
                 android:orientation="horizontal"
-                android:paddingStart="4dp"
+                android:paddingStart="2dp"
                 android:paddingTop="0dp"
                 android:paddingEnd="0dp"
-                android:paddingBottom="8dp"
+                android:paddingBottom="4dp"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 tools:listitem="@layout/adapter_type" />
 
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/typeMore"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
                 android:layout_gravity="center_vertical"
-                android:layout_marginStart="2dp"
+                android:layout_marginStart="0dp"
                 android:background="@android:color/transparent"
                 android:minWidth="0dp"
                 android:minHeight="0dp"
-                android:padding="8dp"
+                android:padding="6dp"
                 android:scaleType="center"
-                android:translationY="-4dp"
+                android:translationY="-2dp"
                 android:visibility="gone"
                 app:srcCompat="@drawable/ic_action_menu"
                 tools:visibility="visible" />
@@ -94,7 +98,7 @@
         android:id="@+id/homeWeb"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="?attr/actionBarSize"
+        android:layout_marginTop="48dp"
         android:focusable="true"
         android:focusableInTouchMode="true"
         android:visibility="gone" />
