@@ -56,6 +56,9 @@ jobs:
     name: Build and publish
     runs-on: ubuntu-latest
     timeout-minutes: 90
+    permissions:
+      contents: write
+      packages: write
 
     steps:
       - name: Checkout
@@ -286,6 +289,37 @@ jobs:
           done
           ls -lh dist/
 
+      - name: Clean META-INF metadata and realign before signing
+        # 恢复分支合入 jgit / commons-compress / zxing 后，APK 的 META-INF 下堆了
+        # 近 90 个条目（androidx.*.version、app-metadata.properties、
+        # version-control-info.textproto、LICENSE 等）。这些条目不被 v1 签名覆盖，
+        # apksigner 报 "not protected by signature"，MT 逐个校验时判「签名状态不通过」。
+        # 这里在签名前删干净；zip -d 会重写 ZIP，必须紧跟 zipalign 恢复对齐。
+        # META-INF/services/ 是 ServiceLoader 配置，必须保留（会被 MANIFEST 覆盖）。
+        run: |
+          set -euo pipefail
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          BT_DIR="$(find "$SDK_ROOT/build-tools" -mindepth 1 -maxdepth 1 -type d | sort | tail -1)"
+          ZIPALIGN="$BT_DIR/zipalign"
+          test -x "$ZIPALIGN"
+          for apk in dist/*.apk; do
+            STRIP="$(unzip -Z1 "$apk" | grep -iE '^META-INF/' \
+              | grep -viE '^META-INF/(services/|MANIFEST\.MF$|.*\.(SF|RSA|DSA|EC)$)' || true)"
+            if [ -z "$STRIP" ]; then
+              echo "== $apk : no unprotected META-INF metadata"
+              continue
+            fi
+            echo "== $apk : stripping $(printf '%s\n' "$STRIP" | grep -c .) unprotected META-INF entries"
+            printf '%s\n' "$STRIP" | sed 's/^/    /'
+            while IFS= read -r entry; do
+              [ -z "$entry" ] || zip -d -q "$apk" "$entry" || true
+            done <<< "$STRIP"
+            "$ZIPALIGN" -f -p 4 "$apk" "${apk}.aligned"
+            mv "${apk}.aligned" "$apk"
+            echo "  realigned. remaining META-INF entries:"
+            unzip -Z1 "$apk" | grep -iE '^META-INF/' | sed 's/^/    /' || true
+          done
+
       - name: Add v1 (JAR) signature
         # 输入是 Gradle 输出的未签名 APK，这里一次性签 v1+v2+v3
         env:
@@ -398,6 +432,8 @@ jobs:
             # version-control-info.textproto、androidx.*.version 等）。这是
             # 标准提示、与签名有效性无关，MT 也不会因此判不通过。
             # 只拦截除此之外的 WARNING，避免把正常包挡在门外。
+            UNPROTECTED="$(echo "$VERBOSE" | grep -ci 'not protected by signature' || true)"
+            echo "::notice title=Unprotected META-INF entries::$apk has $UNPROTECTED entries not covered by v1 signature"
             OTHER_WARN="$(echo "$VERBOSE" | grep -i 'WARNING' | grep -viE 'not protected by signature' || true)"
             if [ -n "$OTHER_WARN" ]; then
               echo "::error title=apksigner warning::$(echo "$OTHER_WARN" | tr '\n' ' ')"
@@ -467,6 +503,17 @@ jobs:
                   hard_failure = True
                   fail(ap, "expected exactly 1 MANIFEST.MF / 1 SF / 1 signature block, got %d/%d/%d" % (len(mf), len(sf), len(blk)))
                   continue
+              # MT 判定口径：META-INF 下除签名三件套与 services/ 外不应有任何条目，
+              # 否则 apksigner 会报 not protected by signature，MT 显示校验不通过。
+              unprotected = [n for n in meta
+                             if n not in (mf + sf + blk)
+                             and not n.startswith("META-INF/services/")]
+              if unprotected:
+                  hard_failure = True
+                  fail(ap, "%d unprotected META-INF entries remain: %s" %
+                       (len(unprotected), ", ".join(unprotected[:10])))
+              else:
+                  notice(ap, "META-INF clean: no unprotected entries (services/ excluded)")
               mf_bytes = z.read(mf[0])
               sections = [s for s in re.split(r"\r?\n\r?\n", mf_bytes.decode("utf-8", "replace")) if s.strip()]
               checked = 0

@@ -258,3 +258,24 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
       `OkProxySelector` 总闸 (默认 2080，管 OkHttp) 是两套独立体系，不要互相覆盖。
     - `LabConfig.serverPort()` 依赖 `Server.startManage()` / `Proxy.getPort()`，
       这条链路本分支完整，不要切断。
+
+29. **MT「签名状态校验不通过（v1+v2+v3 都在）」的真正根因与修法**：
+    - 不是缺 v1，也不是 META-INF 里混了第二套签名（那两个都有断言）。
+    - 恢复分支引入 jgit / commons-compress / zxing 等依赖后，APK 的 META-INF 下
+      会堆到 89~91 个条目：`androidx.*.*.version`、
+      `com/android/build/gradle/app-metadata.properties`、
+      `version-control-info.textproto`、`LICENSE`/`NOTICE` 等。这些条目**不被 v1
+      签名覆盖**，apksigner 逐条报 `not protected by signature`，我们曾把它加进
+      WARNING 白名单，MT 却据此判「签名状态校验不通过」。
+    - 修法在 `.github/workflows/android-release.yml` 的
+      `Clean META-INF metadata and realign before signing`：**签名前**删掉
+      META-INF 下除 `services/` 与签名三件套外的所有条目，然后**必须**紧跟
+      `zipalign -f -p 4`（`zip -d` 会重写 ZIP 破坏对齐）。顺序不能放到签名之后。
+    - `META-INF/services/` 是 ServiceLoader 配置，**不能删**；它由 MANIFEST 覆盖，
+      不会触发 not protected。
+    - 签名后的 `Verify JAR (v1) integrity like MT` 必须硬断言
+      「META-INF 除签名三件套与 services/ 外无残留」，并以 annotation 输出
+      `not protected by signature` 的条数作为实证。
+    - 别再靠「CI 全绿」推断「MT 通过」：CI 用的是 apksigner 口径，MT 更严。
+      另外同包名不同证书（例如 `com.fongmi.android.oktv` 撞已装官方版）也会让
+      MT 显示签名不一致、安装被系统拒绝，属设备侧冲突，不是 APK 签名坏了。
