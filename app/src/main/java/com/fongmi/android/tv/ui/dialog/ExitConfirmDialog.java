@@ -1,25 +1,21 @@
 package com.fongmi.android.tv.ui.dialog;
 
 import android.app.Dialog;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
-import android.os.Bundle;
-import android.view.Gravity;
-import android.view.LayoutInflater;
-import android.view.Window;
-import android.view.WindowManager;
+import android.view.View;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
+import androidx.viewbinding.ViewBinding;
 
-import com.fongmi.android.tv.databinding.DialogExitConfirmBinding;
-import com.fongmi.android.tv.utils.ResUtil;
-import com.fongmi.android.tv.utils.Util;
+import com.fongmi.android.tv.R;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
-public final class ExitConfirmDialog extends DialogFragment {
+/**
+ * 退出确认：直接用项目现成的 BaseAlertDialog + MaterialAlertDialogBuilder。
+ * 不再用自定义卡片布局 —— 描述精简为只有标题、按钮一次点击即响应、
+ * 手机与 TV 共用，样式跟随 app 主题。
+ */
+public final class ExitConfirmDialog extends BaseAlertDialog {
 
     private Runnable onConfirm;
 
@@ -36,48 +32,35 @@ public final class ExitConfirmDialog extends DialogFragment {
         show(activity.getSupportFragmentManager(), ExitConfirmDialog.class.getSimpleName());
     }
 
-    @NonNull
     @Override
-    public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-        DialogExitConfirmBinding binding = DialogExitConfirmBinding.inflate(LayoutInflater.from(requireContext()));
-        Dialog dialog = new Dialog(requireContext());
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog.setContentView(binding.getRoot());
-        dialog.setCanceledOnTouchOutside(false);
-        binding.negative.setOnClickListener(view -> dismiss());
-        binding.positive.setOnClickListener(view -> {
-            Runnable confirm = onConfirm;
-            dismissAllowingStateLoss();
-            if (confirm != null) confirm.run();
-        });
-        dialog.setOnShowListener(view -> binding.positive.requestFocus());
-        return dialog;
+    protected ViewBinding getBinding() {
+        // 用 MaterialAlertDialog 自带按钮，不需要自定义 content view
+        return null;
     }
 
     @Override
-    public void onStart() {
-        super.onStart();
-        Dialog dialog = getDialog();
-        Window window = dialog == null ? null : dialog.getWindow();
-        if (window == null) return;
-        int screenWidth = ResUtil.getScreenWidth(requireContext());
-        int width;
-        if (Util.isLeanback()) {
-            // TV 保持原来的 420~560dp 口径
-            width = Math.max(ResUtil.dp2px(420), Math.min((int) (screenWidth * 0.42f), ResUtil.dp2px(560)));
-        } else {
-            // 手机最小 320dp：两侧各留 16dp，弹窗最多 420dp，保证不超屏
-            width = Math.min(screenWidth - ResUtil.dp2px(32),
-                    Math.max(ResUtil.dp2px(280), Math.min((int) (screenWidth * 0.9f), ResUtil.dp2px(420))));
-        }
-        WindowManager.LayoutParams params = window.getAttributes();
-        params.width = width;
-        params.height = WindowManager.LayoutParams.WRAP_CONTENT;
-        params.gravity = Gravity.CENTER;
-        params.dimAmount = 0.58f;
-        window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
-        window.setAttributes(params);
-        window.setLayout(width, WindowManager.LayoutParams.WRAP_CONTENT);
+    protected MaterialAlertDialogBuilder getBuilder() {
+        return builder()
+                .setTitle(R.string.exit_confirm_title)
+                .setNegativeButton(R.string.dialog_negative, (dialog, which) -> dismiss())
+                .setPositiveButton(R.string.exit_confirm_positive, (dialog, which) -> {
+                    Runnable confirm = onConfirm;
+                    dismissAllowingStateLoss();
+                    if (confirm != null) confirm.run();
+                });
+    }
+
+    @Override
+    protected void setupWindowBeforeShow(Dialog dialog) {
+        if (dialog != null) dialog.setCanceledOnTouchOutside(false);
+        super.setupWindowBeforeShow(dialog);
+        if (dialog == null) return;
+        // 默认焦点给「取消」，TV 上按一次确认就取消，不会误退出
+        dialog.setOnShowListener(di -> {
+            if (!(di instanceof Dialog)) return;
+            Dialog d = (Dialog) di;
+            View cancel = d.getWindow() == null ? null : d.getWindow().findViewById(android.R.id.button2);
+            if (cancel != null) cancel.requestFocus();
+        });
     }
 }

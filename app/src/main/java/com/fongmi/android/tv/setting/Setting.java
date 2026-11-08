@@ -153,8 +153,8 @@ public class Setting {
     }
 
     public static int getWall() {
-        int wall = Prefers.getInt("wall", WALL_DREAM_PURPLE);
-        return wall == WALL_GREEN || isLegacyColorWall(wall) ? WALL_DREAM_PURPLE : wall;
+        int wall = Prefers.getInt("wall", WALL_DAYLIGHT_MINIMAL);
+        return wall == WALL_GREEN || isLegacyColorWall(wall) ? WALL_DAYLIGHT_MINIMAL : wall;
     }
 
     public static void putWall(int wall) {
@@ -174,7 +174,7 @@ public class Setting {
         for (int i = 0; i < DEFAULT_WALLS.length; i++) {
             if (DEFAULT_WALLS[i] == wall) return DEFAULT_WALLS[(i + 1) % DEFAULT_WALLS.length];
         }
-        return WALL_DREAM_PURPLE;
+        return WALL_DAYLIGHT_MINIMAL;
     }
 
     public static int[] getDefaultWalls() {

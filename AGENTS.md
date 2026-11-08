@@ -223,3 +223,18 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
       `contentInsetEnd=4dp`、logo 32dp/marginEnd 8dp。按最小 320dp 屏算：
       5×34=170dp + logo 40dp + 标题约 60dp ≈ 270dp ≤ toolbar 内容区 288dp。
       **固定 dp，不做按屏比例的智能缩放**；不动 toolbar 高度（homeWeb marginTop 对齐它）。
+
+27. **本轮五条交互改动的约束，别退回旧写法**：
+    - 默认壁纸主题是「雾蓝极简」= `WALL_DAYLIGHT_MINIMAL`(25)。`Setting.getWall()` 的
+      Prefers 默认值、legacy 兜底、`nextDefaultWall()` 兜底 **三处**都要一致，
+      只改一处会漏。默认只对首次安装 / 清数据生效，已保存过 wall 的用户要手动切一次。
+    - 首页顶部：`menu_vod.xml` 常显 6 个（search/history/proxy/keep/menu_import_script/
+      more_actions；`web_home_fullscreen` 默认 invisible 不占位）。`compactToolbar()` 固定
+      **28dp 宽 / 2dp padding**（上一轮 34/4 空隙偏大），图标统一 20dp `*_s` 副本。
+      6×28=168 + logo 40 + 标题 55 ≈ 263dp ≤ 288dp。标题 `android:textSize="15sp"`
+      直接覆盖 `ToolbarTextAppearance` 的 20sp，不要改全局 style（别处也用）。
+    - 退出确认：`ExitConfirmDialog` 必须继承 **BaseAlertDialog**（项目现成元素），
+      用 `MaterialAlertDialogBuilder` 的标题 + 取消/确认按钮，**不要**自定义卡片布局
+      和 `focusableInTouchMode="true"` 的 TextView（那是「取消要点两下」的根因）。
+      默认焦点给 `android.R.id.button2`（取消），TV 上不误退出。
+      `dialog_exit_confirm.xml` 与 5 个 shape/selector/color 已删除，不要再搬回来。

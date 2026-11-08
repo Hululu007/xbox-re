@@ -37,7 +37,8 @@
                 android:ellipsize="marquee"
                 android:singleLine="true"
                 android:text="@string/app_name"
-                android:textAppearance="@style/ToolbarTextAppearance" />
+                android:textAppearance="@style/ToolbarTextAppearance"
+                android:textSize="15sp" />
 
         </com.google.android.material.appbar.MaterialToolbar>
 

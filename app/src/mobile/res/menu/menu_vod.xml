@@ -24,6 +24,20 @@
         app:showAsAction="always" />
 
     <item
+        android:id="@+id/keep"
+        android:icon="@drawable/ic_popup_keep_s"
+        android:title="@string/app_keep"
+        app:iconTint="@color/white"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/menu_import_script"
+        android:icon="@drawable/ic_popup_import_s"
+        android:title="@string/script_import"
+        app:iconTint="@color/white"
+        app:showAsAction="always" />
+
+    <item
         android:id="@+id/web_home_fullscreen"
         android:icon="@drawable/ic_control_fullscreen_s"
         android:title="@string/play_fullscreen"
@@ -45,11 +59,6 @@
                 android:title="@string/live_refresh" />
 
             <item
-                android:id="@+id/keep"
-                android:icon="@drawable/ic_popup_keep"
-                android:title="@string/app_keep" />
-
-            <item
                 android:id="@+id/sync"
                 android:icon="@drawable/ic_popup_sync"
                 android:title="@string/setting_one_key_sync" />
@@ -68,11 +77,6 @@
                 android:id="@+id/enhance"
                 android:icon="@drawable/ic_popup_enhance"
                 android:title="@string/setting_enhance" />
-
-            <item
-                android:id="@+id/menu_import_script"
-                android:icon="@drawable/ic_popup_import"
-                android:title="@string/script_import" />
 
             <item
                 android:id="@+id/menu_ext"

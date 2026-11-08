@@ -372,9 +372,10 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
     }
 
     /**
-     * 首页顶部一行按钮缩小：固定 34dp 宽 + 左右各 4dp padding（原约 48dp 宽 / 12dp padding）。
-     * 不动 toolbar 高度，homeWeb 的 marginTop 仍对齐 ?attr/actionBarSize。
-     * 固定值，不按屏幕比例智能缩放。
+     * 首页顶部一行按钮：固定 28dp 宽 + 左右各 2dp padding（上一轮 34dp/4dp，右半边空隙偏大）。
+     * 收藏与导入脚本移出竖…后常显 6 个：6×28=168dp，加 logo 40dp、标题约 55dp ≈ 263dp
+     * ≤ toolbar 内容区约 288dp（最小 320dp 屏），一行放得下。
+     * 不动 toolbar 高度，homeWeb 的 marginTop 仍对齐 ?attr/actionBarSize；固定 dp 不智能缩放。
      */
     private void compactToolbar() {
         for (int i = 0; i < mBinding.toolbar.getChildCount(); i++) {
@@ -383,8 +384,8 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
             ViewGroup menu = (ViewGroup) child;
             for (int j = 0; j < menu.getChildCount(); j++) {
                 View action = menu.getChildAt(j);
-                action.setMinimumWidth(ResUtil.dp2px(34));
-                action.setPadding(ResUtil.dp2px(4), 0, ResUtil.dp2px(4), 0);
+                action.setMinimumWidth(ResUtil.dp2px(28));
+                action.setPadding(ResUtil.dp2px(2), 0, ResUtil.dp2px(2), 0);
             }
         }
     }
