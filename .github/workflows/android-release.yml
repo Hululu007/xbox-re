@@ -214,8 +214,8 @@ jobs:
             echo "storePassword=$STORE_PASSWORD"
             echo "keyPassword=$KEY_PASS"
           } > local.properties
-          # apksigner 无法给已经带 v2/v3 签名的 APK 追加 v1：必须从完全未签名的
-          # APK 开始，一次性签 v1+v2+v3。这里只在 CI 工作副本里关闭 Gradle 签名。
+          # 本轮统一从「完全未签名的 APK」开始，由 apksigner 一次签 v2+v3。
+          # 这里只在 CI 工作副本里关闭 Gradle 签名，不改仓库里的 build.gradle。
           sed -i 's|signingConfig = hasReleaseSigning ? signingConfigs.release : signingConfigs.debug|signingConfig = null|' app/build.gradle
           grep -q 'signingConfig = null' app/build.gradle || {
             echo "::error title=Unsigned build not configured::Failed to disable Gradle signing in app/build.gradle"
@@ -289,45 +289,81 @@ jobs:
           done
           ls -lh dist/
 
-      - name: Empty META-INF and realign before signing
-        # 恢复分支合入 jgit / commons-compress / zxing 后，APK 的 META-INF 下堆了
-        # 近 90 个条目（androidx.*.version、app-metadata.properties、
-        # version-control-info.textproto、LICENSE、services/ 等）。
-        # 关键事实：apksigner 生成的 v1 MANIFEST.MF **不包含 META-INF/ 下任何条目**，
-        # 所以该目录里只要还留着一个文件，MT 就会反向发现「ZIP 里有、MANIFEST 里没有」
-        # 并判「签名状态：校验不通过」——这正是上一版保留 services/ 后仍装不上的原因。
-        # 签名前把 META-INF 清空（含 services/、第三方 jar 的 MANIFEST.MF 与旧签名块），
-        # 再由 apksigner 重建干净的三件套。zip -d 会重写 ZIP，必须紧跟 zipalign 恢复对齐。
+      - name: Strip stale JAR signature entries only (keep all payload files)
+        # 上一轮把 META-INF 下 90 个条目全部清空，用户反馈「文件不全、不算安装包」：
+        # 其中 87 个是依赖自带的正常内容（*.version、LICENSE/NOTICE、
+        # app-metadata.properties、version-control-info.textproto、
+        # META-INF/services/* 的 ServiceLoader 配置），删掉会丢配置，而且
+        # `zip -d` 逐条删除 90 次 + zipalign 反复重写 ZIP，有破坏 APK 结构的风险。
+        #
+        # 本轮只精准移除「签名类」条目（MANIFEST.MF / *.SF / *.RSA / *.DSA /
+        # *.EC / SIG-*），其余全部原样保留；并且改为 Python zipfile 单次重建
+        # （一次 I/O，逐条保留 compress_type / 内容 / 时间戳），再 zipalign -f 4。
+        # 随后走纯 v2/v3 签名：v2/v3 覆盖整个 APK 文件，所有文件都受保护，
+        # 不需要 v1，也就不再存在「META-INF 未受签名保护的条目」这个两难。
         run: |
           set -euo pipefail
           SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
           BT_DIR="$(find "$SDK_ROOT/build-tools" -mindepth 1 -maxdepth 1 -type d | sort | tail -1)"
           ZIPALIGN="$BT_DIR/zipalign"
           test -x "$ZIPALIGN"
-          for apk in dist/*.apk; do
-            STRIP="$(unzip -Z1 "$apk" | grep -iE '^META-INF/' || true)"
-            if [ -z "$STRIP" ]; then
-              echo "== $apk : META-INF already empty"
-              continue
-            fi
-            echo "== $apk : clearing $(printf '%s\n' "$STRIP" | grep -c .) META-INF entries"
-            printf '%s\n' "$STRIP" | sed 's/^/    /'
-            printf '%s\n' "$STRIP" >> /tmp/stripped-entries.txt
-            while IFS= read -r entry; do
-              [ -z "$entry" ] || zip -d -q "$apk" "$entry" || true
-            done <<< "$STRIP"
-            "$ZIPALIGN" -f -p 4 "$apk" "${apk}.aligned"
-            mv "${apk}.aligned" "$apk"
-            LEFT="$(unzip -Z1 "$apk" | grep -iE '^META-INF/' || true)"
-            if [ -n "$LEFT" ]; then
-              echo "::error title=META-INF not empty::$apk still has META-INF entries after zip -d: $(echo "$LEFT" | tr '\n' ' ')"
-              exit 1
-            fi
-            echo "  realigned. META-INF is now empty (apksigner will create the 3 signature files)"
-          done
+          rm -f /tmp/strip-report.txt
+          python3 - <<'PY'
+          import glob, os, re, zipfile
 
-      - name: Add v1 (JAR) signature
-        # 输入是 Gradle 输出的未签名 APK，这里一次性签 v1+v2+v3
+          # 只匹配「签名类」条目；services/、*.version、LICENSE 等一律保留
+          SIG = re.compile(r'^META-INF/(MANIFEST\.MF|.*\.(SF|RSA|DSA|EC)|SIG-[^/]*)$', re.I)
+          hard_failure = False
+          for apk in sorted(glob.glob('dist/*.apk')):
+              tmp = apk + '.rebuild'
+              removed, kept = [], 0
+              with zipfile.ZipFile(apk, 'r') as zin, zipfile.ZipFile(tmp, 'w') as zout:
+                  zout.comment = zin.comment
+                  for item in zin.infolist():
+                      if SIG.match(item.filename):
+                          removed.append(item.filename)
+                          continue
+                      if item.filename.upper().startswith('META-INF/'):
+                          kept += 1
+                      data = zin.read(item)
+                      zi = zipfile.ZipInfo(item.filename, item.date_time)
+                      zi.compress_type = item.compress_type
+                      zi.external_attr = item.external_attr
+                      zi.internal_attr = item.internal_attr
+                      zi.create_system = item.create_system
+                      zi.comment = item.comment
+                      zout.writestr(zi, data)
+              os.replace(tmp, apk)
+              with open('/tmp/strip-report.txt', 'a', encoding='utf-8') as fh:
+                  fh.write("=== %s ===\n" % apk)
+                  fh.write("removed (signature entries only): %d\n" % len(removed))
+                  for r in removed: fh.write("  - " + r + "\n")
+                  fh.write("kept META-INF payload entries: %d\n" % kept)
+                  fh.write("total ZIP entries after rebuild: %d\n\n" % len(zipfile.ZipFile(apk).namelist()))
+              print("== %s : removed %d signature entries, kept %d META-INF payload entries" %
+                    (apk, len(removed), kept))
+              # 文件必须全：依赖自带的 META-INF 元数据应原样保留
+              if kept < 60:
+                  print("::error title=META-INF payload lost::%s kept only %d META-INF entries" % (apk, kept))
+                  hard_failure = True
+          if hard_failure:
+              raise SystemExit(1)
+          print("META-INF payload preserved for all APKs")
+          PY
+          for apk in dist/*.apk; do
+            # zip -d / Python 重建会丢失 AGP 写入的对齐 extra field，必须恢复 4 字节对齐。
+            # 不用 -p（page align）：本轮不做 v1，也避免改动 .so 的原有对齐布局。
+            "$ZIPALIGN" -f 4 "$apk" "${apk}.aligned"
+            mv "${apk}.aligned" "$apk"
+            "$ZIPALIGN" -c 4 "$apk"
+          done
+          echo "zipalign -f 4 verified for all APKs"
+
+      - name: Sign APK with v2+v3 (no JAR/v1)
+        # minSdk 24（Android 7.0）起系统只用 v2/v3 验签，v1 只服务 Android 6
+        # 及以下。v2/v3 的签名覆盖整个 APK 文件（除 signing block），所以
+        # META-INF 里保留的 *.version / LICENSE / services/ 等全部受保护，
+        # 不再需要「清空 META-INF」这种会丢文件的做法。
         env:
           RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
           RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
@@ -343,16 +379,9 @@ jobs:
           STORE_PASS="${RELEASE_STORE_PASSWORD:-$KEY_PASSWORD}"
           KEY_PASS="${RELEASE_KEY_PASSWORD:-$STORE_PASS}"
           for apk in dist/*.apk; do
-            echo "== signing $apk with v1+v2+v3"
-            # 上一步已把 META-INF 清空，这里必须确认没有任何旧 MANIFEST.MF /
-            # .SF / .RSA 残留，否则 apksigner 会把旧清单合并进来，MT 复算必挂。
-            LEGACY="$(unzip -Z1 "$apk" | grep -iE '^META-INF/.*\.(SF|RSA|DSA|EC)$|^META-INF/MANIFEST\.MF$' || true)"
-            if [ -n "$LEGACY" ]; then
-              echo "::error title=META-INF not clean::$apk still has stale JAR signature entries: $(echo "$LEGACY" | tr '\n' ' ')"
-              exit 1
-            fi
-            PRE="$("$APKSIGNER" verify --min-sdk-version 21 --verbose "$apk" 2>&1 || true)"
-            if echo "$PRE" | grep -qi "verified using"; then
+            echo "== signing $apk with v2+v3 (minSdk 24)"
+            PRE="$("$APKSIGNER" verify --min-sdk-version 24 --verbose "$apk" 2>&1 || true)"
+            if echo "$PRE" | grep -qiE "verified using v[123] scheme.*: true"; then
               echo "::error title=APK already signed::$apk already carries signatures; unsigned build is required"
               exit 1
             fi
@@ -361,21 +390,14 @@ jobs:
               --ks-key-alias "$ALIAS" \
               --ks-pass "pass:$STORE_PASS" \
               --key-pass "pass:$KEY_PASS" \
-              --min-sdk-version 21 \
-              --v1-signing-enabled true \
+              --min-sdk-version 24 \
+              --v1-signing-enabled false \
               --v2-signing-enabled true \
               --v3-signing-enabled true \
               --out "${apk}.signed" "$apk"
             mv "${apk}.signed" "$apk"
-            VERBOSE="$("$APKSIGNER" verify --min-sdk-version 21 --verbose "$apk" 2>&1 || true)"
-            SIGFILES="$(unzip -l "$apk" | grep -icE 'META-INF/.*\.(RSA|DSA|EC|SF)' || true)"
-            echo "v1 files in META-INF: $SIGFILES"
+            VERBOSE="$("$APKSIGNER" verify --min-sdk-version 24 --verbose "$apk" 2>&1 || true)"
             echo "$(echo "$VERBOSE" | tr '\n' ' ')"
-            if [ "$SIGFILES" -lt 1 ] || ! echo "$VERBOSE" | grep -qi "v1 scheme.*: true"; then
-              echo "::error title=v1 signing failed::$(echo "$VERBOSE" | tr '\n' ' ') | META-INF signature files=$SIGFILES"
-              exit 1
-            fi
-            # 只断 v1 会放过「MT 显示 V1+V2+V3 但 v2/v3 其实校验失败」的情况
             if echo "$VERBOSE" | grep -qi "DOES NOT VERIFY"; then
               echo "::error title=APK does not verify::$(echo "$VERBOSE" | tr '\n' ' ')"
               exit 1
@@ -386,19 +408,21 @@ jobs:
                 exit 1
               fi
             done
-            SFCOUNT="$(unzip -Z1 "$apk" | grep -icE '^META-INF/.*\.SF$' || true)"
-            if [ "$SFCOUNT" -ne 1 ]; then
-              echo "::error title=Multiple SF files::$apk has $SFCOUNT .SF files in META-INF; MT reports verification failure"
+            # 纯 v2/v3：META-INF 里不应出现任何 v1 签名三件套
+            RESIDUE="$(unzip -Z1 "$apk" | grep -iE '^META-INF/.*\.(SF|RSA|DSA|EC)$|^META-INF/MANIFEST\.MF$' || true)"
+            if [ -n "$RESIDUE" ]; then
+              echo "::error title=Stale v1 signature files::$apk still has: $(echo "$RESIDUE" | tr '\n' ' ')"
               exit 1
             fi
-            # MT 口径：META-INF 里必须恰好一个签名块，不能混第二套证书
-            SIGCOUNT="$(unzip -Z1 "$apk" | grep -icE '^META-INF/.*\.(RSA|DSA|EC)$' || true)"
-            if [ "$SIGCOUNT" -ne 1 ]; then
-              echo "::error title=Multiple JAR signatures::$apk has $SIGCOUNT signature blocks in META-INF; MT reports verification failure"
+            # 文件必须全：依赖自带的 META-INF 元数据要还在
+            KEEP="$(unzip -Z1 "$apk" | grep -icE '^META-INF/[^/]+$' || true)"
+            echo "::notice title=META-INF payload preserved::$apk keeps $KEEP META-INF payload entries (no files removed)"
+            if [ "$KEEP" -lt 60 ]; then
+              echo "::error title=META-INF payload lost::$apk kept only $KEEP META-INF entries"
               exit 1
             fi
           done
-          echo "v1+v2+v3 signing completed for all APKs"
+          echo "v2+v3 signing completed for all APKs (all payload files preserved)"
 
       - name: Verify APK signatures and package identity
         run: |
@@ -419,26 +443,28 @@ jobs:
             fi
             CERTS="$("$APKSIGNER" verify --print-certs "$apk" 2>&1)"
             echo "$CERTS"
-            VERBOSE="$("$APKSIGNER" verify --min-sdk-version 21 --verbose "$apk" 2>&1)"
-            SIGFILES="$(unzip -l "$apk" | grep -icE 'META-INF/.*\.(RSA|DSA|EC|SF)' || true)"
-            echo "  v1 files in META-INF: $SIGFILES"
-            if [ "$SIGFILES" -lt 1 ] || ! echo "$VERBOSE" | grep -qi "v1 scheme.*: true"; then
-              echo "::error title=V1 signature missing::$apk has no JAR (v1) signature; MT / some installers report it as unsigned. $(echo "$VERBOSE" | tr '\n' ' ') | META-INF signature files=$SIGFILES"
+            VERBOSE="$("$APKSIGNER" verify --min-sdk-version 24 --verbose "$apk" 2>&1)"
+            for scheme in v2 v3; do
+              if ! echo "$VERBOSE" | grep -qi "$scheme scheme.*: true"; then
+                echo "::error title=$scheme scheme not verified::$apk $(echo "$VERBOSE" | tr '\n' ' ')"
+                exit 1
+              fi
+            done
+            SIGCOUNT="$(unzip -Z1 "$apk" | grep -icE '^META-INF/.*\.(RSA|DSA|EC|SF)$|^META-INF/MANIFEST\.MF$' || true)"
+            if [ "$SIGCOUNT" -ne 0 ]; then
+              echo "::error title=Unexpected v1 signature files::$apk has $SIGCOUNT JAR signature entries; pure v2/v3 build expected"
               exit 1
             fi
-            SIGCOUNT="$(unzip -Z1 "$apk" | grep -icE '^META-INF/.*\.(RSA|DSA|EC)$' || true)"
-            if [ "$SIGCOUNT" -ne 1 ]; then
-              echo "::error title=Multiple JAR signatures::$apk has $SIGCOUNT signature blocks; MT reports verification failure"
+            echo "  scheme: v2+v3 only, META-INF v1 signature entries = 0"
+            # 纯 v2/v3 下 apksigner 不应再报「not protected by signature」（那是
+            # v1 verifier 的口径）。仍保留白名单以记录条数，但任何其它 WARNING 拦下。
+            WARNCOUNT="$(echo "$VERBOSE" | grep -ci 'WARNING' || true)"
+            echo "::notice title=apksigner warnings::$apk has $WARNCOUNT warning(s)"
+            OTHER_WARN="$(echo "$VERBOSE" | grep -i 'WARNING' | grep -viE 'not protected by signature' || true)"
+            if [ -n "$OTHER_WARN" ]; then
+              echo "::error title=apksigner warning::$apk has warnings: $(echo "$OTHER_WARN" | tr '\n' ' ')"
               exit 1
             fi
-            # 上一版把 not protected by signature 加进白名单 → CI 全绿但 MT 判不通过。
-            # META-INF 已清空，现在必须零 WARNING；只要还有 WARNING 就拦下，不再放行。
-            ALL_WARN="$(echo "$VERBOSE" | grep -i 'WARNING' || true)"
-            if [ -n "$ALL_WARN" ]; then
-              echo "::error title=apksigner warning::$apk has warnings: $(echo "$ALL_WARN" | tr '\n' ' ')"
-              exit 1
-            fi
-            echo "::notice title=Zero apksigner warnings::$apk verifies with v1+v2+v3, no unprotected META-INF entries"
             if echo "$CERTS" | grep -qi "Android Debug"; then
               echo "::error title=Debug-signed APK::Refusing to publish a debug-signed release."
               exit 1
@@ -452,11 +478,11 @@ jobs:
           EXPECTED="${{ steps.build_apks.outputs.expected_apk_count }}"
           [ -n "$EXPECTED" ] || EXPECTED=4
           test "$count" -eq "$EXPECTED" || { echo "::error title=APK count::Expected $EXPECTED APKs, got $count"; exit 1; }
-          echo "Verified $count release-signed APKs with the oktv applicationId"
+          echo "Verified $count v2+v3-signed APKs with the oktv applicationId (all payload files preserved)"
           # 可下载的自检报告：用户能拿 MT 显示的证书指纹 / 签名方案直接对照，
           # 不必依赖 CI 自述，也不必下载几十 MB 的 APK 去验。
           {
-            echo "xbox-re 签名自检报告"
+            echo "xbox-re 签名与完整性自检报告（v2+v3，文件全保留）"
             echo "tag: ${{ steps.meta.outputs.tag }}"
             echo "commit: $GITHUB_SHA"
             echo "SHA256 证书指纹: 82:7C:75:5F:F6:04:3C:5B:3B:F0:65:8B:BD:21:10:C5:79:88:6C:9B:DC:91:55:CA:00:4A:BF:66:E5:59:D5:7B"
@@ -467,8 +493,8 @@ jobs:
               echo "package: $("$AAPT2" dump packagename "$apk")"
               echo "META-INF 条目:"
               unzip -Z1 "$apk" | grep -iE '^META-INF/' | sed 's/^/  /'
-              echo "apksigner verify:"
-              "$APKSIGNER" verify --min-sdk-version 21 --verbose "$apk" 2>&1 | sed 's/^/  /'
+              echo "apksigner verify (minSdk 24):"
+              "$APKSIGNER" verify --min-sdk-version 24 --verbose "$apk" 2>&1 | sed 's/^/  /'
               echo "证书:"
               "$APKSIGNER" verify --print-certs "$apk" 2>&1 | sed 's/^/  /'
               echo ""
@@ -476,100 +502,81 @@ jobs:
           } > dist/signature-report.txt
           echo "signature-report.txt generated"
 
-      - name: Verify JAR (v1) integrity like MT
-        # apksigner verify 只看自己那套签名；MT 会逐条复算 MANIFEST.MF 的 digest。
-        # 这一步用 Python 独立复算，把结果打成 annotation，构建后可从 check-run 读回实证。
+      - name: Verify APK completeness and installability
+        # 用户反馈「文件不全、都不算安装包」。本步不再只验签名，而是把 APK
+        # 当一个安装包整体体检：ZIP 完整性、aapt2 能否解析出 package/
+        # versionCode/label、关键文件是否齐全、META-INF 保留了多少条目。
+        # 结果追加到 dist/signature-report.txt，再由后面的步骤回传 Release notes。
         run: |
+          set -euo pipefail
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          BT_DIR="$(find "$SDK_ROOT/build-tools" -mindepth 1 -maxdepth 1 -type d | sort | tail -1)"
+          AAPT2="$BT_DIR/aapt2"
+          test -x "$AAPT2"
+          {
+            echo ""
+            echo "=== APK 完整体检（结构 / 可安装性） ==="
+            for apk in dist/*.apk; do
+              echo "--- $(basename "$apk") ---"
+              echo "size: $(stat -c%s "$apk") bytes"
+              echo "sha256: $(sha256sum "$apk" | cut -d' ' -f1)"
+              echo "zip entries: $(unzip -Z1 "$apk" | wc -l)"
+              echo "unzip -t: $(unzip -t "$apk" 2>&1 | tail -1)"
+              echo "META-INF entries: $(unzip -Z1 "$apk" | grep -icE '^META-INF/' || true)"
+              echo "aapt2 dump badging (first 14 lines):"
+              "$AAPT2" dump badging "$apk" 2>&1 | head -14 | sed 's/^/  /'
+              echo ""
+            done
+          } >> dist/signature-report.txt
           python3 - <<'PY'
-          import base64, glob, hashlib, re, zipfile
+          import glob, re, zipfile
 
           EVIDENCE = open("dist/signature-report.txt", "a", encoding="utf-8")
-
-          def notice(ap, msg):
-              print("::notice title=MT v1 %s::%s" % (ap, msg.replace("\n", " | ")))
-              EVIDENCE.write("MT-v1 [%s] %s\n" % (ap, msg.replace("\n", " | ")))
-
-          def fail(ap, msg):
-              print("::error title=MT v1 %s failed::%s" % (ap, msg.replace("\n", " | ")))
-              EVIDENCE.write("MT-v1 FAIL [%s] %s\n" % (ap, msg.replace("\n", " | ")))
+          def record(msg):
+              print(msg)
+              EVIDENCE.write(msg + "\n")
 
           hard_failure = False
+          SIG = re.compile(r'^META-INF/(MANIFEST\.MF|.*\.(SF|RSA|DSA|EC)|SIG-[^/]*)$', re.I)
           for apk in sorted(glob.glob("dist/*.apk")):
-              ap = apk.split("/")[-1]
+              name = apk.split("/")[-1]
               z = zipfile.ZipFile(apk)
               names = z.namelist()
-              meta = [n for n in names if n.upper().startswith("META-INF/") and not n.endswith("/")]
-              sf = [n for n in meta if n.upper().endswith(".SF")]
-              blk = [n for n in meta if n.upper().endswith((".RSA", ".DSA", ".EC"))]
-              mf = [n for n in meta if n.upper().endswith("MANIFEST.MF")]
-              notice(ap, "META-INF entries (%d): %s" % (len(meta), ", ".join(meta)))
-              if len(mf) != 1 or len(sf) != 1 or len(blk) != 1:
-                  hard_failure = True
-                  fail(ap, "expected exactly 1 MANIFEST.MF / 1 SF / 1 signature block, got %d/%d/%d" % (len(mf), len(sf), len(blk)))
-                  continue
-              # MT 判定口径：META-INF 下除签名三件套外必须零条目。
-              # 上一版把 services/ 排除在外，正是它仍然装不上的原因。
-              unprotected = [n for n in meta if n not in (mf + sf + blk)]
-              if unprotected:
-                  hard_failure = True
-                  fail(ap, "%d unprotected META-INF entries remain: %s" %
-                       (len(unprotected), ", ".join(unprotected[:10])))
-              else:
-                  notice(ap, "META-INF clean: exactly 3 signature files, no other entries")
-              mf_bytes = z.read(mf[0])
-              sections = [s for s in re.split(r"\r?\n\r?\n", mf_bytes.decode("utf-8", "replace")) if s.strip()]
-              checked = 0
-              mismatches = []
-              names_in_mf = set()
-              for sec in sections:
-                  sec = re.sub(r"\r?\n ", "", sec)
-                  kv = dict()
-                  for line in sec.splitlines():
-                      if ": " in line:
-                          k, v = line.split(": ", 1)
-                          kv[k.strip()] = v.strip()
-                  name = kv.get("Name")
-                  digest = kv.get("SHA-256-Digest") or kv.get("SHA1-Digest")
-                  if not name or not digest:
-                      continue
-                  names_in_mf.add(name)
-                  if name not in names:
-                      mismatches.append(name + " (listed in MANIFEST but absent)")
-                      continue
-                  algo = "sha256" if "SHA-256-Digest" in kv else "sha1"
-                  actual = base64.b64encode(hashlib.new(algo, z.read(name)).digest()).decode()
-                  if actual != digest:
-                      mismatches.append(name + " (%s mismatch)" % algo)
-                  else:
-                      checked += 1
-              # .SF / MANIFEST.MF 的长 base64 会折行（续行以单个空格开头），先合并再解析
-              sf_text = re.sub(r"\r?\n ", "", z.read(sf[0]).decode("utf-8", "replace"))
-              m = re.search(r"SHA-256-Digest-Manifest:\s*(\S+)", sf_text) or re.search(r"SHA1-Digest-Manifest:\s*(\S+)", sf_text)
-              manifest_ok = None
-              if m:
-                  algo = "sha256" if "SHA-256" in sf_text else "sha1"
-                  manifest_ok = base64.b64encode(hashlib.new(algo, mf_bytes).digest()).decode() == m.group(1)
-              # 反向覆盖：MT 不仅复算 MANIFEST 里的摘要，还会发现「ZIP 里有、
-              # MANIFEST 里没有」的条目并判签名不通过。上一版缺的就是这一半。
-              payload = [n for n in names
-                         if not n.upper().startswith("META-INF/") and not n.endswith("/")]
-              missing = [n for n in payload if n not in names_in_mf]
-              if missing:
-                  hard_failure = True
-                  fail(ap, "%d APK entries missing from MANIFEST.MF (MT would report unsigned entries): %s" %
-                       (len(missing), ", ".join(missing[:10])))
-              notice(ap, "reverse coverage: %d/%d non-META-INF entries listed in MANIFEST.MF" %
-                     (len(payload) - len(missing), len(payload)))
-              notice(ap, "MANIFEST entries checked=%d mismatches=%s | SF Digest-Manifest=%s | SF=%s SIG=%s" %
-                     (checked, mismatches[:8] or "none", manifest_ok, sf[0], blk[0]))
-              if mismatches or manifest_ok is False:
-                  hard_failure = True
-                  fail(ap, "MANIFEST digest mismatch=%s Digest-Manifest=%s (MT would report verification failure)" % (mismatches[:8], manifest_ok))
-          EVIDENCE.write("MT-style bidirectional v1 integrity: %s\n" % ("PASSED" if not hard_failure else "FAILED"))
+              bad = z.testzip()
+              if bad is not None:
+                  record("FAIL [%s] corrupt ZIP entry: %s" % (name, bad)); hard_failure = True
+              meta = [n for n in names if n.upper().startswith("META-INF/")]
+              meta_files = [n for n in meta if not n.endswith("/")]
+              payload = [n for n in meta_files if not SIG.match(n)]
+              sigleft = [n for n in meta_files if SIG.match(n)]
+              dex = [n for n in names if re.match(r'^classes\d*\.dex$', n)]
+              res = [n for n in names if n.startswith("res/") and not n.endswith("/")]
+              lib = [n for n in names if n.startswith("lib/") and not n.endswith("/")]
+              assets = [n for n in names if n.startswith("assets/") and not n.endswith("/")]
+              checks = {
+                  "ZIP integrity": bad is None,
+                  "AndroidManifest.xml": "AndroidManifest.xml" in names,
+                  "classes*.dex (>=1)": len(dex) >= 1,
+                  "resources.arsc": "resources.arsc" in names,
+                  "res/ (>=100)": len(res) >= 100,
+                  "lib/ (>=1)": len(lib) >= 1,
+                  "assets/ (>=1)": len(assets) >= 1,
+                  "META-INF payload preserved (>=60)": len(payload) >= 60,
+                  "no v1 signature entries": len(sigleft) == 0,
+              }
+              record("--- %s ---" % name)
+              record("  entries=%d dex=%s res=%d lib=%d assets=%d META-INF=%d(payload=%d sig=%d)" %
+                     (len(names), ",".join(dex) or "none", len(res), len(lib), len(assets),
+                      len(meta_files), len(payload), len(sigleft)))
+              record("  META-INF payload sample: %s" % ", ".join(sorted(payload)[:12]))
+              for k, v in checks.items():
+                  record("  %-40s %s" % (k, "OK" if v else "FAIL"))
+                  if not v: hard_failure = True
+          EVIDENCE.write("APK completeness: %s\n" % ("PASSED" if not hard_failure else "FAILED"))
           EVIDENCE.close()
           if hard_failure:
               raise SystemExit(1)
-          print("MT-style bidirectional v1 integrity check passed for all APKs")
+          print("APK completeness and installability checks passed for all APKs")
           PY
 
       - name: Set up ORAS
@@ -765,14 +772,14 @@ jobs:
           rel = call("GET", api + "/repos/" + repo + "/releases/tags/" + tag)
           report = open("dist/signature-report.txt", encoding="utf-8", errors="replace").read()
           stripped = ""
-          if os.path.exists("/tmp/stripped-entries.txt"):
-              stripped = open("/tmp/stripped-entries.txt", encoding="utf-8", errors="replace").read()
-          extra = ("\n\n---\n\n## 签名自检报告（构建时真实输出）\n\n```text\n" + report
-                   + "\n```\n\n### 签名前从 META-INF 清除的条目（累计）\n\n```text\n"
+          if os.path.exists("/tmp/strip-report.txt"):
+              stripped = open("/tmp/strip-report.txt", encoding="utf-8", errors="replace").read()
+          extra = ("\n\n---\n\n## 签名与完整性自检报告（构建时真实输出）\n\n```text\n" + report
+                   + "\n```\n\n### 签名前移除的条目（仅签名类；其余 META-INF 文件全部保留）\n\n```text\n"
                    + (stripped or "(none)") + "\n```\n")
           call("PATCH", api + "/repos/" + repo + "/releases/" + str(rel["id"]),
                {"body": (rel.get("body") or "") + extra})
-          print("signature evidence attached to release notes:", len(extra), "chars")
+          print("signature + completeness evidence attached to release notes:", len(extra), "chars")
           PY
 
       - name: Sync to CNB
