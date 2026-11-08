@@ -88,9 +88,9 @@ public class Setting {
     public static final int WALL_GREEN = 1;
 
     private static final int[] DEFAULT_WALLS = {
-            WALL_DREAM_PURPLE, WALL_LAVENDER_CRYSTAL, WALL_PASTEL_PRISM, WALL_ROSE_VEIL, WALL_VIOLET_SMOKE,
+            WALL_DAYLIGHT_MINIMAL, WALL_LAVENDER_CRYSTAL, WALL_PASTEL_PRISM, WALL_ROSE_VEIL, WALL_VIOLET_SMOKE,
             WALL_NEON_BERRY, WALL_MIDNIGHT_MOON, WALL_NEON_CYBER, WALL_DEEP_SPACE_GLASS, WALL_GRAPHITE_SMOKE,
-            WALL_DAYLIGHT_MINIMAL, WALL_SKY_MINT, WALL_POLAR_LIGHT_GLASS, WALL_GLASS_GRADIENT, WALL_CRYSTAL_SKY,
+            WALL_DREAM_PURPLE, WALL_SKY_MINT, WALL_POLAR_LIGHT_GLASS, WALL_GLASS_GRADIENT, WALL_CRYSTAL_SKY,
             WALL_BLUE_SILK, WALL_CYAN_CRYSTAL, WALL_MINT_GLACIER, WALL_AURORA_GLASS, WALL_DEEP_SEA,
             WALL_LIQUID_CHROME, WALL_FOREST_MIST, WALL_EMERALD_AURORA, WALL_WARM_MOON_GLASS, WALL_PEACH_DAWN,
             WALL_CHAMPAGNE_MIST, WALL_SUNSET_PRISM
@@ -153,8 +153,8 @@ public class Setting {
     }
 
     public static int getWall() {
-        int wall = Prefers.getInt("wall", WALL_DREAM_PURPLE);
-        return wall == WALL_GREEN || isLegacyColorWall(wall) ? WALL_DREAM_PURPLE : wall;
+        int wall = Prefers.getInt("wall", WALL_DAYLIGHT_MINIMAL);
+        return wall == WALL_GREEN || isLegacyColorWall(wall) ? WALL_DAYLIGHT_MINIMAL : wall;
     }
 
     public static void putWall(int wall) {
@@ -174,7 +174,7 @@ public class Setting {
         for (int i = 0; i < DEFAULT_WALLS.length; i++) {
             if (DEFAULT_WALLS[i] == wall) return DEFAULT_WALLS[(i + 1) % DEFAULT_WALLS.length];
         }
-        return WALL_DREAM_PURPLE;
+        return WALL_DAYLIGHT_MINIMAL;
     }
 
     public static int[] getDefaultWalls() {
@@ -220,7 +220,7 @@ public class Setting {
         if (wall == WALL_DREAM_PURPLE) return 0xFF7560CA;
         if (wall == WALL_SKY_MINT) return 0xFF6DA6B1;
         if (wall == WALL_FOREST_MIST) return 0xFF4E8750;
-        if (wall == WALL_DAYLIGHT_MINIMAL) return 0xFF7B8D9C;
+        if (wall == WALL_DAYLIGHT_MINIMAL) return 0xFF9DB6CC;
         if (wall == WALL_DEEP_SEA) return 0xFF2F7290;
         if (wall == WALL_VIOLET_SMOKE) return 0xFF7C4BE2;
         if (wall == WALL_ROSE_VEIL) return 0xFFB27FAE;
