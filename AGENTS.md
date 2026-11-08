@@ -247,8 +247,13 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
       与 `lab_template.json` 的 `root` 一致）。禁止再写死
       `/storage/emulated/0/VodPlus/...`、`peekpro/...` 这些别的 app 的目录；
       `syncVodPlusAssets()` 是空实现（本分支不带 assets/VodPlus）。
-    - `menu_nav.xml` 只有 vod/live/setting 三项，`getNavEntry()` 没有消费方；
-      实验室设置弹窗里的 `navEntryRow` 必须永久 GONE。要么接线要么切断，**别留死开关**。
+    - **底部导航入口必须完整接线**（上轮曾误判「没有消费方」并切断，是错的）：
+      `menu_nav.xml` 的 `R.id.lab`（图标 `ic_nav_lab` 已是 48dp，与其余 nav 图标同款）
+      + `HomeActivity.setNavigation()` 里 `findItem(R.id.lab).setVisible(LabConfig.get().getNavEntry())`
+      + `onNavigationItemSelected` 里 `LabActivity.start(this); return false`
+      + `LabActivity` 设置弹窗的 `navEntryRow` 在手机端 VISIBLE、TV 端 GONE，并保存
+      `setNavEntry()`。lab_strings.xml 的 `lab_nav_entry_title/hint` 就是给这个开关用的。
+      改完开关要发 `ConfigEvent(COMMON)` 让首页 `setNavigation()` 重算。
     - 实验室的「全局代理」(默认 7890，注入 rootfs 进程环境变量) 与 app 的
       `OkProxySelector` 总闸 (默认 2080，管 OkHttp) 是两套独立体系，不要互相覆盖。
     - `LabConfig.serverPort()` 依赖 `Server.startManage()` / `Proxy.getPort()`，

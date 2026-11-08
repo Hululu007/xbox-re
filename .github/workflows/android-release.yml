@@ -304,17 +304,14 @@ jobs:
           KEY_PASS="${RELEASE_KEY_PASSWORD:-$STORE_PASS}"
           for apk in dist/*.apk; do
             echo "== signing $apk with v1+v2+v3"
-            # Gradle 产出的「未签名」APK 仍可能带第三方 jar 自带的
-            # META-INF/*.SF / *.RSA / *.DSA / *.EC 和 MANIFEST.MF。apksigner 只追加
-            # 自己那套、不清理旧的；MT 逐个校验 META-INF 签名文件，遇到旧的对不上
-            # 当前证书就判「校验不通过」，而 apksigner verify 仍显示 v1+v2+v3 全 true。
+            # 不再用 zip -d 改动 APK：Info-ZIP 重写 ZIP 会丢弃 AGP 写入的对齐
+            # extra field，某些解析器读到的条目字节可能与 apksigner 签名时不一致。
+            # AGP 打包时已排除第三方 jar 的 META-INF 签名文件，这里只记录，
+            # 签名前的残留由后面的 .SF / 签名块数量断言直接把关。
             LEGACY="$(unzip -Z1 "$apk" | grep -iE '^META-INF/.*\.(SF|RSA|DSA|EC)$|^META-INF/MANIFEST\.MF$' || true)"
             if [ -n "$LEGACY" ]; then
-              echo "  removing stale JAR signature entries:"
+              echo "  stale JAR signature entries present (post-sign assertions will catch them):"
               echo "$LEGACY" | sed 's/^/    /'
-              while IFS= read -r entry; do
-                [ -z "$entry" ] || zip -d -q "$apk" "$entry" || true
-              done <<< "$LEGACY"
             fi
             PRE="$("$APKSIGNER" verify --min-sdk-version 21 --verbose "$apk" 2>&1 || true)"
             if echo "$PRE" | grep -qi "verified using"; then
@@ -338,6 +335,22 @@ jobs:
             echo "$(echo "$VERBOSE" | tr '\n' ' ')"
             if [ "$SIGFILES" -lt 1 ] || ! echo "$VERBOSE" | grep -qi "v1 scheme.*: true"; then
               echo "::error title=v1 signing failed::$(echo "$VERBOSE" | tr '\n' ' ') | META-INF signature files=$SIGFILES"
+              exit 1
+            fi
+            # 只断 v1 会放过「MT 显示 V1+V2+V3 但 v2/v3 其实校验失败」的情况
+            if echo "$VERBOSE" | grep -qi "DOES NOT VERIFY"; then
+              echo "::error title=APK does not verify::$(echo "$VERBOSE" | tr '\n' ' ')"
+              exit 1
+            fi
+            for scheme in v2 v3; do
+              if ! echo "$VERBOSE" | grep -qi "$scheme scheme.*: true"; then
+                echo "::error title=$scheme scheme not verified::$(echo "$VERBOSE" | tr '\n' ' ')"
+                exit 1
+              fi
+            done
+            SFCOUNT="$(unzip -Z1 "$apk" | grep -icE '^META-INF/.*\.SF$' || true)"
+            if [ "$SFCOUNT" -ne 1 ]; then
+              echo "::error title=Multiple SF files::$apk has $SFCOUNT .SF files in META-INF; MT reports verification failure"
               exit 1
             fi
             # MT 口径：META-INF 里必须恰好一个签名块，不能混第二套证书
@@ -426,6 +439,74 @@ jobs:
             done
           } > dist/signature-report.txt
           echo "signature-report.txt generated"
+
+      - name: Verify JAR (v1) integrity like MT
+        # apksigner verify 只看自己那套签名；MT 会逐条复算 MANIFEST.MF 的 digest。
+        # 这一步用 Python 独立复算，把结果打成 annotation，构建后可从 check-run 读回实证。
+        run: |
+          python3 - <<'PY'
+          import base64, glob, hashlib, re, zipfile
+
+          def notice(ap, msg):
+              print("::notice title=MT v1 %s::%s" % (ap, msg.replace("\n", " | ")))
+
+          def fail(ap, msg):
+              print("::error title=MT v1 %s failed::%s" % (ap, msg.replace("\n", " | ")))
+
+          hard_failure = False
+          for apk in sorted(glob.glob("dist/*.apk")):
+              ap = apk.split("/")[-1]
+              z = zipfile.ZipFile(apk)
+              names = z.namelist()
+              meta = [n for n in names if n.upper().startswith("META-INF/") and not n.endswith("/")]
+              sf = [n for n in meta if n.upper().endswith(".SF")]
+              blk = [n for n in meta if n.upper().endswith((".RSA", ".DSA", ".EC"))]
+              mf = [n for n in meta if n.upper().endswith("MANIFEST.MF")]
+              notice(ap, "META-INF entries (%d): %s" % (len(meta), ", ".join(meta)))
+              if len(mf) != 1 or len(sf) != 1 or len(blk) != 1:
+                  hard_failure = True
+                  fail(ap, "expected exactly 1 MANIFEST.MF / 1 SF / 1 signature block, got %d/%d/%d" % (len(mf), len(sf), len(blk)))
+                  continue
+              mf_bytes = z.read(mf[0])
+              sections = [s for s in re.split(r"\r?\n\r?\n", mf_bytes.decode("utf-8", "replace")) if s.strip()]
+              checked = 0
+              mismatches = []
+              for sec in sections:
+                  sec = re.sub(r"\r?\n ", "", sec)
+                  kv = dict()
+                  for line in sec.splitlines():
+                      if ": " in line:
+                          k, v = line.split(": ", 1)
+                          kv[k.strip()] = v.strip()
+                  name = kv.get("Name")
+                  digest = kv.get("SHA-256-Digest") or kv.get("SHA1-Digest")
+                  if not name or not digest:
+                      continue
+                  if name not in names:
+                      mismatches.append(name + " (listed in MANIFEST but absent)")
+                      continue
+                  algo = "sha256" if "SHA-256-Digest" in kv else "sha1"
+                  actual = base64.b64encode(hashlib.new(algo, z.read(name)).digest()).decode()
+                  if actual != digest:
+                      mismatches.append(name + " (%s mismatch)" % algo)
+                  else:
+                      checked += 1
+              # .SF / MANIFEST.MF 的长 base64 会折行（续行以单个空格开头），先合并再解析
+              sf_text = re.sub(r"\r?\n ", "", z.read(sf[0]).decode("utf-8", "replace"))
+              m = re.search(r"SHA-256-Digest-Manifest:\s*(\S+)", sf_text) or re.search(r"SHA1-Digest-Manifest:\s*(\S+)", sf_text)
+              manifest_ok = None
+              if m:
+                  algo = "sha256" if "SHA-256" in sf_text else "sha1"
+                  manifest_ok = base64.b64encode(hashlib.new(algo, mf_bytes).digest()).decode() == m.group(1)
+              notice(ap, "MANIFEST entries checked=%d mismatches=%s | SF Digest-Manifest=%s | SF=%s SIG=%s" %
+                     (checked, mismatches[:8] or "none", manifest_ok, sf[0], blk[0]))
+              if mismatches or manifest_ok is False:
+                  hard_failure = True
+                  fail(ap, "MANIFEST digest mismatch=%s Digest-Manifest=%s (MT would report verification failure)" % (mismatches[:8], manifest_ok))
+          if hard_failure:
+              raise SystemExit(1)
+          print("MT-style v1 integrity check passed for all APKs")
+          PY
 
       - name: Set up ORAS
         id: oras
