@@ -20,6 +20,7 @@ import androidx.fragment.app.FragmentStatePagerAdapter;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewpager.widget.PagerAdapter;
+import androidx.appcompat.widget.ActionMenuView;
 import androidx.viewpager.widget.ViewPager;
 
 import com.fongmi.android.tv.App;
@@ -141,6 +142,7 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
         mBinding.filter.setOnLongClickListener(this::onLink);
         mBinding.toolbar.setOnMenuItemClickListener(this::onMenuItemClick);
         mBinding.toolbar.post(this::setSearchLongClick);
+        mBinding.toolbar.post(this::compactToolbar);
         mBinding.appBar.addOnOffsetChangedListener((appBarLayout, verticalOffset) -> {
             int range = appBarLayout.getTotalScrollRange();
             if (range <= 0) return;
@@ -366,6 +368,25 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
                 proxy.setIcon(icon);
             }
         }
+        compactToolbar();
+    }
+
+    /**
+     * 首页顶部一行按钮缩小：固定 34dp 宽 + 左右各 4dp padding（原约 48dp 宽 / 12dp padding）。
+     * 不动 toolbar 高度，homeWeb 的 marginTop 仍对齐 ?attr/actionBarSize。
+     * 固定值，不按屏幕比例智能缩放。
+     */
+    private void compactToolbar() {
+        for (int i = 0; i < mBinding.toolbar.getChildCount(); i++) {
+            View child = mBinding.toolbar.getChildAt(i);
+            if (!(child instanceof ActionMenuView)) continue;
+            ViewGroup menu = (ViewGroup) child;
+            for (int j = 0; j < menu.getChildCount(); j++) {
+                View action = menu.getChildAt(j);
+                action.setMinimumWidth(ResUtil.dp2px(34));
+                action.setPadding(ResUtil.dp2px(4), 0, ResUtil.dp2px(4), 0);
+            }
+        }
     }
 
     /** 首页代理按钮：循环开关，明暗按当前站点配置翻转并写回，立即生效。 */
@@ -405,6 +426,7 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
 
     private void homeContent() {
         requestNormalChrome();
+        if (mWeb != null) mWeb.closePage();
         showProgress();
         mBinding.homeWeb.setVisibility(View.GONE);
         updateToolbarMenu();

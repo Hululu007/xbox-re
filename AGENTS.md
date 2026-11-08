@@ -207,3 +207,19 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
     另：脚本管理第 5 行 `actionRow` 必须用 `weight=1` 左右撑满（固定 264dp 居中会让
     两侧留白、段标签被压成「工…区」），`addLabel()` 不得设 ellipsize + 固定 34dp。
     新增 url 也要走 `insertPos()`，否则 py/js/html/url 次序在手工录入时会破。
+
+26. **本轮三条交互改动的约束，别再退回旧写法**：
+    - html 站点切换：`HomeWebController.load()` 只要 `siteKey` 变化（或新站点没有
+      homePage）就必须先 `closePage()` ——停加载、`about:blank` 替换文档、清历史/
+      注入脚本、`onPause/onResume`，**不能只 `loadUrl(newUrl)` 复用、更不能只
+      `setVisibility(GONE)`**（那样旧 html 的 JS/媒体/网络请求还在跑）。不销毁
+      WebView：binding 仍持有 `homeWeb`，销毁后 `setVisibility` 会作用在废 view 上。
+    - 退出确认：`ExitConfirmDialog` 与其 layout/drawable/color 放 **main**，两变体共用；
+      mobile `HomeActivity.onBackInvoked()` 的最终分支必须弹确认，确认后才
+      `finish()` / 后台播放。**不要**在 leanback/java 再留同名类（duplicate class）。
+      手机宽度按 `screenWidth - 32dp` 封顶，TV 保持 420~560dp 原口径。
+    - 首页顶部一行：`menu_vod.xml` 用 20dp 图标副本（`*_s.xml`，只改尺寸不改图形），
+      `VodFragment.compactToolbar()` 固定 `minWidth=34dp / padding=4dp`，
+      `contentInsetEnd=4dp`、logo 32dp/marginEnd 8dp。按最小 320dp 屏算：
+      5×34=170dp + logo 40dp + 标题约 60dp ≈ 270dp ≤ toolbar 内容区 288dp。
+      **固定 dp，不做按屏比例的智能缩放**；不动 toolbar 高度（homeWeb marginTop 对齐它）。

@@ -36,6 +36,7 @@ import com.fongmi.android.tv.server.Server;
 import com.fongmi.android.tv.service.PlaybackService;
 import com.fongmi.android.tv.setting.Setting;
 import com.fongmi.android.tv.ui.base.BaseActivity;
+import com.fongmi.android.tv.ui.dialog.ExitConfirmDialog;
 import com.fongmi.android.tv.ui.custom.FragmentStateManager;
 import com.fongmi.android.tv.ui.fragment.SettingPersonalFragment;
 import com.fongmi.android.tv.ui.fragment.SettingEnhanceFragment;
@@ -426,9 +427,14 @@ public class HomeActivity extends BaseActivity implements NavigationBarView.OnIt
         } else if (mManager.isVisible(1)) {
             change(0);
         } else if (mManager.canBack(0)) {
-            if (PlaybackService.isRunning()) Util.moveToBackground(this);
-            else super.onBackInvoked();
+            // 返回键最终会关掉 app，弹确认避免误操作（与 TV 端一致）
+            ExitConfirmDialog.create(this::confirmExitHome).show(this);
         }
+    }
+
+    private void confirmExitHome() {
+        if (PlaybackService.isRunning()) Util.moveToBackground(this);
+        else super.onBackInvoked();
     }
 
     @Override

@@ -17,6 +17,7 @@ import androidx.fragment.app.FragmentActivity;
 
 import com.fongmi.android.tv.databinding.DialogExitConfirmBinding;
 import com.fongmi.android.tv.utils.ResUtil;
+import com.fongmi.android.tv.utils.Util;
 
 public final class ExitConfirmDialog extends DialogFragment {
 
@@ -60,7 +61,15 @@ public final class ExitConfirmDialog extends DialogFragment {
         Window window = dialog == null ? null : dialog.getWindow();
         if (window == null) return;
         int screenWidth = ResUtil.getScreenWidth(requireContext());
-        int width = Math.max(ResUtil.dp2px(420), Math.min((int) (screenWidth * 0.42f), ResUtil.dp2px(560)));
+        int width;
+        if (Util.isLeanback()) {
+            // TV 保持原来的 420~560dp 口径
+            width = Math.max(ResUtil.dp2px(420), Math.min((int) (screenWidth * 0.42f), ResUtil.dp2px(560)));
+        } else {
+            // 手机最小 320dp：两侧各留 16dp，弹窗最多 420dp，保证不超屏
+            width = Math.min(screenWidth - ResUtil.dp2px(32),
+                    Math.max(ResUtil.dp2px(280), Math.min((int) (screenWidth * 0.9f), ResUtil.dp2px(420))));
+        }
         WindowManager.LayoutParams params = window.getAttributes();
         params.width = width;
         params.height = WindowManager.LayoutParams.WRAP_CONTENT;
