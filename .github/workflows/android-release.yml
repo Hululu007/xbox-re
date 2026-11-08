@@ -375,7 +375,7 @@ jobs:
             echo "== $apk"
             PKG="$("$AAPT2" dump packagename "$apk")"
             echo "  package: $PKG"
-            if [ "$PKG" != "com.fongmi.android.tv.xbox" ]; then
+            if [ "$PKG" != "com.fongmi.android.oktv" ]; then
               echo "::error title=Wrong applicationId::$PKG"
               exit 1
             fi
@@ -416,7 +416,7 @@ jobs:
           EXPECTED="${{ steps.build_apks.outputs.expected_apk_count }}"
           [ -n "$EXPECTED" ] || EXPECTED=4
           test "$count" -eq "$EXPECTED" || { echo "::error title=APK count::Expected $EXPECTED APKs, got $count"; exit 1; }
-          echo "Verified $count release-signed APKs with the xbox applicationId"
+          echo "Verified $count release-signed APKs with the oktv applicationId"
           # 可下载的自检报告：用户能拿 MT 显示的证书指纹 / 签名方案直接对照，
           # 不必依赖 CI 自述，也不必下载几十 MB 的 APK 去验。
           {
