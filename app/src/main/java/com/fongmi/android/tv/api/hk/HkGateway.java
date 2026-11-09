@@ -96,20 +96,8 @@ public final class HkGateway {
             for (int i = sites.size() - 1; i >= 0; i--) {
                 if (isHk(sites.get(i).getKey())) sites.remove(i);
             }
-            // 2. 按启用规则重建
-            for (HkRule rule : HkRuleManager.get().getEnabledRules()) {
-                String title = rule.getTitle();
-                if (title == null || title.isEmpty()) continue;
-                Site site = Site.get(PREFIX + title, "海阔·" + title);
-                site.setType(3);                       // 与 CSP 站点一致；拦截发生在 isSpider() 之前，不会真去实例化 spider
-                site.setApi("hk://" + title);          // 占位，仅用于标识
-                site.setSearchable(1);
-                site.setChangeable(1);
-                site.setQuickSearch(1);
-                site.setExt("");
-                site.setCategories(classNames(rule));
-                sites.add(site);
-            }
+            // 2. 站点一律从 B（hk.state.json）重建；管理页与首页同源
+            com.fongmi.android.tv.api.hk.state.HkStateUpdater.injectHomeSites();
         } catch (Throwable e) {
             Log.w(TAG, "injectSites skipped: " + e);
         }
