@@ -308,22 +308,37 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
     - VodConfig.initSite / LiveConfig.initLive 用 ConfigSanitizer.spider(object) 取字段
       （数组取首项、对象拼 {url,md5}、三段 trim 但保留 http 校验引用、单段原样返回）。
     - 校验文件请求走 OkHttp.client()，代理总闸亮着时同样生效。
+32. **`.js` / `.js.md5` 是猫爪系「一键订阅」，不是配置 json，也不是单站点 JS 源**：
+    - `.js.md5` 只有 32 字节校验值；同目录 `index.js` 是 **Node.js CommonJS 整包运行时**
+      （混淆 + `runInThisContext(exports,require,module,...,process)` + `brotliDecompressSync`），
+      **QuickJS 跑不了**。它执行后在本机 HTTP 服务上产出 `{video:{sites:[...]}}` 配置。
+    - 正确链路（本轮落地）：`VodConfig.load` 见 `CatSource.isBundle(url)` →
+      `CatSource.serve(url)` 起 `:node` 子进程 → `NodeService` 下载/校验 bundle、
+      `dlopen` libnode.so、执行 `boot.js` → 探 `/config` → `CatSource.normalize()` 把
+      `video.sites` 提上来、相对 api 补基址 → 交回老 `checkJson/parseConfig`。
+    - 上一版 `JsMd5Interface`「合成一个 type=3 站点」**已删除**：那会把整包运行时当单源喂给
+      quickjs（`spider.js` 拿不到 `__jsEvalReturn`/`default` → 空站点），还会把 664KB~1.5MB
+      纯文本当 dex 下载。别恢复。
+    - 用户填的原始 URL 不改、不落盘；bundle 缓存按 `index.js.md5` + `index.config.js.md5`
+      双校验，命中复用，服务端原地更新会重新下载。
+    - `libnode.so`（nodejs-mobile v18.20.4，单 ABI 约 60MB）**运行时按需下载**，不进 APK；
+      走 `update.GithubProxy` 的用户代理配置，失败回退直连。`app/src/main/jniLibs/<abi>/libc++_shared.so`
+      复用实验室已有二进制（尺寸与上游一致）。
+    - 只接点播：`CatSource.normalize` 只提 `video.sites`，上游也没接直播；
+      `LiveConfig` 遇到这类地址明确报错，不当 m3u 解析。
+    - 代理总闸：bundle / md5 / libnode 下载走 `OkHttp.client()`，`/config` 与站点相对 api
+      走 `127.0.0.1` 本机一跳（设计直连），bundle 内部对外请求由 Node 自己发，不受 JVM 选择器管。
 
-32. **`.js` / `.js.md5` 单文件地址要能直接填进「新增点播 / 直播」**：
-    - 这类地址不是配置 json（`.md5` 只有 32 字节校验文本），别走
-      `Decoder.getJson` + `Json.parse`，否则点播解析失败、直播被当 m3u 文本。
-    - `JsMd5Interface.matches(url)` 在 `VodConfig.load` / `LiveConfig.load` 最前面
-      短路，`build(url, live)` 合成**只含 sites 或 lives 的内存配置**，原始 url 不改、
-      不落盘；`Config` 表存的仍是用户填的地址。
-    - 条目的 `jar = <jsUrl>;md5;<md5Url>`：由 `JsLoader -> BaseLoader.dex(jar) ->
-      JarLoader.parseJar` 在站点首次使用时拉校验、比对 `Path.jar(jsUrl)`、按需重下 js。
-      **不要放顶层 spider**（会被预加载且被 objectFrom 继承给所有条目）。
-    - `api` 必须保持 http(s)：`Module.fetch` 只认 http/assets/lib/，
-      `UrlUtil.convert` 对 http 原样返回；js 源码由 quickjs 执行。
-    - 顶层不写 lives（点播）/ sites（直播），`VodConfig.initLive` 对空 lives 直接
-      return，不会串改另一侧配置。
-    - 填 `.js` 时 md5Url 由 `+".md5"` 推测；取不到校验文件时 `dex()` 内部吞异常
-      降级为「无校验但仍能执行」，不会让站点失效。
-    - md5 校验请求与 js 源码请求都走 `OkHttp.client()` / `OkHttp.string()`，
-      代理总闸亮着时同样生效；`VodConfig.clear()` 会 `BaseLoader.clear()`，
-      重新加载即重新校验，与影视TV接口的刷新语义一致。
+33. **猫源 Node 子系统移植约束**（本轮新增，动构建链，改动前先读）：
+    - `nodejs/` 是 NDK 模块，`libcnode.so` 只做 `dlopen/dlsym` 转调 `node::Start`；
+      `ndkVersion` 必须与 `app` 的 `29.0.14206865` 一致，CI 若报缺 `cmake;3.22.1` / NDK，
+      在 workflow 的 sdkmanager 行补组件即可，**不要改签名链、变体、apk 命名**。
+    - `NodeService` 跑在 `:node` 独立进程（`node::Start` 不可进程内重入），
+      Manifest 声明必须带 `android:process=":node"` + `foregroundServiceType="dataSync"`。
+    - `NodeRuntime` 是全局单例：同时只服务一个 bundle，换源会杀旧进程再起新的；
+      点播与直播不能各用一个不同猫源。
+    - 不要照搬上游的 `NodeDialog`（依赖 `WebHtvAlertDialogBuilder` / `DialogNodeProgressBinding`，
+      我们仓没有），进度走 `NodeNotify` 通知即可。
+    - `BuildConfig.APPLICATION_ID` 在 AGP 9 不可靠，已改 `context.getPackageName()`；
+      `GithubProxy` 在 `com.fongmi.android.tv.update` 包且没有 `apply()`，NodeLib 用
+      `resolve(...).rewrite(...)` 桥接。

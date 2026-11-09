@@ -32,7 +32,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import com.fongmi.android.tv.utils.JsMd5Interface;
+import com.fongmi.android.tv.api.CatSource;
 
 public class LiveConfig extends BaseConfig {
 
@@ -125,9 +125,10 @@ public class LiveConfig extends BaseConfig {
             initLive(config, new JsonObject());
             return;
         }
-        if (JsMd5Interface.matches(config.getUrl())) {
-            checkJson(config, JsMd5Interface.build(config.getUrl(), true));
-            return;
+        if (CatSource.isBundle(config.getUrl())) {
+            // 上游 CatSource.normalize 只从 /config 提 video.sites，猫源 bundle 不产出 lives。
+            // 明确报错，别把 32 字节的 md5 文本当 m3u 解析出一条空直播。
+            throw new Exception("猫源订阅是点播接口，请在「新增点播」中填写");
         }
         String json = Decoder.getJson(UrlUtil.convert(config.getUrl()), TAG);
         if (Json.isObj(json)) checkJson(config, Json.parse(json).getAsJsonObject());

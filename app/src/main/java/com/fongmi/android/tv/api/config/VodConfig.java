@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import com.fongmi.android.tv.utils.JsMd5Interface;
+import com.fongmi.android.tv.api.CatSource;
 
 public class VodConfig extends BaseConfig {
 
@@ -120,8 +120,12 @@ public class VodConfig extends BaseConfig {
     @Override
     protected void load(Config config) throws Throwable {
         String url = config.getUrl();
-        if (JsMd5Interface.matches(url)) {
-            checkJson(config, JsMd5Interface.build(url, false));
+        if (CatSource.isBundle(url)) {
+            // 猫爪系订阅（.../index.js.md5）不是配置 json：先把 Node bundle 在本机跑起来，
+            // 再从它的 /config 取标准配置。只接点播，见 LiveConfig。
+            String configUrl = CatSource.serve(url);
+            String text = Decoder.getJson(configUrl, TAG);
+            checkJson(config, CatSource.normalize(configUrl, Json.parse(text)));
             return;
         }
         String dir = "";
