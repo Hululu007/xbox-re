@@ -137,6 +137,46 @@ public final class ConfigSanitizer {
         return result;
     }
 
+
+    /**
+     * spider 字段：猫源爬虫运行时，支持「地址;md5;校验值或 .md5 文件 URL」三段式。
+     *
+     * <p>JarLoader.parseJar 会 split(";md5;")：第三段以 http 开头时直接
+     * OkHttp.string(md5) 拉取 .md5 文件内容，再与本地缓存文件的 MD5 比对，
+     * 不一致才重新下载第一段（js / jar）。所以 index.js + index.js.md5 这类
+     * 「两部分组成」的猫源写法是配置里 spider 字段的形态，不是接口地址本身。</p>
+     *
+     * <p>只修解析用副本：字段写成数组时取首个字符串、写成对象时拼 {url,md5}；
+     * 三段各自 trim 并保留第三段 http 引用；单段原样返回，正常配置一个字节不变。
+     * 字段缺失或无法兜底时返回空串（与 Json.safeString 的失败行为一致）。</p>
+     */
+    public static String spider(JsonObject object) {
+        if (object == null || !object.has("spider")) return "";
+        JsonElement value = object.get("spider");
+        String raw = "";
+        if (value != null && value.isJsonPrimitive()) {
+            raw = value.getAsString();
+        } else if (value != null && value.isJsonArray()) {
+            for (JsonElement item : value.getAsJsonArray()) {
+                if (item != null && item.isJsonPrimitive()) { raw = item.getAsString(); break; }
+            }
+        } else if (value != null && value.isJsonObject()) {
+            JsonObject item = value.getAsJsonObject();
+            String url = text(item, "url");
+            if (url.trim().isEmpty()) url = text(item, "spider");
+            String md5 = text(item, "md5");
+            if (!url.trim().isEmpty()) raw = md5.trim().isEmpty() ? url : url + ";md5;" + md5;
+        }
+        if (raw == null || raw.trim().isEmpty()) return "";
+        String[] parts = raw.split(";md5;", 2);
+        if (parts.length == 1) return raw;
+        String url = parts[0].trim();
+        String md5 = parts[1].trim();
+        if (url.isEmpty()) return "";
+        SpiderDebug.log("config", "spider url=%s md5ref=%s", url, md5.startsWith("http"));
+        return md5.isEmpty() ? url : url + ";md5;" + md5;
+    }
+
     /** 浅拷贝：JsonElement 本身是只读共享的，这里只在副本上替换 / 删除字段。 */
     private static JsonObject shallowCopy(JsonObject source) {
         JsonObject copy = new JsonObject();

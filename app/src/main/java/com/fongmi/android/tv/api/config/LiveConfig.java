@@ -196,7 +196,7 @@ public class LiveConfig extends BaseConfig {
     }
 
     private void initLive(Config config, JsonObject object) {
-        String spider = Json.safeString(object, "spider");
+        String spider = ConfigSanitizer.spider(object);
         BaseLoader.get().parseJar(spider, false);
         setLives(ConfigSanitizer.list(object, "lives").stream().map(e -> Live.objectFrom(e, spider)).distinct().collect(Collectors.toCollection(ArrayList::new)));
         finishLive(config, spider);

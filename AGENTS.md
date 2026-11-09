@@ -295,3 +295,16 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
       本条是在对比过 oktvpro 完整 tree 后，只换取列表入口，**没碰**
       Site.objectFrom / SiteAdapter / SiteDialog / SiteBlockSetting 任何显示链代码。
     - 日志 `config sites in=N out=M fixed=K` 可实机对照「配置条数 vs 站点列表条数」。
+
+31. **猫源 spider 是「爬虫运行时 + md5 校验」，不是接口地址本身**：
+    - 接口仍是配置 json（sites / lives / spider / parses），影视TV 类接口与猫源共用
+      同一套 VodConfig.parseConfig；区别只在站点级：type 0/1/4 直接取 json，
+      猫源 type=3 走 csp_ / .js / .py 爬虫，才需要 spider 提供 js / jar 运行时。
+    - spider 支持 `地址;md5;<校验值 或 .md5 文件 URL>`：JarLoader.parseJar 对
+      http 开头的第三段会 OkHttp.string(md5) 拉校验文件，再 Util.equals 比对本地
+      缓存、按需重新下载。index.js + index.js.md5 正是这个形态。
+    - **别把 .md5 校验文件直接填进「新增接口」**：它是 32 字节纯 MD5 文本，
+      parseConfig 解析不出 sites → 站点列表为空。要填的是含 sites 的配置 json 地址。
+    - VodConfig.initSite / LiveConfig.initLive 用 ConfigSanitizer.spider(object) 取字段
+      （数组取首项、对象拼 {url,md5}、三段 trim 但保留 http 校验引用、单段原样返回）。
+    - 校验文件请求走 OkHttp.client()，代理总闸亮着时同样生效。

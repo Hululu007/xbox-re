@@ -214,7 +214,7 @@ public class VodConfig extends BaseConfig {
     }
 
     private void initSite(Config config, JsonObject object) {
-        String spider = Json.safeString(object, "spider");
+        String spider = ConfigSanitizer.spider(object);
         BaseLoader.get().parseJar(spider, true);
         setSites(ConfigSanitizer.sites(object).stream().map(e -> Site.objectFrom(e, spider)).distinct().collect(Collectors.toCollection(ArrayList::new)));
         Map<String, Site> items = Site.findAll().stream().collect(Collectors.toMap(Site::getKey, Function.identity()));
