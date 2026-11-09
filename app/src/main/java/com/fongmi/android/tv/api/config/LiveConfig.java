@@ -18,8 +18,6 @@ import com.fongmi.android.tv.event.ConfigEvent;
 import com.fongmi.android.tv.impl.Callback;
 import com.fongmi.android.tv.setting.CustomCspSetting;
 import com.fongmi.android.tv.setting.LiveSetting;
-import com.fongmi.android.tv.utils.ConfigSanitizer;
-import com.fongmi.android.tv.utils.CatBundleNotice;
 import com.fongmi.android.tv.utils.UrlUtil;
 import com.github.catvod.bean.Header;
 import com.github.catvod.bean.Proxy;
@@ -80,10 +78,6 @@ public class LiveConfig extends BaseConfig {
     }
 
     public static void load(Config config, Callback callback) {
-        if (CatBundleNotice.isBundleUrl(config.getUrl())) {
-            callback.error(CatBundleNotice.message());
-            return;
-        }
         get().clear().config(config).load(callback);
     }
 
@@ -201,9 +195,9 @@ public class LiveConfig extends BaseConfig {
     }
 
     private void initLive(Config config, JsonObject object) {
-        String spider = ConfigSanitizer.spider(object);
+        String spider = Json.safeString(object, "spider");
         BaseLoader.get().parseJar(spider, false);
-        setLives(ConfigSanitizer.list(object, "lives").stream().map(e -> Live.objectFrom(e, spider)).distinct().collect(Collectors.toCollection(ArrayList::new)));
+        setLives(Json.safeListElement(object, "lives").stream().map(e -> Live.objectFrom(e, spider)).distinct().collect(Collectors.toCollection(ArrayList::new)));
         finishLive(config, spider);
     }
 
