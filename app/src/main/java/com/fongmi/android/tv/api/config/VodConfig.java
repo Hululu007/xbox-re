@@ -119,7 +119,7 @@ public class VodConfig extends BaseConfig {
     protected void load(Config config) throws Throwable {
         String url = config.getUrl();
         if (com.fongmi.android.tv.api.hk.state.HkInterface.isHkUrl(url)) {
-            com.fongmi.android.tv.api.hk.state.HkStateUpdater.injectHomeSites();
+            com.fongmi.android.tv.api.hk.state.HkStateUpdater.injectHomeSites(url);
             return;
         }
         String dir = "";
@@ -236,7 +236,7 @@ public class VodConfig extends BaseConfig {
         return sites == null ? Collections.emptyList() : sites;
     }
 
-    private void setSites(List<Site> sites) {
+    public void setSites(List<Site> sites) {
         this.sites = sites;
     }
 

@@ -90,14 +90,9 @@ public final class HkGateway {
      */
     public static void injectSites() {
         try {
-            List<Site> sites = VodConfig.get().getSites();
-            if (sites == null) return;
-            // 1. 清掉上一轮注入的站点
-            for (int i = sites.size() - 1; i >= 0; i--) {
-                if (isHk(sites.get(i).getKey())) sites.remove(i);
-            }
-            // 2. 站点一律从 B（hk.state.json）重建；管理页与首页同源
-            com.fongmi.android.tv.api.hk.state.HkStateUpdater.injectHomeSites();
+            // 站点一律从 B（hk.state.json）整体重建；管理页与首页同源。
+            // 不可变空表不能原位 remove/add，统一交给 HkStateUpdater 构造新 List 写回。
+            com.fongmi.android.tv.api.hk.state.HkStateUpdater.applyHomeSites();
         } catch (Throwable e) {
             Log.w(TAG, "injectSites skipped: " + e);
         }

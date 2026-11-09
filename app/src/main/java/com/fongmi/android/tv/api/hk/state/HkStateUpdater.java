@@ -1,9 +1,12 @@
 package com.fongmi.android.tv.api.hk.state;
 
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.fongmi.android.tv.App;
 import com.fongmi.android.tv.api.config.VodConfig;
+import com.fongmi.android.tv.api.hk.HkGateway;
+import com.fongmi.android.tv.event.ConfigEvent;
 import com.fongmi.android.tv.bean.Config;
 import com.fongmi.android.tv.bean.Site;
 
@@ -21,6 +24,8 @@ import java.util.Set;
  */
 public final class HkStateUpdater {
 
+    private static final String TAG = "HkStateUpdater";
+
     private HkStateUpdater() {}
 
     public interface Done { void run(); }
@@ -36,7 +41,7 @@ public final class HkStateUpdater {
             }
             state.sites = all;
             HkStateStore.writeState(state);
-            App.post(() -> { if (done != null) done.run(); });
+            App.post(() -> { publishNow(); if (done != null) done.run(); });
         }, "hk-refresh").start();
     }
 
@@ -53,8 +58,20 @@ public final class HkStateUpdater {
                 HkStateStore.replaceFeed(state, doc, feedId, fresh);
                 HkStateStore.writeState(state);
             }
-            App.post(() -> { if (done != null) done.run(); });
+            App.post(() -> { publishNow(); if (done != null) done.run(); });
         }, "hk-feed").start();
+    }
+
+    /** 写完 A/B 后统一发布：清引擎缓存 → 重建首页海阔站点 → 通知 UI 刷新。 */
+    public static void publish() {
+        App.post(HkStateUpdater::publishNow);
+    }
+
+    /** 主线程执行；refreshAll / refreshFeed 的收尾也直接调这里，避免双重 post。 */
+    private static void publishNow() {
+        try { HkGateway.invalidateAll(); } catch (Throwable e) { Log.e(TAG, "invalidateAll failed", e); }
+        applyHomeSites();
+        try { ConfigEvent.vod(); } catch (Throwable e) { Log.e(TAG, "vod event failed", e); }
     }
 
     private static List<HkSiteEntry> refreshDocInternal(String doc, HkState state,
@@ -162,18 +179,21 @@ public final class HkStateUpdater {
                 e.mark = mark; e.origin = origin;
             }
         HkStateStore.writeState(s);
+        publish();
     }
 
     public static void blacklistFeed(String doc, String feedId) {
         HkDoc d = HkStateStore.readDoc(doc);
         for (HkFeed f : d.feeds) if (feedId.equals(f.feedId)) f.mark = "拉黑";
         HkStateStore.writeDoc(d);
+        publish();
     }
 
     public static void restoreFeed(String doc, String feedId) {
         HkDoc d = HkStateStore.readDoc(doc);
         for (HkFeed f : d.feeds) if (feedId.equals(f.feedId)) f.mark = "正常";
         HkStateStore.writeDoc(d);
+        publish();
     }
 
     /** 删除 = 物理删 A 里那条，并清掉 B 里该 feedId 段（站点无物理删）。 */
@@ -186,6 +206,7 @@ public final class HkStateUpdater {
         HkState s = HkStateStore.readState();
         HkStateStore.removeFeed(s, doc, feedId);
         HkStateStore.writeState(s);
+        publish();
     }
 
     public static void editFeed(String doc, String feedId, String raw) {
@@ -200,6 +221,7 @@ public final class HkStateUpdater {
         for (HkFeed f : d.feeds) if (feedIds.contains(f.feedId)) f.category = category;
         if (!d.categories.contains(category)) d.categories.add(category);
         HkStateStore.writeDoc(d);
+        publish();
     }
 
     public static void renameCategory(String doc, String oldName, String newName) {
@@ -212,6 +234,7 @@ public final class HkStateUpdater {
         }
         for (HkFeed f : d.feeds) if (oldName.equals(f.category)) f.category = newName;
         HkStateStore.writeDoc(d);
+        publish();
     }
 
     /** 一级接口更名：6 处连锁一次做完。 */
@@ -230,15 +253,35 @@ public final class HkStateUpdater {
         Config.delete(HkInterface.configUrl(oldName), 0);
         Config.create(0, HkInterface.configUrl(newName), newName);
         if (oldName.equals(HkStateStore.currentDoc())) HkStateStore.setCurrentDoc(newName);
+        publish();
     }
 
-    /** 首页站点：全 doc 全部有效站点，重名 <接口名>|N；切猫源接口 clear() 后重建。 */
+    /** 兼容旧调用点；VodConfig.load 用带 url 的重载，避免依赖 this.config 的切换时机。 */
     public static void injectHomeSites() {
+        injectHomeSites(null);
+    }
+
+    public static void injectHomeSites(String url) {
+        applyHomeSites(url);
+    }
+
+    public static void applyHomeSites() {
+        applyHomeSites(null);
+    }
+
+    /** 首页站点：全 doc 全部有效站点，重名 <接口名>|N。
+     *  只在当前点播接口是 hk:/ 时重建，避免在标准接口下覆盖原有站点列表；
+     *  getSites() 可能是 Collections.emptyList()（clear 之后），一律构造新 ArrayList 整体写回，
+     *  绝不原位 remove/add；home 仍有效时不覆盖用户当前选中的站点。 */
+    public static void applyHomeSites(String url) {
+        String u = url == null ? VodConfig.getUrl() : url;
+        if (!HkInterface.isHkUrl(u)) return;
         try {
-            List<Site> sites = VodConfig.get().getSites();
-            if (sites == null) return;
-            for (int i = sites.size() - 1; i >= 0; i--)
-                if (HkInterface.isHkKey(sites.get(i).getKey())) sites.remove(i);
+            List<Site> current = VodConfig.get().getSites();
+            List<Site> out = new ArrayList<>();
+            if (current != null)
+                for (Site item : current)
+                    if (!HkInterface.isHkKey(item.getKey())) out.add(item);
             HkState s = HkStateStore.readState();
             Map<String, Integer> nameCount = new HashMap<>();
             for (HkSiteEntry e : s.sites) {
@@ -253,8 +296,18 @@ public final class HkStateUpdater {
                 site.setChangeable(1);
                 site.setQuickSearch(1);
                 site.setExt("");
-                sites.add(site);
+                out.add(site);
             }
-        } catch (Throwable ignored) {}
+            VodConfig.get().setSites(out);
+            Site home = VodConfig.get().getHome();
+            boolean keep = home != null && !TextUtils.isEmpty(home.getKey());
+            if (keep) {
+                keep = false;
+                for (Site item : out) if (item.getKey().equals(home.getKey())) { keep = true; break; }
+            }
+            if (!keep && !out.isEmpty()) VodConfig.get().setHome(out.get(0));
+        } catch (Throwable e) {
+            Log.e(TAG, "applyHomeSites failed", e);
+        }
     }
 }

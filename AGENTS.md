@@ -290,3 +290,11 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
     - 入口：所有「导入脚本 / 脚本管理」文案统一「拓展接口」；`ScriptManageDialog` 双 tab 共外壳；`show(activity, callback, url)` 按 `isHkUrl` / `isStoreUrl` 自动点亮并选中一级接口。
     - TV 二次点击口令走 `HkFeedQrDialog` + `ServerEvent.Type.HK_FEED`（老 SETTING 是全局广播，UaDialog 会误填并自动确认，禁止复用）；TV 隐藏一切打字入口。
     - 代理：海阔取数走 `OkHttp` 总闸；`HkWebkitFetcher` 的 Chromium 原生请求不受 JVM ProxySelector 管（与 html 站点同边界）。
+
+31. **海阔首页注入与刷新链（修复 a906e381 二次核验）**：
+    - `HkScriptBridge.java` 已删除：它引用 `LocalScriptSource.addHkItem` / `HkStore` / `readHkStore` 三个不存在的符号（javac 必挂）；规则本体落盘由 `HkFeedParser.collect()` 的 `importJsonList` / `importJsRule` 负责，不需要这层桥。
+    - `VodConfig.getSites()` 在 `clear()` 之后返回 `Collections.emptyList()`，**禁止原位 `remove` / `add`**。`HkStateUpdater.applyHomeSites()` 构造新 `ArrayList` 后经 `VodConfig.setSites(out)` 整体写回，并仅在 home 失效或为空时重设；`setSites` 已改为 public。
+    - 只在当前点播接口 `hk:/` 时重建，避免在标准接口下覆盖原有站点列表；`VodConfig.load()` 必须传局部 `url` 给 `injectHomeSites(url)`，不要依赖 `getConfig()` 的切换时机。
+    - 写完 A/B 必须 `HkStateUpdater.publish()`：清 `HkGateway` Router/条目缓存 → 重建首页 → 发 `ConfigEvent.vod()`。`refreshAll` / `refreshFeed` 收尾与所有用户动作（拉黑、恢复、删除、归类、更名）都已接上；禁止再出现「B 更新了但首页不重建」。
+    - `ScriptManageDialog.show(activity, callback, url)` 才是「点什么接口就编辑什么接口」：历史条目编辑必须传 `item.getUrl()`；`ConfigDialog` / `SiteDialog` / 设置页 / 点播菜单没有具体条目，用二参数版默认当前 url 即可。
+    - `values/strings.xml` 与 `values-zh/strings.xml` 必须同步，中文包漏改会显示旧文案「脚本管理 / 导入脚本」。

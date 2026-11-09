@@ -97,7 +97,7 @@ public class HistoryDialog extends BaseAlertDialog implements ConfigAdapter.OnCl
     public void onEditClick(Config item) {
         FragmentActivity activity = requireActivity();
         dismiss();
-        App.post(() -> ScriptManageDialog.show(activity, null), 100);
+        App.post(() -> ScriptManageDialog.show(activity, null, item.getUrl()), 100);
     }
 
     @Override
