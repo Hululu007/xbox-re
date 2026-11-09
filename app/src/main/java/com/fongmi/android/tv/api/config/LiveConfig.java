@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import com.fongmi.android.tv.utils.JsMd5Interface;
 
 public class LiveConfig extends BaseConfig {
 
@@ -122,6 +123,10 @@ public class LiveConfig extends BaseConfig {
     protected void load(Config config) throws Throwable {
         if (config.isEmpty()) {
             initLive(config, new JsonObject());
+            return;
+        }
+        if (JsMd5Interface.matches(config.getUrl())) {
+            checkJson(config, JsMd5Interface.build(config.getUrl(), true));
             return;
         }
         String json = Decoder.getJson(UrlUtil.convert(config.getUrl()), TAG);

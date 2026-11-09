@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import com.fongmi.android.tv.utils.JsMd5Interface;
 
 public class VodConfig extends BaseConfig {
 
@@ -119,6 +120,10 @@ public class VodConfig extends BaseConfig {
     @Override
     protected void load(Config config) throws Throwable {
         String url = config.getUrl();
+        if (JsMd5Interface.matches(url)) {
+            checkJson(config, JsMd5Interface.build(url, false));
+            return;
+        }
         String dir = "";
         try {
             dir = LocalScriptSource.dirOfUrl(url);

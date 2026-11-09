@@ -308,3 +308,22 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
     - VodConfig.initSite / LiveConfig.initLive 用 ConfigSanitizer.spider(object) 取字段
       （数组取首项、对象拼 {url,md5}、三段 trim 但保留 http 校验引用、单段原样返回）。
     - 校验文件请求走 OkHttp.client()，代理总闸亮着时同样生效。
+
+32. **`.js` / `.js.md5` 单文件地址要能直接填进「新增点播 / 直播」**：
+    - 这类地址不是配置 json（`.md5` 只有 32 字节校验文本），别走
+      `Decoder.getJson` + `Json.parse`，否则点播解析失败、直播被当 m3u 文本。
+    - `JsMd5Interface.matches(url)` 在 `VodConfig.load` / `LiveConfig.load` 最前面
+      短路，`build(url, live)` 合成**只含 sites 或 lives 的内存配置**，原始 url 不改、
+      不落盘；`Config` 表存的仍是用户填的地址。
+    - 条目的 `jar = <jsUrl>;md5;<md5Url>`：由 `JsLoader -> BaseLoader.dex(jar) ->
+      JarLoader.parseJar` 在站点首次使用时拉校验、比对 `Path.jar(jsUrl)`、按需重下 js。
+      **不要放顶层 spider**（会被预加载且被 objectFrom 继承给所有条目）。
+    - `api` 必须保持 http(s)：`Module.fetch` 只认 http/assets/lib/，
+      `UrlUtil.convert` 对 http 原样返回；js 源码由 quickjs 执行。
+    - 顶层不写 lives（点播）/ sites（直播），`VodConfig.initLive` 对空 lives 直接
+      return，不会串改另一侧配置。
+    - 填 `.js` 时 md5Url 由 `+".md5"` 推测；取不到校验文件时 `dex()` 内部吞异常
+      降级为「无校验但仍能执行」，不会让站点失效。
+    - md5 校验请求与 js 源码请求都走 `OkHttp.client()` / `OkHttp.string()`，
+      代理总闸亮着时同样生效；`VodConfig.clear()` 会 `BaseLoader.clear()`，
+      重新加载即重新校验，与影视TV接口的刷新语义一致。
