@@ -16,6 +16,7 @@ import com.fongmi.android.tv.event.ConfigEvent;
 import com.fongmi.android.tv.event.RefreshEvent;
 import com.fongmi.android.tv.impl.Callback;
 import com.fongmi.android.tv.setting.CustomCspSetting;
+import com.fongmi.android.tv.utils.ConfigSanitizer;
 import com.fongmi.android.tv.utils.LocalScriptSource;
 import com.fongmi.android.tv.utils.UrlUtil;
 import com.fongmi.android.tv.web.ext.WebHomeExtensionRegistry;
@@ -215,7 +216,7 @@ public class VodConfig extends BaseConfig {
     private void initSite(Config config, JsonObject object) {
         String spider = Json.safeString(object, "spider");
         BaseLoader.get().parseJar(spider, true);
-        setSites(Json.safeListElement(object, "sites").stream().map(e -> Site.objectFrom(e, spider)).distinct().collect(Collectors.toCollection(ArrayList::new)));
+        setSites(ConfigSanitizer.sites(object).stream().map(e -> Site.objectFrom(e, spider)).distinct().collect(Collectors.toCollection(ArrayList::new)));
         Map<String, Site> items = Site.findAll().stream().collect(Collectors.toMap(Site::getKey, Function.identity()));
         getSites().forEach(site -> { site.sync(items.get(site.getKey())); SiteFeature.onConfigParsed(site); });
         CustomCspSetting.Result custom = CustomCspSetting.inject(getSites());
@@ -224,7 +225,7 @@ public class VodConfig extends BaseConfig {
     }
 
     private void initParse(Config config, JsonObject object) {
-        setParses(Json.safeListElement(object, "parses").stream().map(Parse::objectFrom).distinct().collect(Collectors.toCollection(ArrayList::new)));
+        setParses(ConfigSanitizer.list(object, "parses").stream().map(Parse::objectFrom).distinct().collect(Collectors.toCollection(ArrayList::new)));
         setParse(config, getParses().isEmpty() ? new Parse() : getParses().stream().filter(item -> item.getName().equals(config.getParse())).findFirst().orElse(getParses().get(0)), false);
     }
 

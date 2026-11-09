@@ -279,3 +279,19 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
     - 别再靠「CI 全绿」推断「MT 通过」：CI 用的是 apksigner 口径，MT 更严。
       另外同包名不同证书（例如 `com.fongmi.android.oktv` 撞已装官方版）也会让
       MT 显示签名不一致、安装被系统拒绝，属设备侧冲突，不是 APK 签名坏了。
+
+30. **在线订阅（新增接口 URL）配置的解析用副本规范化，别再改显示链**：
+    - 远程配置由别人维护，随时更新、也会带脏字段；只在 `ConfigSanitizer` 里修一份
+      内存副本，原始 json / 缓存 / Config 表一个字节不动，正常配置的字段值与次序不变。
+    - `VodConfig.initSite` 用 `ConfigSanitizer.sites(object)` 取代
+      `Json.safeListElement(object, "sites")`；`initParse` 与 `LiveConfig.initLive` 用
+      `ConfigSanitizer.list(object, key)` 安全取列表（非对象元素跳过、字段不是数组时不抛）。
+    - 站点侧补齐：key 空 / 重复 → 补唯一副本（否则 .distinct() 按 key 吞条目）、
+      name 空 → 用 key 兜底、字符串字段非 primitive 转字符串、整数字段非法值移除
+      （getter 有 0/1 兜底）、categories/style 类型不对就移除。保留未知字段。
+    - **在线路径不强制 hide=0**：hide=1 是作者故意隐藏的站点，属配置语义；
+      只有本地脚本那份 `LocalScriptSource.parseSites()` 才强制 0，两边不要混用。
+    - 第 25 条「不要在没对比 tree 的情况下改 VodConfig/SiteAdapter」仍然成立：
+      本条是在对比过 oktvpro 完整 tree 后，只换取列表入口，**没碰**
+      Site.objectFrom / SiteAdapter / SiteDialog / SiteBlockSetting 任何显示链代码。
+    - 日志 `config sites in=N out=M fixed=K` 可实机对照「配置条数 vs 站点列表条数」。
