@@ -168,6 +168,9 @@ dependencies {
     implementation libs.bundles.jupnp
     implementation libs.customactivityoncrash
     implementation libs.eventbus
+    implementation libs.jsoup
+    implementation libs.logger
+    implementation libs.rhino
     implementation libs.flexbox
     implementation libs.lottie
     implementation libs.material
