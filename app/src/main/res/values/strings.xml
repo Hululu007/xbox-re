@@ -1499,14 +1499,4 @@
     <!-- 上游 webhtv 原样搬回，未做英译中改写 -->
     <string name="app_branding_icon_select">Select icon</string>
     <string name="home_buttons_reset">Reset</string>
-
-    <!-- 猫源 Node 运行时 -->
-    <string name="node_prepare">Preparing…</string>
-    <string name="node_downloading">Downloading Node runtime</string>
-    <string name="node_bundle">Checking cat source bundle…</string>
-    <string name="node_starting">Starting service…</string>
-    <string name="node_waiting">Waiting for service to be ready…</string>
-    <string name="node_ready">Cat source ready</string>
-    <string name="node_stopping">Stopping previous cat source…</string>
-    <string name="node_switch_restart">Switching cat source…</string>
 </resources>

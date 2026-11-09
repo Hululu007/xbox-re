@@ -186,13 +186,6 @@
             android:foregroundServiceType="dataSync"
             android:stopWithTask="false" />
 
-        <service
-            android:name=".node.NodeService"
-            android:exported="false"
-            android:process=":node"
-            android:foregroundServiceType="dataSync"
-            android:stopWithTask="false" />
-
         <activity
             android:name=".ui.activity.AppBrandingActivity"
             android:exported="false" />

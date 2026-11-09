@@ -19,6 +19,7 @@ import com.fongmi.android.tv.impl.Callback;
 import com.fongmi.android.tv.setting.CustomCspSetting;
 import com.fongmi.android.tv.setting.LiveSetting;
 import com.fongmi.android.tv.utils.ConfigSanitizer;
+import com.fongmi.android.tv.utils.CatBundleNotice;
 import com.fongmi.android.tv.utils.UrlUtil;
 import com.github.catvod.bean.Header;
 import com.github.catvod.bean.Proxy;
@@ -32,7 +33,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import com.fongmi.android.tv.api.CatSource;
 
 public class LiveConfig extends BaseConfig {
 
@@ -80,6 +80,10 @@ public class LiveConfig extends BaseConfig {
     }
 
     public static void load(Config config, Callback callback) {
+        if (CatBundleNotice.isBundleUrl(config.getUrl())) {
+            callback.error(CatBundleNotice.message());
+            return;
+        }
         get().clear().config(config).load(callback);
     }
 
@@ -124,11 +128,6 @@ public class LiveConfig extends BaseConfig {
         if (config.isEmpty()) {
             initLive(config, new JsonObject());
             return;
-        }
-        if (CatSource.isBundle(config.getUrl())) {
-            // 上游 CatSource.normalize 只从 /config 提 video.sites，猫源 bundle 不产出 lives。
-            // 明确报错，别把 32 字节的 md5 文本当 m3u 解析出一条空直播。
-            throw new Exception("猫源订阅是点播接口，请在「新增点播」中填写");
         }
         String json = Decoder.getJson(UrlUtil.convert(config.getUrl()), TAG);
         if (Json.isObj(json)) checkJson(config, Json.parse(json).getAsJsonObject());

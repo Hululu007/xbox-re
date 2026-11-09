@@ -17,6 +17,7 @@ import com.fongmi.android.tv.event.RefreshEvent;
 import com.fongmi.android.tv.impl.Callback;
 import com.fongmi.android.tv.setting.CustomCspSetting;
 import com.fongmi.android.tv.utils.ConfigSanitizer;
+import com.fongmi.android.tv.utils.CatBundleNotice;
 import com.fongmi.android.tv.utils.LocalScriptSource;
 import com.fongmi.android.tv.utils.UrlUtil;
 import com.fongmi.android.tv.web.ext.WebHomeExtensionRegistry;
@@ -32,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import com.fongmi.android.tv.api.CatSource;
 
 public class VodConfig extends BaseConfig {
 
@@ -73,6 +73,10 @@ public class VodConfig extends BaseConfig {
     }
 
     public static void load(Config config, Callback callback) {
+        if (CatBundleNotice.isBundleUrl(config.getUrl())) {
+            callback.error(CatBundleNotice.message());
+            return;
+        }
         get().clear().config(config).load(callback);
     }
 
@@ -120,14 +124,6 @@ public class VodConfig extends BaseConfig {
     @Override
     protected void load(Config config) throws Throwable {
         String url = config.getUrl();
-        if (CatSource.isBundle(url)) {
-            // 猫爪系订阅（.../index.js.md5）不是配置 json：先把 Node bundle 在本机跑起来，
-            // 再从它的 /config 取标准配置。只接点播，见 LiveConfig。
-            String configUrl = CatSource.serve(url);
-            String text = Decoder.getJson(configUrl, TAG);
-            checkJson(config, CatSource.normalize(configUrl, Json.parse(text)));
-            return;
-        }
         String dir = "";
         try {
             dir = LocalScriptSource.dirOfUrl(url);
