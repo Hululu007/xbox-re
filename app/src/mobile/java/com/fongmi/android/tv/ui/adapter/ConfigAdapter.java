@@ -77,7 +77,7 @@ public class ConfigAdapter extends RecyclerView.Adapter<ConfigAdapter.ViewHolder
         holder.binding.delete.setVisibility(readOnly ? View.GONE : View.VISIBLE);
         holder.binding.delete.setOnClickListener(v -> listener.onDeleteClick(item));
         // 脚本文件夹接口才显示编辑入口（含只读的历史选择弹窗）
-        holder.binding.edit.setVisibility(LocalScriptSource.isStoreUrl(item.getUrl()) ? View.VISIBLE : View.GONE);
+        holder.binding.edit.setVisibility((LocalScriptSource.isStoreUrl(item.getUrl()) || com.fongmi.android.tv.api.hk.state.HkInterface.isHkUrl(item.getUrl())) ? View.VISIBLE : View.GONE);
         holder.binding.edit.setOnClickListener(v -> listener.onEditClick(item));
     }
 

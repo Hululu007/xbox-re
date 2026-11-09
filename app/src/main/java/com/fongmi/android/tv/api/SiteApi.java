@@ -8,6 +8,7 @@ import androidx.collection.ArrayMap;
 import com.fongmi.android.tv.App;
 import com.fongmi.android.tv.R;
 import com.fongmi.android.tv.api.config.VodConfig;
+import com.fongmi.android.tv.api.hk.HkGateway;
 import com.fongmi.android.tv.bean.Class;
 import com.fongmi.android.tv.bean.Result;
 import com.fongmi.android.tv.bean.Site;
@@ -56,6 +57,7 @@ public class SiteApi {
 
     @NonNull
     public static Result homeContent(@NonNull Site site) throws Exception {
+        if (HkGateway.isHk(site)) return HkGateway.home(site);
         if (isSpider(site)) {
             Spider spider = site.recent().spider();
             boolean crash = Prefers.getBoolean("crash");
@@ -91,6 +93,7 @@ public class SiteApi {
 
     @NonNull
     public static Result categoryContent(@NonNull String key, @NonNull String tid, @NonNull String page, boolean filter, @NonNull HashMap<String, String> extend) throws Exception {
+        if (HkGateway.isHk(key)) return HkGateway.category(key, tid, page, filter, extend);
         SpiderDebug.log("category", "key=%s,tid=%s,page=%s,filter=%s,extend=%s", key, tid, page, filter, extend);
         Site site = VodConfig.get().getSite(key);
         if (isSpider(site)) {
@@ -112,6 +115,7 @@ public class SiteApi {
 
     @NonNull
     public static Result detailContent(@NonNull String key, @NonNull String id) throws Exception {
+        if (HkGateway.isHk(key)) return HkGateway.detail(key, id);
         SpiderDebug.log("detail", "key=%s,id=%s", key, id);
         if (WebHomeInlineVodStore.KEY.equals(key)) return WebHomeInlineVodStore.detail(id);
         Site site = VodConfig.get().getSite(key);
@@ -149,6 +153,7 @@ public class SiteApi {
 
     @NonNull
     public static Result playerContent(@NonNull String key, @NonNull String flag, @NonNull String id, int playerType) throws Exception {
+        if (HkGateway.isHk(key)) return HkGateway.player(key, flag, id, playerType);
         SpiderDebug.log("player", "key=%s,flag=%s,id=%s", key, flag, id);
         Source.get().stop();
         if (WebHomeInlineVodStore.KEY.equals(key)) return WebHomeInlineVodStore.player(flag, id);
@@ -196,6 +201,7 @@ public class SiteApi {
 
     @NonNull
     public static Result searchContent(@NonNull Site site, @NonNull String keyword, boolean quick, @NonNull String page) throws Exception {
+        if (HkGateway.isHk(site)) return HkGateway.search(site, keyword, quick, page);
         SpiderDebug.log("search", "site=%s,keyword=%s,quick=%s,page=%s", site.getName(), keyword, quick, page);
         boolean hasPage = !page.equals("1");
         if (isSpider(site)) {

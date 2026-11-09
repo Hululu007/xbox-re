@@ -135,6 +135,7 @@ public class App extends Application implements Application.ActivityLifecycleCal
     private void startBackgroundServices() {
         SpiderDebug.log("startup", "background services start cost=%sms", System.currentTimeMillis() - time);
         Server.get().start();
+        com.fongmi.android.tv.api.hk.state.HkStateUpdater.refreshAll(null);
         // 实验室自启：Server 已起来，命令里的 {serverPort} 才能拿到真实端口。
         // auto_install / auto_execute 由这里驱动，否则那两个开关永远不生效。
         LabAutoStart.start(this);

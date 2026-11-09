@@ -37,6 +37,9 @@ import com.fongmi.android.tv.impl.Callback;
 import com.fongmi.android.tv.ui.custom.CustomRecyclerView;
 import com.fongmi.android.tv.utils.FileChooser;
 import com.fongmi.android.tv.utils.LocalScriptSource;
+import com.fongmi.android.tv.api.hk.state.HkInterface;
+import com.fongmi.android.tv.api.hk.state.HkStateStore;
+import com.fongmi.android.tv.api.hk.ui.HkPanelController;
 import com.fongmi.android.tv.utils.Notify;
 import com.fongmi.android.tv.utils.ResUtil;
 import com.fongmi.android.tv.utils.Task;
@@ -65,6 +68,8 @@ public final class ScriptManageDialog extends BaseAlertDialog {
 
     private DialogScriptManageBinding binding;
     private Runnable callback;
+    private String configUrl = "";
+    private HkPanelController hkPanel;
     private String currentDir = "";
     private String filter = "all";
     private boolean dirty;
@@ -90,10 +95,16 @@ public final class ScriptManageDialog extends BaseAlertDialog {
     }
 
     public static void show(FragmentActivity activity, Runnable callback) {
+        show(activity, callback, VodConfig.getUrl());
+    }
+
+    /** 点什么接口就编辑什么接口：带进接口 url，自动点亮对应 tab 并选中对应一级接口。 */
+    public static void show(FragmentActivity activity, Runnable callback, String url) {
         for (Fragment f : activity.getSupportFragmentManager().getFragments())
             if (f instanceof ScriptManageDialog && f.isAdded() && !f.isRemoving()) return;
         ScriptManageDialog dialog = new ScriptManageDialog();
         dialog.callback = callback;
+        dialog.configUrl = url == null ? "" : url;
         dialog.show(activity.getSupportFragmentManager(), "ScriptManageDialog");
     }
 
@@ -189,6 +200,31 @@ public final class ScriptManageDialog extends BaseAlertDialog {
         buildRows();
         applyColumnLayout();
         bindState();
+        initTabs();
+    }
+
+    /** 双 tab 共外壳：本地脚本那段一行不动，切 tab 只换第 2 行以下的可见性。 */
+    private void initTabs() {
+        hkPanel = new HkPanelController(requireActivity());
+        hkPanel.attach(binding.hkPanelHost, configUrl);
+        binding.tabLocal.setOnClickListener(v -> switchTab(false));
+        binding.tabHk.setOnClickListener(v -> switchTab(true));
+        boolean hk = HkInterface.isHkUrl(configUrl);
+        switchTab(hk);
+    }
+
+    private void switchTab(boolean hk) {
+        binding.tabLocal.setChecked(!hk);
+        binding.tabHk.setChecked(hk);
+        int local = hk ? android.view.View.GONE : android.view.View.VISIBLE;
+        binding.dirScroll.setVisibility(local);
+        binding.summary.setVisibility(local);
+        binding.filterRow.setVisibility(local);
+        binding.actionRow.setVisibility(local);
+        binding.columns.setVisibility(local);
+        binding.bottomRow.setVisibility(local);
+        binding.hkPanelHost.setVisibility(hk ? android.view.View.VISIBLE : android.view.View.GONE);
+        if (hk) hkPanel.onShown();
     }
 
     @Override

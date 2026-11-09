@@ -18,17 +18,33 @@
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/title"
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/tabLocal"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:minWidth="0dp"
+            android:minHeight="36dp"
+            android:checkable="true"
+            android:checked="true"
+            android:text="@string/hk_tab_local"
+            android:textColor="@color/dialog_text_button" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/tabHk"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:minWidth="0dp"
+            android:minHeight="36dp"
+            android:checkable="true"
+            android:text="@string/hk_tab_hk"
+            android:textColor="@color/dialog_text_button" />
+
+        <Space
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:ellipsize="end"
-            android:singleLine="true"
-            android:text="@string/script_manage"
-            android:textColor="@color/dialog_outlined_button_text"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:layout_height="1dp"
+            android:layout_weight="1" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/reset"
@@ -56,6 +72,7 @@
 
     <!-- 第 2 行：已添加文件夹 + 添加文件夹（带外圈，过长中间省略） -->
     <HorizontalScrollView
+        android:id="@+id/dirScroll"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
@@ -188,6 +205,7 @@
 
     <!-- 底部：取消 / 确定 分散对齐 -->
     <androidx.appcompat.widget.LinearLayoutCompat
+        android:id="@+id/bottomRow"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
@@ -222,5 +240,14 @@
             app:backgroundTint="@color/dialog_primary_button_bg" />
 
     </androidx.appcompat.widget.LinearLayoutCompat>
+
+    <!-- 海阔脚本 tab：与本地脚本共外壳，第 2 行以下整体换内容 -->
+    <FrameLayout
+        android:id="@+id/hkPanelHost"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="6dp"
+        android:layout_weight="1"
+        android:visibility="gone" />
 
 </androidx.appcompat.widget.LinearLayoutCompat>

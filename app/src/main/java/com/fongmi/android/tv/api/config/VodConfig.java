@@ -118,6 +118,10 @@ public class VodConfig extends BaseConfig {
     @Override
     protected void load(Config config) throws Throwable {
         String url = config.getUrl();
+        if (com.fongmi.android.tv.api.hk.state.HkInterface.isHkUrl(url)) {
+            com.fongmi.android.tv.api.hk.state.HkStateUpdater.injectHomeSites();
+            return;
+        }
         String dir = "";
         try {
             dir = LocalScriptSource.dirOfUrl(url);

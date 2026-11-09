@@ -1263,7 +1263,7 @@
     <string name="player_lyrics_search">Search lyrics</string>
 
     <!-- 脚本文件夹订阅源 / 脚本管理 -->
-    <string name="script_manage">脚本管理</string>
+    <string name="script_manage">拓展接口</string>
     <string name="script_refresh">刷新</string>
     <string name="script_add_folder">添加文件夹</string>
     <string name="script_add_url">在线html录入</string>
@@ -1312,7 +1312,7 @@
     <string name="script_bin_label">回收站</string>
     <string name="script_name_required">请输入名称</string>
     <string name="script_url_duplicate">名称或 url 已存在</string>
-    <string name="script_import">导入脚本</string>
+    <string name="script_import">拓展接口</string>
     <string name="script_edit">编辑脚本</string>
     <string name="menu_proxy">代理</string>
     <string name="menu_ext">扩展参数</string>
@@ -1499,4 +1499,6 @@
     <!-- 上游 webhtv 原样搬回，未做英译中改写 -->
     <string name="app_branding_icon_select">Select icon</string>
     <string name="home_buttons_reset">Reset</string>
+    <string name="hk_tab_local">本地脚本</string>
+    <string name="hk_tab_hk">海阔脚本</string>
 </resources>
