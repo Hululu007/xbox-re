@@ -107,6 +107,14 @@ public class HomeActivity extends BaseActivity implements NavigationBarView.OnIt
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        // 与 webhtv main 同口径：实验室设置里改了「底部导航入口」开关后，
+        // 回到首页按当前配置重算可见性（本分支无 FollowingSettings，故只判 lab）。
+        if (mBinding.navigation.getMenu().findItem(R.id.lab).isVisible() != LabConfig.get().getNavEntry()) setNavigation();
+    }
+
+    @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         outState.putBoolean(STATE_RETURN_VOD_FROM_ENHANCE, returnVodFromEnhance);
         outState.putInt(STATE_CURRENT_POSITION, currentPosition);

@@ -203,12 +203,8 @@ public final class LabEnv {
         }
     }
 
-    /**
-     * 上游 VodPlus 版会从 assets/VodPlus 同步预置文件到根目录，本分支没有这套 assets，
-     * 保留空实现以切断这层联系（压缩包一律由用户放到 getRoot()/EnvFiles/）。
-     */
     public static void syncVodPlusAssets(Context context) {
-        // no-op：本项目不携带 VodPlus 预置资源
+        syncAssets(context, "VodPlus", new File(LabConfig.get().getRoot()), false);
     }
 
     private static void syncAssets(Context context, String assetPath, File dest, boolean overwrite) {
@@ -536,6 +532,12 @@ public final class LabEnv {
                 root + "/EnvFiles",
                 root + "/EnvFiles/二进制",
                 root + "/EnvFiles/环境市场",
+                "/storage/emulated/0/peekpro/EnvFiles",
+                "/storage/emulated/0/peekpro/EnvFiles/二进制",
+                "/storage/emulated/0/peekpro/EnvFiles/环境市场",
+                "/storage/emulated/0/peekpro/scripts",
+                "/storage/emulated/0/peekpro/Proxy",
+                "/storage/emulated/0/peekpro",
                 root + "/Download",
                 "/storage/emulated/0/Download",
                 root
@@ -560,6 +562,12 @@ public final class LabEnv {
         return root + "/EnvFiles\n"
                 + root + "/EnvFiles/二进制\n"
                 + root + "/EnvFiles/环境市场\n"
+                + "/storage/emulated/0/peekpro/EnvFiles\n"
+                + "/storage/emulated/0/peekpro/EnvFiles/二进制\n"
+                + "/storage/emulated/0/peekpro/EnvFiles/环境市场\n"
+                + "/storage/emulated/0/peekpro/scripts\n"
+                + "/storage/emulated/0/peekpro/Proxy\n"
+                + "/storage/emulated/0/peekpro\n"
                 + root + "/Download\n"
                 + "/storage/emulated/0/Download\n"
                 + root;

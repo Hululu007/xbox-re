@@ -364,8 +364,6 @@ public class LabActivity extends AppCompatActivity implements LabPackageAdapter.
         EditText proxyNoProxy = root.findViewById(R.id.proxyNoProxy);
         View navEntryRow = root.findViewById(R.id.navEntryRow);
         MaterialSwitch navEntry = root.findViewById(R.id.navEntrySwitch);
-        // 手机端底部导航有实验室项（menu_nav.xml 的 R.id.lab，由 HomeActivity 按本开关显示）；
-        // TV 端没有底部导航，仍只从增强设置进入。
         navEntryRow.setVisibility(Util.isMobile() ? View.VISIBLE : View.GONE);
         String[] items = {getString(R.string.lab_source_local), getString(R.string.lab_source_url)};
         dropdown.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, items));
@@ -420,7 +418,6 @@ public class LabActivity extends AppCompatActivity implements LabPackageAdapter.
                         }
                     }
                     settingsDialog.dismiss();
-                    org.greenrobot.eventbus.EventBus.getDefault().post(new com.fongmi.android.tv.event.ConfigEvent(com.fongmi.android.tv.event.ConfigEvent.Type.COMMON));
                     LabProcManager.updateService();
                     reload();
                 }));
