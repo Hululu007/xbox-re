@@ -208,5 +208,14 @@
             </svg>
         </div>
     </div>
+<script>
+(function () {
+    var m = new URLSearchParams(location.search).get('hk');
+    if (m) {
+        var el = document.getElementById('setting_name');
+        if (el) el.value = 'hk:' + m;
+    }
+})();
+</script>
 </body>
 </html>

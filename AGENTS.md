@@ -279,3 +279,14 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
     - 别再靠「CI 全绿」推断「MT 通过」：CI 用的是 apksigner 口径，MT 更严。
       另外同包名不同证书（例如 `com.fongmi.android.oktv` 撞已装官方版）也会让
       MT 显示签名不一致、安装被系统拒绝，属设备侧冲突，不是 APK 签名坏了。
+
+30. **海阔脚本（拓展接口 → 海阔脚本 tab）架构约束**：
+    - 海阔 = `api/hk/**` Rhino 规则引擎，与猫源 csp/py/js/jar 是两套运行时；规则本体由 `HkRuleManager` 落 `filesDir/plugins/hk/`。
+    - 数据分层：**A 一级 json `<接口名>.json` × N**（用户改、参与备份、文件名=接口名）；**B `hk.state.json` 一份**（按 doc 分段、自动覆盖、不参与备份）。管理页与首页都只读 B。
+    - 所有刷新 / 失效 / 拉黑 / 删除 / 归类 / 更名都经 `HkStateUpdater` 更新 A/B；改口令只按 feedId 增量替换 B 的一段，不全量更新。
+    - 站点 `mark = 正常/拉黑/失效`、`origin = auto/user`；失效变有效自动回、拉黑必须手动回；口令删除=物理删 A + 清 B 该 feedId，站点只能拉黑/恢复。
+    - 去重：同口令规范化后**不解析直接合并**；不同口令解析出相同指纹，单 doc 内谁先留谁；指纹不同但同名只加展示名 `|1`，不写回 A 或规则本体。
+    - 首页 = 所有 doc 全部 `mark=正常` 站点，重名 `<接口名>|N`；切猫源接口 `clear()` 后由 `VodConfig.load` / `HkGateway.injectSites()` 从 B 重建。
+    - 入口：所有「导入脚本 / 脚本管理」文案统一「拓展接口」；`ScriptManageDialog` 双 tab 共外壳；`show(activity, callback, url)` 按 `isHkUrl` / `isStoreUrl` 自动点亮并选中一级接口。
+    - TV 二次点击口令走 `HkFeedQrDialog` + `ServerEvent.Type.HK_FEED`（老 SETTING 是全局广播，UaDialog 会误填并自动确认，禁止复用）；TV 隐藏一切打字入口。
+    - 代理：海阔取数走 `OkHttp` 总闸；`HkWebkitFetcher` 的 Chromium 原生请求不受 JVM ProxySelector 管（与 html 站点同边界）。

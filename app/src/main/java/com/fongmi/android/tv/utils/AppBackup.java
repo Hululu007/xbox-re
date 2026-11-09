@@ -41,6 +41,7 @@ public final class AppBackup {
     private static final String SHARED = "shared-files.zip";
     private static final String LOGIN = "login-state.zip";
     private static final String APP_FILES = "app-files/";
+    private static final String HK_DOCS = "hk-docs/";
     private static final int BUFFER_SIZE = 128 * 1024;
 
     private AppBackup() {
@@ -140,7 +141,7 @@ public final class AppBackup {
             String warningText = warning.toString();
             byte[] data = backup.toString().getBytes(StandardCharsets.UTF_8);
             byte[] manifest = manifest(shared, login, customCspSourceFiles, customCspFiles, backup.getWebHomeExtensionPreferenceCount(), backup.getWebHomeExtensionSourceCount(), warningText).getBytes(StandardCharsets.UTF_8);
-            long total = data.length + manifest.length + appFilesSize(Path.files(), Path.files());
+            long total = data.length + manifest.length + appFilesSize(Path.files(), Path.files()) + hkDocsSize();
             if (shared != null) total += shared.getFile().length();
             if (login != null) total += login.getFile().length();
             Counter counter = new Counter(total, progress);
@@ -150,6 +151,7 @@ public final class AppBackup {
                 if (shared != null) addFile(output, SHARED, shared.getFile(), counter);
                 if (login != null) addFile(output, LOGIN, login.getFile(), counter);
                 addAppFiles(output, Path.files(), Path.files(), counter);
+                addHkDocs(output, counter);
             }
             notifyProgress(progress, warningText.isEmpty() ? "备份完成" : "备份完成，但部分数据未写入", 100, target.length(), target.length());
             SpiderDebug.log("backup", "create complete file=%s size=%d warning=%s", target.getAbsolutePath(), target.length(), warningText);
@@ -203,6 +205,14 @@ public final class AppBackup {
                                 copyEntry(input, target, buffer);
                                 appFiles++;
                             }
+                        }
+                    } else if (name.startsWith(HK_DOCS)) {
+                        String relative = safe(name.substring(HK_DOCS.length()));
+                        if (!relative.isEmpty() && relative.endsWith(".json")) {
+                            File dir = new File(com.fongmi.android.tv.api.hk.state.HkStateStore.rootDir());
+                            if (!dir.exists()) dir.mkdirs();
+                            File target = new File(dir, relative).getCanonicalFile();
+                            if (inside(dir.getCanonicalFile(), target)) copyEntry(input, target, buffer);
                         }
                     }
                     input.closeEntry();
@@ -350,6 +360,31 @@ public final class AppBackup {
         if (!file.isFile()) return;
         String relative = root.toPath().relativize(file.toPath()).toString().replace(File.separatorChar, '/');
         addFile(output, APP_FILES + relative, file, counter);
+    }
+
+    /** 海阔一级 json（A）参与备份；二级 hk.state.json 是派生的，明确排除。 */
+    private static long hkDocsSize() {
+        File dir = new File(com.fongmi.android.tv.api.hk.state.HkStateStore.rootDir());
+        File[] files = dir.listFiles();
+        long size = 0;
+        if (files == null) return 0;
+        for (File f : files) {
+            if (!f.isFile() || !f.getName().endsWith(".json")) continue;
+            if (com.fongmi.android.tv.api.hk.state.HkStateStore.STATE_FILE.equals(f.getName())) continue;
+            size += f.length();
+        }
+        return size;
+    }
+
+    private static void addHkDocs(ZipOutputStream output, Counter counter) throws IOException {
+        File dir = new File(com.fongmi.android.tv.api.hk.state.HkStateStore.rootDir());
+        File[] files = dir.listFiles();
+        if (files == null) return;
+        for (File f : files) {
+            if (!f.isFile() || !f.getName().endsWith(".json")) continue;
+            if (com.fongmi.android.tv.api.hk.state.HkStateStore.STATE_FILE.equals(f.getName())) continue;
+            addFile(output, HK_DOCS + f.getName(), f, counter);
+        }
     }
 
     private static long appFilesSize(File root, File file) {

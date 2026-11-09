@@ -132,6 +132,10 @@ public class Action implements Process {
         String text = params.get("text");
         String name = params.get("name");
         if (TextUtils.isEmpty(text)) return;
+        if (name != null && name.startsWith("hk:")) {
+            ServerEvent.hkFeed(name.substring(3), text);
+            return;
+        }
         ServerEvent.setting(text, name);
     }
 

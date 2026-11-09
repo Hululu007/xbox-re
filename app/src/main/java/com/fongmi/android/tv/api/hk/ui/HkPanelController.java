@@ -211,7 +211,7 @@ public final class HkPanelController {
     }
 
     private void editFeed(HkFeed f) {
-        if (tv) { showFeedReadOnly(f); return; }   // TV 二维码输入由第 4 批接入
+        if (tv) { HkFeedQrDialog.show(activity, doc, f.feedId, f.raw); return; }
         inputDialog("修改口令（保存后只刷新这一条）", f.raw, raw -> {
             HkStateUpdater.editFeed(doc, f.feedId, raw);
             toast("已更新，按 feed 增量刷新");
