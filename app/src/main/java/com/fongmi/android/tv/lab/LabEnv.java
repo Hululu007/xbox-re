@@ -47,6 +47,7 @@ import java.util.zip.ZipFile;
 public final class LabEnv {
 
     private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor();
+    private static volatile String lastDownloadError = "";
     private static final String ABI_ARM64 = "arm64-v8a";
     private static final String ABI_ARMV7 = "armeabi-v7a";
 
@@ -204,7 +205,12 @@ public final class LabEnv {
     }
 
     public static void syncVodPlusAssets(Context context) {
-        syncAssets(context, "VodPlus", new File(LabConfig.get().getRoot()), false);
+        File root = new File(LabConfig.get().getRoot());
+        syncAssets(context, "VodPlus", root, false);
+        // 模板里 php -S -t 的根目录默认 {sdcard}/WebHTV/wwwroot，
+        // 而内置接口在 assets/VodPlus/wwwroot/vod.php。不镜像过去，
+        // 「复制点播接口 / T4代理接口」给出的地址必然 404。
+        syncAssets(context, "VodPlus/wwwroot", new File(root, "wwwroot"), false);
     }
 
     private static void syncAssets(Context context, String assetPath, File dest, boolean overwrite) {
@@ -406,6 +412,7 @@ public final class LabEnv {
                 if (!loadArchive(context, url, archive, item, callback)) {
                     throw new IOException("找不到压缩包：" + fileName(url)
                             + "\n已尝试下载：" + expandUrl(url)
+                            + "\n下载错误：" + (TextUtils.isEmpty(lastDownloadError) ? "本机无此文件" : lastDownloadError)
                             + "\n已搜索：\n" + searchPaths());
                 }
                 String archiveName = archive.getName().toLowerCase(Locale.ROOT);
@@ -519,6 +526,7 @@ public final class LabEnv {
             download(expanded, target, callback, fileName);
             return true;
         } catch (IOException e) {
+            lastDownloadError = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
             return false;
         }
     }
@@ -573,7 +581,9 @@ public final class LabEnv {
                 + root + "/Download\n"
                 + "/storage/emulated/0/Download\n"
                 + root
-                + "\n\n若没有环境包：到实验室「设置 → 环境包源」填一个可直连的目录基址，或把压缩包放进上面的 EnvFiles 目录。";
+                + "\n\nphp / python / nodejs 没有官方 Android 构建，需自备压缩包放进上述任一目录，"
+                + "或在「设置 → 环境包源」填可直连基址；"
+                + "mihomo / alist / frp / aria2 / ubuntu 为公网地址，会自动走应用内 GitHub 代理下载。";
     }
 
     private static String expandPath(String path) {
@@ -671,32 +681,59 @@ public final class LabEnv {
     }
 
     private static void download(String url, File target, InstallCallback callback, String fileName) throws IOException {
-        HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
-        conn.setConnectTimeout(15000);
-        conn.setReadTimeout(120000);
-        conn.setRequestProperty("User-Agent", "WebHTV-Lab");
-        int code = conn.getResponseCode();
-        if (code != 200) throw new IOException("下载失败 HTTP " + code);
-        long total = conn.getContentLengthLong();
-        long downloaded = 0;
-        long lastPost = 0;
-        try (InputStream in = conn.getInputStream(); FileOutputStream out = new FileOutputStream(target)) {
-            byte[] buf = new byte[16384];
-            int len;
-            while ((len = in.read(buf)) != -1) {
-                out.write(buf, 0, len);
-                downloaded += len;
-                if (downloaded - lastPost >= 102400 || downloaded >= total) {
-                    lastPost = downloaded;
-                    final long d = downloaded, t = total;
-                    if (callback != null) App.post(() -> callback.onDownloadProgress(d, t));
+        String resolved = resolveDownloadUrl(url);
+        try {
+            downloadOnce(resolved, target, callback, fileName);
+        } catch (IOException e) {
+            // 代理不通就退回直连，仍能明确报出 HTTP 码而不是静默变「未安装」。
+            if (!resolved.equals(url)) downloadOnce(url, target, callback, fileName);
+            else throw e;
+        }
+    }
+
+    /** 公网包走应用内已有的 GitHub 代理设置；局域网占位地址不动。 */
+    private static String resolveDownloadUrl(String url) {
+        try {
+            if (url.startsWith("https://github.com/") || url.startsWith("https://raw.githubusercontent.com/")) {
+                com.fongmi.android.tv.update.GithubProxy.Config cfg =
+                        com.fongmi.android.tv.update.GithubProxy.resolve(
+                                com.fongmi.android.tv.setting.Setting.getUpdateGithubProxy(),
+                                com.fongmi.android.tv.setting.Setting.getUpdateGithubProxyUrl(),
+                                com.fongmi.android.tv.setting.Setting.getUpdateGithubProxyMode());
+                return cfg.rewrite(url);
+            }
+        } catch (Throwable ignored) {
+        }
+        return url;
+    }
+
+    private static void downloadOnce(String url, File target, InstallCallback callback, String fileName) throws IOException {
+        okhttp3.Response res = com.github.catvod.net.OkHttp.newCall(url).execute();
+        try {
+            if (!res.isSuccessful() || res.body() == null) {
+                throw new IOException("下载失败 HTTP " + res.code() + " " + url);
+            }
+            long total = res.body().contentLength();
+            long downloaded = 0;
+            long lastPost = 0;
+            try (InputStream in = res.body().byteStream(); FileOutputStream out = new FileOutputStream(target)) {
+                byte[] buf = new byte[16384];
+                int len;
+                while ((len = in.read(buf)) != -1) {
+                    out.write(buf, 0, len);
+                    downloaded += len;
+                    if (downloaded - lastPost >= 102400 || (total > 0 && downloaded >= total)) {
+                        lastPost = downloaded;
+                        final long d = downloaded, t = total;
+                        if (callback != null) App.post(() -> callback.onDownloadProgress(d, t));
+                    }
                 }
             }
+            final long d = downloaded, t = total;
+            if (callback != null) App.post(() -> callback.onDownloadProgress(d, t));
         } finally {
-            conn.disconnect();
+            res.close();
         }
-        final long d = downloaded, t = total;
-        if (callback != null) App.post(() -> callback.onDownloadProgress(d, t));
     }
 
     /** 人类可读的文件大小，用于下载进度文案 */

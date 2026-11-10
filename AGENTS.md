@@ -306,3 +306,11 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
 - 签名卫生只由 `.github/workflows/android-release.yml` 的「v2+v3 单次签 + 硬断言」负责；
   `app/build.gradle` 不得写 `packaging.resources.excludes`；不要在实验室、关于页
   或其它功能分支里另起一套签名/打包逻辑。
+
+
+## 实验室三段链（不可简化）
+
+- 清单：`LabConfig.loadSync()` 任何失败都必须回落到「缓存 → APK 内置模板」，**不得清空列表**；`LabActivity.onError` 不得 `render(null)`。
+- 环境包：5 个公网包（mihomo/alist/frp/aria2/ubuntu）下载必须走 `OkHttp` + `GithubProxy`，不得用裸 `HttpURLConnection`；php/python/nodejs 无官方 Android 构建，只提供自备导入/直链，不得宣称已提供下载。
+- 内置接口：`LabEnv.syncVodPlusAssets()` 必须把 `assets/VodPlus/wwwroot` 镜像到 `<root>/wwwroot`，否则模板里 `php -S -t <root>/wwwroot` 与「复制点播接口」必然 404。
+- 验收以运行时为准：清单条目数、各包 installed、服务端口可达；**CI 全绿不等于功能可用**。

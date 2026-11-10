@@ -53,7 +53,7 @@ public final class LabConfig {
     private LabModels.LabRoot root;
     private volatile String configRoot;
     private String sourceName = "";
-    private String loadError = "";
+    private volatile String loadError = "";
 
     private static class Loader {
         static final LabConfig INSTANCE = new LabConfig();
@@ -197,7 +197,6 @@ public final class LabConfig {
             try {
                 root = loadSync();
                 sourceName = describeSource();
-                loadError = "";
                 if (callback != null) App.post(() -> callback.onLoaded(root));
             } catch (Exception e) {
                 loadError = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
@@ -207,6 +206,41 @@ public final class LabConfig {
     }
 
     public LabModels.LabRoot loadSync() throws IOException {
+        try {
+            return loadSyncInner();
+        } catch (Exception e) {
+            // 配置源返回 HTML / 404 / 非 JSON，或本地文件读不到时，绝不清空列表。
+            // 依次回落：上次成功缓存 → APK 内置模板；原因留给 UI 提示，但数据仍在。
+            String reason = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
+            loadError = "配置源解析失败，已回落内置模板：" + reason
+                    + "；来源=" + (getSource() == SOURCE_URL ? getUrl() : "本地");
+            LabModels.LabRoot fallback = null;
+            String cached = readConfigCache();
+            if (!TextUtils.isEmpty(cached)) {
+                try {
+                    fallback = parse(cached);
+                } catch (Exception ignored) {
+                }
+            }
+            if (fallback == null || fallback.lists == null) {
+                try (InputStream in = App.get().getAssets().open("lab_template.json")) {
+                    fallback = parse(readAll(in));
+                } catch (Exception ignored) {
+                }
+            }
+            if (fallback == null) fallback = new LabModels.LabRoot();
+            mergeImported(fallback);
+            if (fallback.lists != null) {
+                for (LabModels.Item item : fallback.lists) {
+                    if (item != null) applyCommandOverrides(item);
+                }
+            }
+            return fallback;
+        }
+    }
+
+    private LabModels.LabRoot loadSyncInner() throws IOException {
+        loadError = "";
         int source = getSource();
         LabModels.LabRoot root = null;
         if (source == SOURCE_LOCAL) {
@@ -227,15 +261,9 @@ public final class LabConfig {
         } else if (source == SOURCE_URL) {
             String url = getUrl();
             if (!TextUtils.isEmpty(url)) {
-                try {
-                    String text = download(url);
-                    saveConfigCache(text);
-                    root = parse(text);
-                } catch (IOException e) {
-                    String cached = readConfigCache();
-                    if (cached == null) throw e;
-                    root = parse(cached);
-                }
+                String text = download(url);
+                saveConfigCache(text);
+                root = parse(text);
             }
         }
         // 没有配置源就保持空清单，只保留已导入的包——不再回落到内置 lab.json。

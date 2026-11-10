@@ -142,6 +142,8 @@ public class LabActivity extends AppCompatActivity implements LabPackageAdapter.
                 mBinding.swipeRefresh.setRefreshing(false);
                 render(root);
                 autoInstall(root);
+                String err = LabConfig.get().getLoadError();
+                if (!TextUtils.isEmpty(err)) Notify.show(err);
             }
 
             @Override
@@ -149,7 +151,8 @@ public class LabActivity extends AppCompatActivity implements LabPackageAdapter.
                 mBinding.progress.setVisibility(View.GONE);
                 mBinding.swipeRefresh.setRefreshing(false);
                 Notify.show("实验室: " + message);
-                render(null);
+                // 加载失败不清空已有列表：图27 就是 render(null) 造成的。
+                render(LabConfig.get().getLabRoot());
             }
         });
     }
