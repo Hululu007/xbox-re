@@ -205,7 +205,7 @@ public final class HkPanelController {
         }
         if (!tv) {
             MaterialButton add = chip("+ 口令", false, true);
-            add.setOnClickListener(safe(v -> inputDialog("录入口令（支持口令集多行）", "", raw -> {
+            add.setOnClickListener(safe(v -> inputDialog("录入口令（口令集多行；云口令密码写在口令后空格、(@密码) 或下一行）", "", raw -> {
                 if (TextUtils.isEmpty(raw)) return;
                 addFeed(raw, mode.equals("全部") || mode.equals("黑名单") ? "" : mode);
             })));
