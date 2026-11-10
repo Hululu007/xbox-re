@@ -45,6 +45,8 @@ public final class LabConfig {
     private static final String KEY_GLOBAL_PROXY_NO_PROXY = "global_proxy_no_proxy";
     private static final String KEY_NAV_ENTRY = "nav_entry";
     private static final String KEY_IMPORTED = "imported";
+    /** 环境包源：php/python/nodejs 没有官方 Android 构建，用户可填一个可直连的目录基址。 */
+    private static final String KEY_ENV_SOURCE = "env_source";
     private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor();
 
     private final Gson gson = new Gson();
@@ -113,6 +115,15 @@ public final class LabConfig {
 
     public void setLocalPath(String path) {
         sp().edit().putString(KEY_LOCAL_PATH, path).apply();
+    }
+
+    /** 环境包源基址，空串表示只用本机 EnvFiles 目录。 */
+    public String getEnvSource() {
+        return sp().getString(KEY_ENV_SOURCE, "");
+    }
+
+    public void setEnvSource(String url) {
+        sp().edit().putString(KEY_ENV_SOURCE, url).apply();
     }
 
     public boolean getForeground() {
@@ -207,8 +218,11 @@ public final class LabConfig {
                 } finally {
                     local.close();
                 }
-            } else if (!TextUtils.isEmpty(getLocalPath())) {
-                throw new IOException("无法读取本地配置文件: " + getLocalPath());
+            } else {
+                if (!TextUtils.isEmpty(getLocalPath())) {
+                    android.util.Log.w("LabConfig", "本地配置读取失败，改用 APK 内置模板: " + getLocalPath());
+                }
+                root = loadBuiltinTemplate();
             }
         } else if (source == SOURCE_URL) {
             String url = getUrl();
@@ -233,6 +247,25 @@ public final class LabConfig {
             }
         }
         return root;
+    }
+
+    /**
+     * 内置配置源：直接读 APK 内的 lab_template.json，不依赖外部存储权限或落盘。
+     * 上游把「内置配置(0)」删掉后只靠 seedTemplate() 写 /storage/emulated/0/WebHTV/lab.json，
+     * 未授「所有文件访问」时写失败被静默吞掉，列表就永远是空的。这里补回兜底。
+     */
+    private LabModels.LabRoot loadBuiltinTemplate() throws IOException {
+        try (InputStream in = App.get().getAssets().open("lab_template.json")) {
+            LabModels.LabRoot builtin = parse(readAll(in));
+            if (builtin != null && builtin.lists != null && !builtin.lists.isEmpty()) {
+                if (TextUtils.isEmpty(configRoot)) configRoot = TextUtils.isEmpty(builtin.root) ? TEMPLATE_ROOT : builtin.root;
+                sourceName = App.get().getString(com.fongmi.android.tv.R.string.lab_source_local);
+                return builtin;
+            }
+        } catch (Exception e) {
+            throw new IOException("内置模板读取失败: " + e.getMessage());
+        }
+        return new LabModels.LabRoot();
     }
 
     private File configCacheFile() {
@@ -276,7 +309,8 @@ public final class LabConfig {
             try (InputStream in = App.get().getAssets().open("lab_template.json")) {
                 Path.copy(in, target);
             }
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            android.util.Log.w("LabConfig", "seedTemplate 落盘失败，改用 APK 内置模板", e);
         }
     }
 

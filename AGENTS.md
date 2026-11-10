@@ -279,3 +279,11 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
     - 别再靠「CI 全绿」推断「MT 通过」：CI 用的是 apksigner 口径，MT 更严。
       另外同包名不同证书（例如 `com.fongmi.android.oktv` 撞已装官方版）也会让
       MT 显示签名不一致、安装被系统拒绝，属设备侧冲突，不是 APK 签名坏了。
+
+
+## 实验室关键点（clean-lab）
+
+- `LabConfig.loadSync()` 本地源读不到配置时必须回退 APK 内置 `assets/lab_template.json`；`seedTemplate()` 写 /storage/emulated/0 失败不得导致空列表。
+- 模板里 php/python/nodejs 的 `127.0.0.1:{serverPort}/file/...` 只是本机 Server 占位，上游及所有派生仓库都没有这三个运行时的公网下载源（info 明写「需自备压缩包」）；不要再把「按上游原样搬运」当成修复。
+- `LabEnv.expandUrl()` 支持 `LabConfig.getEnvSource()` 基址替换；缺包时错误信息须列出实际下载 URL 与搜索路径，不得静默 404。
+- 「设置 → 环境包源」为可选直链基址；留空时保留本机 EnvFiles 自备路径。

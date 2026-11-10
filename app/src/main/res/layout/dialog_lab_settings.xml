@@ -273,5 +273,31 @@
                 android:maxLines="2"
                 android:inputType="text"/>
         </com.google.android.material.textfield.TextInputLayout>
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/envSourceLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/lab_env_source"
+            android:layout_marginTop="12dp"
+            app:boxStrokeColor="#1976d2"
+            app:hintTextColor="#1976d2"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
+            <com.google.android.material.textfield.TextInputEditText
+                android:textSize="13sp"
+                android:textColor="@color/lab_text_primary"
+                android:id="@+id/envSourceInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="48dp"
+                android:maxLines="2"
+                android:inputType="textUri"/>
+        </com.google.android.material.textfield.TextInputLayout>
+        <com.google.android.material.textview.MaterialTextView
+            android:textSize="12sp"
+            android:textColor="@color/lab_text_secondary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="@string/lab_env_source_hint"/>
     </LinearLayout>
 </ScrollView>

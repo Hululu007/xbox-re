@@ -690,7 +690,7 @@
     <string name="about_title">About OK影视+</string>
     <string name="about_free_badge">Lite</string>
     <string name="about_version">Version %1$s · %2$s/%3$s</string>
-    <string name="about_disclaimer">OK影视+ is a stripped-down independent branch based on webhtv (package com.fongmi.android.oktv) and can be installed alongside the original app.\n\nThis build does not provide online updates and will never check or install packages from the upstream project. Do not overwrite it with the upstream app. For new versions, use releases published by this project only.\n\nThe app itself is completely free and provides no paid services, video content, live sources, API sources, resource storage or content distribution. It is for technical learning, research and personal testing only; please uninstall it within 24 hours of downloading, installing or trying it. All consequences of continued use are borne by the user.\n\nThe app does not embed, sell or distribute any video resources, and is not responsible for interfaces, site sources, plugins, scripts, links, cloud-drive resources or third-party service content added by users. Users must comply with local laws and respect the rights of copyright owners and content providers.\n\nSelling, traffic diversion, paid maintenance, membership services, advertising monetisation, box preinstallation, TV box bundling or any other profit-making in the name of this app is strictly prohibited.\n\nIf you do not agree to the above, stop using and uninstall the app immediately.</string>
+    <string name="about_disclaimer">本软件只提供聚合展示功能，所有资源来自网上，软件不参与任何制作、上传、储存、下载等内容。软件仅供学习参考，请于安装后24小时内删除。\n打包分发请保留出处:\nhttps://github.com/CatVodTVOfficial/TVBoxOSC\nhttps://github.com/FongMi/TV</string>
     <string name="about_acknowledge">I understand</string>
 
     <!-- Backup & Restore -->
@@ -1499,4 +1499,6 @@
     <!-- 上游 webhtv 原样搬回，未做英译中改写 -->
     <string name="app_branding_icon_select">Select icon</string>
     <string name="home_buttons_reset">Reset</string>
+    <string name="lab_env_source">环境包源（可选）</string>
+    <string name="lab_env_source_hint">php / python / nodejs 没有官方 Android 构建。填一个可直连的目录基址后，安装时会从该地址下载同名压缩包；留空则只从手机 EnvFiles 目录读取。</string>
 </resources>

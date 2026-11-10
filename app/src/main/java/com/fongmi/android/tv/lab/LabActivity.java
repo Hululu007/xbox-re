@@ -362,6 +362,7 @@ public class LabActivity extends AppCompatActivity implements LabPackageAdapter.
         MaterialSwitch proxy = root.findViewById(R.id.proxySwitch);
         EditText proxyPort = root.findViewById(R.id.proxyPort);
         EditText proxyNoProxy = root.findViewById(R.id.proxyNoProxy);
+        EditText envSource = root.findViewById(R.id.envSourceInput);
         View navEntryRow = root.findViewById(R.id.navEntryRow);
         MaterialSwitch navEntry = root.findViewById(R.id.navEntrySwitch);
         navEntryRow.setVisibility(Util.isMobile() ? View.VISIBLE : View.GONE);
@@ -379,6 +380,7 @@ public class LabActivity extends AppCompatActivity implements LabPackageAdapter.
         proxy.setChecked(LabConfig.get().getGlobalProxy());
         proxyPort.setText(String.valueOf(LabConfig.get().getGlobalProxyPort()));
         proxyNoProxy.setText(LabConfig.get().getGlobalProxyNoProxy());
+        envSource.setText(LabConfig.get().getEnvSource());
         settingsDialog = new MaterialAlertDialogBuilder(this, R.style.Theme_App_Lab_DayNight_Dialog)
                 .setTitle(R.string.lab_source_title)
                 .setView(root)
@@ -410,6 +412,7 @@ public class LabActivity extends AppCompatActivity implements LabPackageAdapter.
                     }
                     LabConfig.get().setGlobalProxyPort(port > 0 ? port : 7890);
                     LabConfig.get().setGlobalProxyNoProxy(proxyNoProxy.getText() == null ? "" : proxyNoProxy.getText().toString().trim());
+                    LabConfig.get().setEnvSource(envSource.getText() == null ? "" : envSource.getText().toString().trim());
                     if (foreground.isChecked()) requestNotifyPermission();
                     if (battery.isChecked()) {
                         try {

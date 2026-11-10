@@ -404,7 +404,9 @@ public final class LabEnv {
                 String url = download.getUrlByMirror(mirror);
                 File archive = new File(context.getCacheDir(), "lab_" + item.name + "_" + sanitizeFileName(fileName(url)));
                 if (!loadArchive(context, url, archive, item, callback)) {
-                    throw new IOException("找不到压缩包：" + fileName(url) + "\n已搜索：\n" + searchPaths());
+                    throw new IOException("找不到压缩包：" + fileName(url)
+                            + "\n已尝试下载：" + expandUrl(url)
+                            + "\n已搜索：\n" + searchPaths());
                 }
                 String archiveName = archive.getName().toLowerCase(Locale.ROOT);
                 if (callback != null) App.post(() -> callback.onProgress("解压中 ..."));
@@ -570,7 +572,8 @@ public final class LabEnv {
                 + "/storage/emulated/0/peekpro\n"
                 + root + "/Download\n"
                 + "/storage/emulated/0/Download\n"
-                + root;
+                + root
+                + "\n\n若没有环境包：到实验室「设置 → 环境包源」填一个可直连的目录基址，或把压缩包放进上面的 EnvFiles 目录。";
     }
 
     private static String expandPath(String path) {
@@ -633,9 +636,19 @@ public final class LabEnv {
     }
 
     private static String expandUrl(String url) {
-        return url.replace("{serverPort}", LabConfig.serverPort())
+        String expanded = url.replace("{serverPort}", LabConfig.serverPort())
                 .replace("{dataPath}", LabConfig.dataPath())
                 .replace("{sdcard}", "/storage/emulated/0");
+        // 上游模板里 php/python/nodejs 的下载地址是 127.0.0.1:{serverPort}/file/... 占位，
+        // 它只指向本机 Server 的同一个 EnvFiles 目录；本机没有文件时必然 404。
+        // 配了「环境包源」就把文件名拼到该基址，变成真正可下载的地址。
+        String envSource = LabConfig.get().getEnvSource();
+        if (!TextUtils.isEmpty(envSource) && expanded.startsWith("http://127.0.0.1:")
+                && expanded.contains("/file/")) {
+            String base = envSource.endsWith("/") ? envSource : envSource + "/";
+            return base + sanitizeFileName(fileName(expanded));
+        }
+        return expanded;
     }
 
     private static String fileName(String url) {
