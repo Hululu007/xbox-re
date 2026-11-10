@@ -328,7 +328,9 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
     标准链固定为：`Gradle unsigned → zip -d 清无害元数据 → zipalign -p -f 4 → apksigner sign → 上传`，
     **签名后一个字节不碰**。`zipalign -c 4` 签名后只做只读硬断言，不阻断就发不出包。
     `META-INF/services/*`（Rhino `ScriptEngineFactory`）与 `META-INF/nanohttpd/*.properties`
-    是运行时条目，任何清理都不得误删。CI 还需断言 `resources.arsc` Stored + 4 字节对齐、
-    central directory offset 全指向 `PK\x03\x04`、APK Signing Block 位于 CD 之前，
-    并回读 Release asset `digest` 与本地 sha256 一致。用户下载后自检 size + SHA256，
+    是运行时条目，任何清理都不得误删。`resources.arsc` Stored / 4 字节对齐、CD offset、
+    Signing Block 位置这四项只作**诊断记录 + `::notice` 回传**，不做硬阻断（CI 42734843496
+    实证：硬断言误杀正常包，签名链与 `zipalign -c 4` 全过）。真正硬失败的是 ZIP 完整性、
+    关键文件、v1 三件套、运行时条目保留、签名后 `zipalign -c 4`，以及回读 Release asset
+    `digest` 与本地 sha256 一致。用户下载后自检 size + SHA256，
     不一致即为下载被截断/改写（v2/v3 全文件签名失败，报「安装包已损坏」）。
