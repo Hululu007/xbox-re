@@ -664,7 +664,7 @@
     <string name="setting_drive_check">Drive link check</string>
     <string name="setting_theme_color">Theme color</string>
     <string name="setting_appearance">Appearance</string>
-    <string name="setting_appearance_summary">3 options</string>
+    <string name="setting_appearance_summary">4 options</string>
     <string name="setting_auto">Auto</string>
     <string name="setting_custom">Custom</string>
     <string name="setting_size">Image size</string>
@@ -1335,7 +1335,7 @@
     <!-- 全局 webhome 皮肤 -->
     <string name="setting_web_home_theme">全局 WebHome 皮肤</string>
     <string name="setting_web_home_theme_custom">自定义网址</string>
-    <string name="setting_web_home_theme_eclipse">Eclipse（内置）</string>
+    <string name="setting_web_home_theme_eclipse">柔雾青（内置默认）</string>
     <string name="setting_web_home_theme_invalid_url">请输入 HTTPS WebHome 网址</string>
     <string name="setting_web_home_theme_recovery">版本恢复</string>
     <string name="setting_web_home_theme_recovery_failed">无法更新主题版本</string>
@@ -1346,6 +1346,8 @@
     <string name="setting_web_home_theme_retry_message">重试已回退的主题版本？如果首次加载再次失败，将自动恢复稳定版本。</string>
     <string name="setting_web_home_theme_rollback_message">回退到上一个已验证的主题版本？当前版本会保留，之后仍可重试。</string>
     <string name="setting_web_home_theme_url_hint">https://example.com/webhome.html</string>
+    <string name="setting_web_home_theme_short">皮肤与高级定制</string>
+    <string name="setting_web_home_theme_short_summary">柔雾青 / 纸白 / 夜墨 / 流光玻璃</string>
 
     <!-- 播放设置：后台通知与亮度开关 -->
     <string name="player_audio_book_notification">有声书后台通知</string>

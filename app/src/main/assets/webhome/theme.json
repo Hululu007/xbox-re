@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 2,
+  "id": "xboxre-aurora",
+  "name": "柔雾青 Aurora",
+  "version": "1.0.0",
+  "minHostApi": 3,
+  "pages": {
+    "home": {
+      "entry": "eclipse.html",
+      "contract": "vod.home@1",
+      "fallback": "native"
+    },
+    "detail": {
+      "entry": "eclipse-detail.html",
+      "contract": "vod.detail@1",
+      "fallback": "native"
+    }
+  },
+  "permissions": {
+    "home": [
+      "vod.home",
+      "vod.category",
+      "app.search",
+      "app.openVod",
+      "app.openSite",
+      "app.openSetting"
+    ],
+    "detail": [
+      "vod.detail",
+      "player.playVod",
+      "favorite.read",
+      "favorite.write",
+      "history.read",
+      "episode.info"
+    ]
+  },
+  "tokens": {
+    "defaultTheme": "aurora",
+    "storageKey": "xboxre.webhome.theme.v1",
+    "note": "保留字段：Java 侧只校验为对象，不解析内容。此处作为主题与设置入口的可机读契约。",
+    "presets": ["aurora", "paper", "ink", "glass"],
+    "settingsEntries": [
+      { "id": "home-appearance", "where": "webhome/eclipse.html", "control": "data-theme-entry", "target": "appearance-panel" },
+      { "id": "detail-appearance", "where": "webhome/eclipse-detail.html", "control": "data-theme-entry", "target": "appearance-panel" },
+      { "id": "manage-appearance", "where": "assets/index.html#panel4", "control": "data-theme-entry", "target": "appearance-panel" },
+      { "id": "mobile-setting-appearance", "where": "mobile/SettingFragment", "control": "@+id/appearance", "target": "AppearanceDialog" },
+      { "id": "leanback-setting-appearance", "where": "leanback/SettingActivity", "control": "@+id/appearance", "target": "WebHomeThemeDialog" },
+      { "id": "enhance-webhome-theme", "where": "mobile+leanback/SettingEnhance*", "control": "@+id/webHomeTheme", "target": "WebHomeThemeDialog" },
+      { "id": "home-setting-button", "where": "HomeButton id 7", "control": "home_setting", "target": "SettingActivity / SettingFragment" }
+    ],
+    "principle": "所有入口共用同一份 localStorage 配置；不新增第二套主题状态，不新增散乱按钮。"
+  }
+}

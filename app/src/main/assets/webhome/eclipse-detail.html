@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="aurora" data-btn-shape="solid" data-tile-shape="soft" data-modal-style="blur" data-modal-pos="center" data-density="normal" data-motion="on">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>xbox-re · 详情</title>
+<link rel="stylesheet" href="css/theme.css">
+<link rel="stylesheet" href="css/theme-panel.css">
+<script src="js/theme-engine.js" defer></script>
+<script src="js/appearance.js" defer></script>
+</head>
+<body>
+<div class="app">
+    <header class="topbar">
+        <button class="icon-btn" id="btnBack" aria-label="返回">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 5l-7 7 7 7"/></svg>
+        </button>
+        <div class="brand"><span class="brand-mark">X</span><span>详情</span></div>
+        <div class="topbar-spacer"></div>
+        <button class="btn btn-secondary btn-sm" id="btnSetting">设置</button>
+        <button class="btn btn-primary btn-sm" data-theme-entry>外观</button>
+    </header>
+
+    <div class="shell">
+        <aside class="sidebar">
+            <div class="nav-group-title">详情</div>
+            <button class="nav-item is-active">选集</button>
+            <button class="nav-item">推荐</button>
+            <button class="nav-item">演职人员</button>
+            <div class="nav-group-title">系统</div>
+            <button class="nav-item" data-theme-entry>外观与主题</button>
+            <div class="sidebar-foot">柔雾青 Aurora · 内置默认主题</div>
+        </aside>
+
+        <main class="main">
+            <div class="content">
+                <div class="panel" style="margin-bottom:var(--gap)">
+                    <div class="panel-body" style="display:flex;gap:calc(var(--u)*3);flex-wrap:wrap;align-items:flex-start">
+                        <div class="tile-cover" style="flex:0 0 calc(200px * var(--scale));max-width:45%;--cover-a:#6b5b8a;--cover-b:#241d34;--cover-c:rgba(220,180,255,.32)">
+                            <div class="tile-art"><b>MIST HARBOR</b><span>雾港纪事</span></div>
+                        </div>
+                        <div style="flex:1;min-width:220px">
+                            <h2 class="page-title" style="font-size:var(--fs-xl)">雾港纪事</h2>
+                            <p class="page-sub">2026 · 剧情 / 悬疑 · 共 12 集</p>
+                            <div class="row" style="flex-wrap:wrap;margin:calc(var(--u)*1.5) 0">
+                                <span class="tag tag-accent">4K HDR</span><span class="tag">已收藏</span><span class="tag tag-success">云同步</span>
+                            </div>
+                            <p style="color:var(--text-secondary);font-size:var(--fs-sm);line-height:1.7">
+                                一座终年被雾笼罩的港口小城，一桩被潮汐反复冲刷的旧案。所有元素与弹窗均由主题变量驱动。
+                            </p>
+                            <div class="row" style="margin-top:calc(var(--u)*2)">
+                                <button class="btn btn-primary" data-open="modalPlay">▶ 播放第 1 集</button>
+                                <button class="btn btn-secondary" data-open="modalSheet">更多信息</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-head"><h3 class="section-title">选集</h3><span class="section-more">宫格形状可在「外观」里切换</span></div>
+                <div class="tile-grid" id="episodeGrid"></div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalPlay" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-card">
+        <div class="modal-head"><div><h3 class="modal-title">开始播放</h3><p class="modal-desc">第 1 集 · 4K HDR</p></div><button class="icon-btn modal-close" data-close aria-label="关闭">×</button></div>
+        <div class="modal-body"><div class="progress"><i style="width:0%"></i></div><p style="margin-top:12px">调用宿主播放器由 WebHome SDK 完成；此处为界面演示。</p></div>
+        <div class="modal-foot"><button class="btn btn-ghost" data-close>取消</button><button class="btn btn-primary" id="btnPlay" data-close>播放</button></div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalSheet" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-card">
+        <div class="modal-head"><div><h3 class="modal-title">快捷操作</h3><p class="modal-desc">弹窗位置与风格跟随全局主题设置。</p></div><button class="icon-btn modal-close" data-close aria-label="关闭">×</button></div>
+        <div class="modal-body stack" style="gap:calc(var(--u)*1)">
+            <div class="list-row"><span class="list-thumb">★</span><div><div style="font-size:var(--fs-sm);font-weight:600">加入收藏</div><div class="hint">同步到云端</div></div></div>
+            <div class="list-row"><span class="list-thumb">↓</span><div><div style="font-size:var(--fs-sm);font-weight:600">缓存本集</div><div class="hint">约 1.2 GB</div></div></div>
+            <div class="list-row"><span class="list-thumb">◈</span><div><div style="font-size:var(--fs-sm);font-weight:600">外观设置</div><div class="hint">打开统一设置面板</div></div></div>
+        </div>
+        <div class="modal-foot"><button class="btn btn-secondary" data-theme-entry>打开外观</button><button class="btn btn-primary" data-close>完成</button></div>
+    </div>
+</div>
+
+<script>
+(function () {
+    var grid = document.getElementById("episodeGrid");
+    grid.innerHTML = Array.from({ length: 12 }, function (_, i) {
+        var n = i + 1;
+        return '<div class="tile"><div class="tile-cover" style="--cover-a:#3a4d8f;--cover-b:#161d3a;--cover-c:rgba(150,170,255,.4)">' +
+            '<div class="tile-art"><b>EP ' + (n < 10 ? "0" + n : n) + '</b><span>雾港纪事</span></div></div>' +
+            '<div class="tile-title">第 ' + n + ' 集</div><div class="tile-sub">42 分钟</div></div>';
+    }).join("");
+
+    function openSetting() {
+        if (window.ThemeEngine && window.ThemeEngine.openNativeSetting()) return;
+        if (window.XboxAppearance) window.XboxAppearance.open();
+    }
+    document.getElementById("btnSetting").addEventListener("click", openSetting);
+    document.getElementById("btnBack").addEventListener("click", function () {
+        try { if (window.fongmi && window.fongmi.invoke) { window.fongmi.invoke("navigation.back", {}); return; } } catch (e) {}
+        if (history.length > 1) history.back();
+    });
+    document.getElementById("btnPlay").addEventListener("click", function () {
+        try {
+            if (window.fongmi && window.fongmi.player && window.fongmi.player.playVod) {
+                window.fongmi.player.playVod("", "ep-1", "雾港纪事 第1集", "");
+            }
+        } catch (e) {}
+    });
+
+    document.addEventListener("click", function (e) {
+        var o = e.target.closest("[data-open]");
+        if (o) { var el = document.getElementById(o.getAttribute("data-open")); if (el) { el.classList.add("is-open"); el.setAttribute("aria-hidden", "false"); } return; }
+        var c = e.target.closest("[data-close]");
+        if (c) { document.querySelectorAll(".modal-overlay.is-open").forEach(function (el) { el.classList.remove("is-open"); el.setAttribute("aria-hidden", "true"); }); return; }
+        if (e.target.classList.contains("modal-overlay")) { e.target.classList.remove("is-open"); e.target.setAttribute("aria-hidden", "true"); }
+    });
+    document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") document.querySelectorAll(".modal-overlay.is-open").forEach(function (el) { el.classList.remove("is-open"); el.setAttribute("aria-hidden", "true"); });
+    });
+})();
+</script>
+</body>
+</html>

@@ -46,6 +46,10 @@ public final class AppearanceDialog extends DialogFragment implements ThemeDialo
         content.setOrientation(LinearLayout.VERTICAL);
         uiScaleValue = addRow(content, R.string.setting_ui_scale, uiScales[Setting.getUiScaleIndex()], this::chooseUiScale);
         themeValue = addRow(content, R.string.setting_theme_color, getThemeText(), view -> ThemeDialog.show(this));
+        addRow(content, R.string.setting_web_home_theme_short, getString(R.string.setting_web_home_theme_short_summary), view -> {
+            WebHomeThemeDialog.show(requireActivity(), () -> { });
+            dismissAllowingStateLoss();
+        });
         imageSizeValue = addRow(content, R.string.setting_size, imageSizes[PlayerSetting.getSize()], this::chooseImageSize);
         return content;
     }

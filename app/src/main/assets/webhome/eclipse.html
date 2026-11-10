@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="aurora" data-btn-shape="solid" data-tile-shape="soft" data-modal-style="blur" data-modal-pos="center" data-density="normal" data-motion="on">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>xbox-re · 柔雾青</title>
+<link rel="stylesheet" href="css/theme.css">
+<link rel="stylesheet" href="css/theme-panel.css">
+<script src="js/theme-engine.js" defer></script>
+<script src="js/appearance.js" defer></script>
+</head>
+<body>
+<div class="app">
+    <header class="topbar">
+        <div class="brand"><span class="brand-mark">X</span><span>xbox-re</span></div>
+        <div class="topbar-spacer"></div>
+        <label class="search">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m16.2 16.2 4 4"/></svg>
+            <input id="keyword" type="search" placeholder="搜索影片、剧集…" aria-label="搜索">
+        </label>
+        <button class="btn btn-secondary btn-sm" id="btnNativeSetting">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2"/></svg>
+            设置
+        </button>
+        <button class="btn btn-primary btn-sm" data-theme-entry>
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3a9 9 0 0 0 0 18h1.5a1.5 1.5 0 0 0 0-3H12a2 2 0 0 1 0-4h6a3 3 0 0 0 3-3 8 8 0 0 0-9-8z"/></svg>
+            外观
+        </button>
+    </header>
+
+    <div class="shell">
+        <aside class="sidebar">
+            <div class="nav-group-title">内容</div>
+            <button class="nav-item is-active">首页</button>
+            <button class="nav-item">推荐</button>
+            <button class="nav-item">收藏<span class="nav-count">17</span></button>
+            <button class="nav-item">历史</button>
+            <div class="nav-group-title">系统</div>
+            <button class="nav-item" data-theme-entry>外观与主题</button>
+            <button class="nav-item" id="navSetting">原生设置</button>
+            <div class="sidebar-foot">柔雾青 Aurora · 内置默认主题</div>
+        </aside>
+
+        <main class="main">
+            <div class="content">
+                <div class="page-head">
+                    <div>
+                        <h2 class="page-title">晚上好</h2>
+                        <p class="page-sub">继续观看，或从库里挑点新东西。</p>
+                    </div>
+                    <div class="page-actions">
+                        <button class="btn btn-secondary" data-open="modalAbout">关于主题</button>
+                        <button class="btn btn-primary" data-open="modalDialog">弹窗演示</button>
+                    </div>
+                </div>
+
+                <div class="stat-grid">
+                    <div class="stat"><div class="stat-label">片库</div><div class="stat-value">128</div><div class="stat-delta">已同步</div></div>
+                    <div class="stat"><div class="stat-label">今日更新</div><div class="stat-value">24</div><div class="stat-delta">+6</div></div>
+                    <div class="stat"><div class="stat-label">收藏</div><div class="stat-value">17</div><div class="stat-delta">云端</div></div>
+                    <div class="stat"><div class="stat-label">播放记录</div><div class="stat-value">8</div><div class="stat-delta">本周</div></div>
+                </div>
+
+                <div class="section-head">
+                    <h3 class="section-title">继续观看</h3>
+                    <span class="section-more" id="sourceLabel">正在读取片库…</span>
+                </div>
+                <div class="tile-grid" id="tileGrid"></div>
+
+                <div class="section-head"><h3 class="section-title">最近活动</h3><a class="section-more" href="#">查看全部 →</a></div>
+                <div class="card" style="padding:0 calc(var(--u)*2.5)">
+                    <div class="list-row"><span class="list-thumb">▶</span><div><div style="font-size:var(--fs-sm);font-weight:600">《雾港纪事》更新至第 12 集</div><div class="hint">2 小时前</div></div><span class="tag tag-success" style="margin-left:auto">已更新</span></div>
+                    <div class="list-row"><span class="list-thumb">★</span><div><div style="font-size:var(--fs-sm);font-weight:600">收藏《星野漫游》</div><div class="hint">昨天</div></div><span class="tag" style="margin-left:auto">收藏</span></div>
+                    <div class="list-row"><span class="list-thumb">↻</span><div><div style="font-size:var(--fs-sm);font-weight:600">云同步完成</div><div class="hint">3 天前</div></div><span class="tag tag-accent" style="margin-left:auto">同步</span></div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- 弹窗演示：位置与风格由主题变量控制 -->
+<div class="modal-overlay" id="modalDialog" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-card">
+        <div class="modal-head">
+            <div><h3 class="modal-title">弹窗演示</h3><p class="modal-desc">在「外观 → 弹窗」里切换位置与风格，这个弹窗会立即变化。</p></div>
+            <button class="icon-btn modal-close" data-close aria-label="关闭">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="stack">
+                <div class="field"><label class="label">示例输入</label><input class="input" placeholder="请输入名称"></div>
+                <div class="row" style="flex-wrap:wrap"><span class="tag tag-accent">强调</span><span class="tag tag-success">成功</span><span class="tag tag-warning">警告</span><span class="tag tag-danger">危险</span></div>
+                <div class="progress"><i style="width:68%"></i></div>
+                <div class="row"><button class="switch" role="switch" aria-checked="true" data-demo-switch></button><span class="hint">示例开关</span></div>
+            </div>
+        </div>
+        <div class="modal-foot"><button class="btn btn-ghost" data-close>取消</button><button class="btn btn-primary" data-close>确定</button></div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalAbout" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-card">
+        <div class="modal-head">
+            <div><h3 class="modal-title">柔雾青 Aurora</h3><p class="modal-desc">内置默认主题 · ui/aurora-theme-lab 分支</p></div>
+            <button class="icon-btn modal-close" data-close aria-label="关闭">×</button>
+        </div>
+        <div class="modal-body">
+            <p>不用纯白背景与纯黑文字，降低眩光与光晕；强调色降饱和，仅用于小面积点缀。所有颜色、圆角、间距、弹窗与宫格都可在「外观」里调整。</p>
+        </div>
+        <div class="modal-foot"><button class="btn btn-secondary" data-theme-entry>打开外观设置</button><button class="btn btn-primary" data-close>知道了</button></div>
+    </div>
+</div>
+
+<script>
+(function () {
+    /* 片库数据：优先取宿主 SDK，失败/超时则使用内置演示内容，保证不白屏 */
+    var FALLBACK = [
+        { en: "STELLAR DRIFT", name: "星野漫游", sub: "更新至 12 集", tag: "追剧", a: "#2d5f52", b: "#12261f", c: "rgba(160,230,190,.34)" },
+        { en: "MIST HARBOR", name: "雾港纪事", sub: "已看完 8 集", tag: "继续", a: "#6b5b8a", b: "#241d34", c: "rgba(220,180,255,.32)" },
+        { en: "AURORA RUSH", name: "极光竞速", sub: "1080P · 已下载", tag: "已下载", a: "#3a4d8f", b: "#161d3a", c: "rgba(150,170,255,.42)" },
+        { en: "DUNE ECHO", name: "沙丘回响", sub: "4K HDR", tag: "新上架", a: "#a8703f", b: "#3a2416", c: "rgba(255,210,150,.36)" },
+        { en: "DEEP BEACON", name: "深蓝信标", sub: "纪录片", tag: "收藏", a: "#1f6f86", b: "#0d2a33", c: "rgba(120,220,240,.36)" },
+        { en: "SILENT WOODS", name: "静默森林", sub: "已观看 3 次", tag: "历史", a: "#4b6b3a", b: "#1c2b16", c: "rgba(190,235,140,.30)" },
+        { en: "NEON BLOCK", name: "霓虹街区", sub: "云播放", tag: "云端", a: "#b03a6a", b: "#35121f", c: "rgba(255,150,190,.36)" },
+        { en: "PALE RIDGE", name: "苍白山脉", sub: "18.2 GB", tag: "已安装", a: "#7a8a99", b: "#2a333b", c: "rgba(210,230,245,.32)" }
+    ];
+    function esc(s) { return String(s).replace(/[&<>"]/g, function (m) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]; }); }
+    function render(items, live) {
+        document.getElementById("tileGrid").innerHTML = items.map(function (g) {
+            return '<div class="tile"><div class="tile-cover" style="--cover-a:' + g.a + ';--cover-b:' + g.b + ';--cover-c:' + g.c + '">' +
+                '<span class="tile-chip tag tag-glass">' + esc(g.tag || "") + '</span>' +
+                '<div class="tile-art"><b>' + esc(g.en || g.name) + '</b><span>' + esc(g.name || "") + '</span></div>' +
+                '</div><div class="tile-title">' + esc(g.name || "") + '</div><div class="tile-sub">' + esc(g.sub || "") + '</div></div>';
+        }).join("");
+        document.getElementById("sourceLabel").textContent = live ? "片库已连接" : "演示内容（未连接片库）";
+    }
+    render(FALLBACK, false);
+    try {
+        if (window.fongmi && typeof window.fongmi.invoke === "function") {
+            var done = false;
+            var timer = setTimeout(function () { if (!done) render(FALLBACK, false); }, 2500);
+            Promise.resolve(window.fongmi.invoke("vod.home", {})).then(function (data) {
+                done = true; clearTimeout(timer);
+                var list = data && (data.list || data.vods || data.items || (Array.isArray(data) ? data : null));
+                if (list && list.length) {
+                    render(list.slice(0, 12).map(function (v) {
+                        return { en: v.name || v.title || "", name: v.name || v.title || "", sub: v.remark || v.type || "", tag: "片库", a: "#2d5f52", b: "#12261f", c: "rgba(160,230,190,.34)" };
+                    }), true);
+                } else render(FALLBACK, false);
+            }).catch(function () { done = true; clearTimeout(timer); render(FALLBACK, false); });
+        }
+    } catch (e) { render(FALLBACK, false); }
+
+    /* 设置入口：优先宿主 SDK，不可用时降级到内置外观面板 */
+    function openSetting() {
+        if (window.ThemeEngine && window.ThemeEngine.openNativeSetting()) return;
+        if (window.XboxAppearance) window.XboxAppearance.open();
+    }
+    document.getElementById("btnNativeSetting").addEventListener("click", openSetting);
+    document.getElementById("navSetting").addEventListener("click", openSetting);
+
+    /* 弹窗 */
+    document.addEventListener("click", function (e) {
+        var o = e.target.closest("[data-open]");
+        if (o) { var el = document.getElementById(o.getAttribute("data-open")); if (el) { el.classList.add("is-open"); el.setAttribute("aria-hidden", "false"); } return; }
+        var c = e.target.closest("[data-close]");
+        if (c) { document.querySelectorAll(".modal-overlay.is-open").forEach(function (el) { el.classList.remove("is-open"); el.setAttribute("aria-hidden", "true"); }); return; }
+        if (e.target.classList.contains("modal-overlay")) { e.target.classList.remove("is-open"); e.target.setAttribute("aria-hidden", "true"); }
+        var sw = e.target.closest("[data-demo-switch]");
+        if (sw) sw.setAttribute("aria-checked", sw.getAttribute("aria-checked") === "true" ? "false" : "true");
+    });
+    document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") document.querySelectorAll(".modal-overlay.is-open").forEach(function (el) { el.classList.remove("is-open"); el.setAttribute("aria-hidden", "true"); });
+    });
+})();
+</script>
+</body>
+</html>
