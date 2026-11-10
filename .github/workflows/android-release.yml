@@ -535,6 +535,10 @@ jobs:
               dex = [n for n in names if re.match(r'^classes\d*\.dex$', n)]
               arsc = z.getinfo("resources.arsc") if "resources.arsc" in names else None
               arsc_stored = arsc is not None and arsc.compress_type == zipfile.ZIP_STORED
+              # zipalign -c 4 已在签名步骤做硬失败断言，是 Android 官方权威判据。
+              # Python 的 header_offset 只反映 local header 起点；AGP 用 extra field
+              # 给数据区做对齐，二者口径不同，不能拿 header_offset % 4 当硬断言。
+              # 这里只作诊断输出，不再进 checks 硬失败列表。
               arsc_aligned = arsc is not None and (arsc.header_offset % 4) == 0
               res = [n for n in names if n.startswith("res/") and not n.endswith("/")]
               lib = [n for n in names if n.startswith("lib/") and not n.endswith("/")]
@@ -550,7 +554,6 @@ jobs:
                   "META-INF payload covered by v2/v3": True,
                   "no v1 JAR signature files": len(sigleft) == 0,
                   "resources.arsc Stored (AGP native)": arsc_stored,
-                  "resources.arsc 4-byte aligned": arsc_aligned,
               }
               record("--- %s ---" % name)
               record("  entries=%d dex=%s res=%d lib=%d assets=%d META-INF=%d(payload=%d sig=%d)" %
@@ -558,14 +561,19 @@ jobs:
                       len(meta_files), len(payload), len(sigleft)))
               record("  META-INF payload sample: %s" % ", ".join(sorted(payload)[:12]))
               record("  v1 signature files: %s" % ", ".join(sorted(sigleft)))
-              record("  resources.arsc: stored=%s aligned=%s header_offset=%s" %
-                     (arsc_stored, arsc_aligned, arsc.header_offset if arsc else "missing"))
+              record("  resources.arsc: stored=%s header_offset=%s header_offset%%4=%s (diagnostic; zipalign -c 4 is authoritative)" %
+                     (arsc_stored, arsc.header_offset if arsc else "missing", arsc_aligned))
               for k, v in checks.items():
                   record("  %-40s %s" % (k, "OK" if v else "FAIL"))
-                  if not v: hard_failure = True
+                  if not v:
+                      hard_failure = True
+                      record("::error title=APK completeness::%s / %s FAILED (entries=%d dex=%d res=%d lib=%d assets=%d META-INF=%d payload=%d sig=%d arsc_stored=%s)" %
+                             (name, k, len(names), len(dex), len(res), len(lib), len(assets),
+                              len(meta_files), len(payload), len(sigleft), arsc_stored))
           EVIDENCE.write("APK completeness: %s\n" % ("PASSED" if not hard_failure else "FAILED"))
           EVIDENCE.close()
           if hard_failure:
+              record("::error title=APK completeness::one or more hard checks failed; see per-item annotations above")
               raise SystemExit(1)
           print("APK completeness and installability checks passed for all APKs")
           PY
@@ -786,6 +794,7 @@ jobs:
           .github/scripts/sync-cnb-release.sh
 
       - name: Upload workflow artifacts
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: webhtv-${{ steps.meta.outputs.tag }}
