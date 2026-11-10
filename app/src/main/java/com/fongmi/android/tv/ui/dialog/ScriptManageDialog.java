@@ -227,12 +227,12 @@ public final class ScriptManageDialog extends BaseAlertDialog {
                 panel.attach(binding.hkPanelHost, configUrl);
                 hkPanel = panel;
             } catch (Throwable t) {
-                // 老设备缺 java.nio.file / 主题资源 / Gson 异常等一律兜住：
-                // 回退本地 tab，绝不把异常抛给 DialogFragment 导致 APP 退出。
+                // 不再静默回退本地 tab：清掉半初始化的视图，把异常原文留在面板里。
+                // 这样一次截图就能定位，而不是反复猜「初始化失败」。
                 hkPanel = null;
-                Log.e(TAG, "hk panel init failed, fallback to local scripts", t);
-                Notify.show(R.string.hk_panel_fallback);
-                hk = false;
+                binding.hkPanelHost.removeAllViews();
+                Log.e(TAG, "hk panel init failed", t);
+                showHostError(t);
             }
         }
         binding.tabLocal.setChecked(!hk);
@@ -245,23 +245,44 @@ public final class ScriptManageDialog extends BaseAlertDialog {
         binding.columns.setVisibility(local);
         binding.bottomRow.setVisibility(local);
         binding.hkPanelHost.setVisibility(hk ? android.view.View.VISIBLE : android.view.View.GONE);
-        if (hk) {
+        if (hk && hkPanel != null) {
             try { hkPanel.onShown(); }
             catch (Throwable t) {
                 Log.e(TAG, "hk panel refresh failed", t);
-                hkPanel = null;
-                binding.tabLocal.setChecked(true);
-                binding.tabHk.setChecked(false);
-                binding.dirScroll.setVisibility(android.view.View.VISIBLE);
-                binding.summary.setVisibility(android.view.View.VISIBLE);
-                binding.filterRow.setVisibility(android.view.View.VISIBLE);
-                binding.actionRow.setVisibility(android.view.View.VISIBLE);
-                binding.columns.setVisibility(android.view.View.VISIBLE);
-                binding.bottomRow.setVisibility(android.view.View.VISIBLE);
-                binding.hkPanelHost.setVisibility(android.view.View.GONE);
-                Notify.show(R.string.hk_panel_fallback);
+                Notify.show("海阔面板刷新异常：" + brief(t));
             }
         }
+    }
+
+    /** 初始化失败时把异常原文显示在海阔面板内，同时弹一条提示；不切回本地 tab。 */
+    private void showHostError(Throwable t) {
+        String detail = brief(t);
+        try {
+            android.widget.TextView v = new android.widget.TextView(requireContext());
+            v.setText("海阔面板初始化异常\n\n" + detail);
+            v.setTextColor(0xFFB3261E);
+            v.setTextSize(13);
+            v.setPadding(16, 24, 16, 24);
+            binding.hkPanelHost.addView(v);
+        } catch (Throwable ignored) {}
+        Notify.show("海阔面板异常：" + detail);
+    }
+
+    /** 类名 + message + 首帧 + cause 链，够一次截图定位，不用再抓 logcat。 */
+    private static String brief(Throwable t) {
+        StringBuilder sb = new StringBuilder();
+        Throwable c = t;
+        for (int i = 0; i < 3 && c != null; i++, c = c.getCause()) {
+            if (i > 0) sb.append(" ← ");
+            sb.append(c.getClass().getName()).append(": ").append(String.valueOf(c.getMessage()));
+        }
+        StackTraceElement[] st = t.getStackTrace();
+        if (st.length > 0) {
+            StackTraceElement s = st[0];
+            sb.append("\n@").append(s.getClassName()).append(".").append(s.getMethodName())
+              .append(":").append(s.getLineNumber());
+        }
+        return sb.toString();
     }
 
     @Override
