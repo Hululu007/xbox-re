@@ -68,7 +68,10 @@ public final class HkPanelController {
     private View.OnClickListener safe(View.OnClickListener l) {
         return v -> {
             try { l.onClick(v); }
-            catch (Throwable t) { Log.e(TAG, "hk panel action failed", t); toast("操作失败，已阻止异常"); }
+            catch (Throwable t) {
+                Log.e(TAG, "hk panel action failed", t);
+                toast("操作失败：" + t.getClass().getSimpleName() + ": " + t.getMessage());
+            }
         };
     }
 
@@ -117,7 +120,9 @@ public final class HkPanelController {
         HkDoc d = HkStateStore.readDoc(doc);
         try {
             List<HkFeed> feeds = new ArrayList<>();
-            for (HkFeed f : d.feeds) {
+            for (Object o : d.feeds) {
+                if (!(o instanceof HkFeed)) continue;   // 兼容旧混淆 json 里混入的 LinkedTreeMap
+                HkFeed f = (HkFeed) o;
                 boolean bad = !"正常".equals(f.mark);
                 if (blackMode() != bad) continue;
                 if (!blackMode() && !"全部".equals(mode) && !mode.equals(f.category)) continue;
@@ -128,7 +133,9 @@ public final class HkPanelController {
         try {
             List<HkSiteEntry> sites = new ArrayList<>();
             if (!TextUtils.isEmpty(focusFeed)) {
-                for (HkSiteEntry e : state.sites) {
+                for (Object o : state.sites) {
+                    if (!(o instanceof HkSiteEntry)) continue;
+                    HkSiteEntry e = (HkSiteEntry) o;
                     if (!doc.equals(e.doc) || !focusFeed.equals(e.feedId)) continue;
                     boolean bad = !"正常".equals(e.mark);
                     if (blackMode() == bad) sites.add(e);
@@ -180,7 +187,14 @@ public final class HkPanelController {
         }
         HkDoc d = HkStateStore.readDoc(doc);
         Set<String> used = new LinkedHashSet<>();
-        for (HkFeed f : d.feeds) if (!TextUtils.isEmpty(f.category)) used.add(f.category);
+        // 单个坏元素不许中断整行渲染，否则「+口令 / 刷新 / 设置目录」会整排消失。
+        try {
+            for (Object o : d.feeds) {
+                if (!(o instanceof HkFeed)) continue;
+                HkFeed f = (HkFeed) o;
+                if (!TextUtils.isEmpty(f.category)) used.add(f.category);
+            }
+        } catch (Throwable t) { Log.e(TAG, "collect categories failed", t); }
         for (String name : used) {
             MaterialButton chip = chip(name, name.equals(mode), true);
             chip.setOnClickListener(safe(v -> {
@@ -203,9 +217,8 @@ public final class HkPanelController {
         if (!tv) {
             MaterialButton dir = chip("设置目录", false, true);
             dir.setOnClickListener(safe(v -> inputDialog("一级/二级 json 存放目录", HkStateStore.rootDir(), path -> {
-                java.io.File f = new java.io.File(path);
-                if (!f.isDirectory() && !f.mkdirs()) { toast("目录不可用"); return; }
-                HkStateStore.setRootDir(path); refresh();
+                if (!HkStateStore.setRootDir(path)) { toast("目录不可写，请换一个可写目录"); return; }
+                toast("目录已生效，A/B 两份 json 将写在这里"); refresh();
             })));
             catRow.addView(dir);
         }
