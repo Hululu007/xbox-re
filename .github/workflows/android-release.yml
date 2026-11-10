@@ -290,13 +290,16 @@ jobs:
           done
           ls -lh dist/
 
-      - name: Align unsigned APKs before signing (only ZIP rewrite allowed)
+      - name: Clear META-INF completely before signing (only ZIP rewrite allowed)
         # 「安装包已损坏」收敛：签名后再动 ZIP 会丢 AGP 写入的对齐 extra field，
         # apksigner / aapt2 / unzip -t 都能过，但系统 PackageManager 解析时直接拒绝。
-        # 因此所有 ZIP 改写一律前移到签名之前：清掉无害元数据 → zipalign -p -f 4
+        # 「MT 签名状态校验不通过」收敛：v1(JAR) 按规范排除整个 META-INF/ 目录，
+        # 只要该目录下还剩一个非签名条目，apksigner 就报 not protected by signature，
+        # MT 据此判校验不通过。上一版保留 services/ 与 nanohttpd/，仍剩 5 条 warning。
+        # 全库 Java 对 ScriptEngineManager / ServiceLoader / META-INF 零引用，
+        # 这些只是依赖 jar 顺带打进来的资源，必须一并清掉。
+        # 所有 ZIP 改写一律前移到签名之前：清空 META-INF → zipalign -p -f 4
         # → 硬校验对齐与 ZIP 完整性；之后 apksigner 一次签名，签名后零改写。
-        # 运行时条目必须保留：META-INF/services/*（Rhino ScriptEngineFactory）、
-        # META-INF/nanohttpd/*.properties（内嵌 HTTP 服务）。
         run: |
           set -euo pipefail
           SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
@@ -309,21 +312,23 @@ jobs:
               z = zipfile.ZipFile(apk)
               names = z.namelist()
               z.close()
-              drop = [n for n in names if n.startswith("META-INF/") and (
-                  n.endswith(".version") or n.endswith(".kotlin_module")
-                  or "LICENSE" in n.upper()
-                  or n in ("META-INF/com/android/build/gradle/app-metadata.properties",
-                           "META-INF/version-control-info.textproto"))]
-              keep = [n for n in names if n.startswith("META-INF/services/")
-                      or n.startswith("META-INF/nanohttpd/")]
-              assert all(n not in drop for n in keep), "runtime META-INF entry must be kept"
+              # 清掉 META-INF/ 下所有条目：元数据、services/、nanohttpd/，
+              # 以及依赖 jar 残留的旧 MANIFEST.MF / *.SF / *.RSA 等签名文件。
+              # apksigner 会从干净状态生成唯一的 v1 三件套。
+              drop = [n for n in names if n.upper().startswith("META-INF/")
+                      and not n.endswith("/")]
               if drop:
                   r = subprocess.run(["zip", "-d", apk] + drop,
                                      stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
                   if r.returncode not in (0, 12):
                       raise SystemExit("zip -d failed: %s" % r.stderr.decode()[:400])
-              print("%s: dropped %d harmless metadata entries, kept %d runtime entries" %
-                    (os.path.basename(apk), len(drop), len(keep)))
+              z = zipfile.ZipFile(apk)
+              left = [n for n in z.namelist() if n.upper().startswith("META-INF/")]
+              z.close()
+              if left:
+                  raise SystemExit("META-INF not empty before signing: %s" % left[:10])
+              print("%s: cleared all %d META-INF entries (META-INF now empty)" %
+                    (os.path.basename(apk), len(drop)))
           PY
           for apk in dist/*.apk; do
             "$ZIPALIGN" -p -f 4 "$apk" "${apk}.aligned"
@@ -346,10 +351,10 @@ jobs:
         # 都能过，但系统 PackageManager 解析 APK 时拒绝 → 表现为「签名问题/装不上」。
         # MT 重签之所以能装，正因为 MT 会重新打包 ZIP、把结构修回去。
         #
-        # 本轮：Gradle 产出的**未签名 APK 原封不动**交给 apksigner 一次签
-        # v1+v2+v3，不做任何 ZIP 重建、不删任何文件、不跑 zipalign -f。
-        # 结果：META-INF 88/86 个依赖元数据全部保留，ZIP 结构 100% AGP 原生，
-        # 签名方案 v1+v2+v3 全覆盖（老安装器看 v1，新安装器看 v2/v3）。
+        # 本轮：签名前已把 META-INF 清空（见上一步），apksigner 从干净状态
+        # 一次生成唯一的 v1 三件套 + v2/v3 签名块；签名后不做任何 ZIP 改写、
+        # 不删任何文件、不跑 zipalign -f。结果：apksigner verify 零
+        # not protected by signature，MT 的签名状态校验不再有未受保护条目。
         env:
           RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
           RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
@@ -418,19 +423,23 @@ jobs:
               echo "::error title=Alignment broken after signing::$apk is not 4-byte aligned; refusing to publish"
               exit 1
             fi
-            KEEP="$(unzip -Z1 "$apk" | grep -icE '^META-INF/[^/]+$' || true)"
-            echo "::notice title=META-INF payload preserved::$apk keeps $KEEP META-INF entries (nothing deleted)"
-            # 签名前已清掉 *.version / LICENSE / app-metadata 等无害元数据，
-            # 只保留 services/ 与 nanohttpd/ 等运行时条目；阈值 3 用于防误清空。
-            if [ "$KEEP" -lt 3 ]; then
-              echo "::error title=META-INF payload lost::$apk kept only $KEEP META-INF entries"
+            KEEP="$(unzip -Z1 "$apk" | grep -icE '^META-INF/' || true)"
+            echo "::notice title=META-INF clean::$apk has $KEEP META-INF entries (v1 trio only)"
+            # META-INF 里只允许 apksigner 刚生成的三件套，多一个都会让 MT 判不通过。
+            if [ "$KEEP" -lt 3 ] || [ "$KEEP" -gt 4 ]; then
+              echo "::error title=META-INF not clean::$apk has $KEEP META-INF entries, expected v1 trio (3)"
+              exit 1
+            fi
+            NON_SIG="$(unzip -Z1 "$apk" | grep -iE '^META-INF/' | grep -ivE '^META-INF/(MANIFEST\.MF|[^/]*\.(SF|RSA|DSA|EC))$' || true)"
+            if [ -n "$NON_SIG" ]; then
+              echo "::error title=META-INF payload remains::$apk: $(echo "$NON_SIG" | tr '\n' ' ')"
               exit 1
             fi
             {
               echo "=== $(basename "$apk") ==="
               echo "ZIP entries before signing: $BEFORE"
               echo "ZIP entries after signing:  $AFTER (added $ADDED = v1 signature trio)"
-              echo "META-INF entries kept:      $KEEP (no file removed, no ZIP rebuild)"
+              echo "META-INF entries:           $KEEP (v1 trio only; cleared before signing, no ZIP rebuild after signing)"
               echo "zipalign -c 4: $ALIGN_OK (read-only, no rewrite)"
               echo ""
             } >> /tmp/sign-report.txt
@@ -464,17 +473,20 @@ jobs:
               fi
             done
             SIGCOUNT="$(unzip -Z1 "$apk" | grep -icE '^META-INF/.*\.(RSA|DSA|EC|SF)$|^META-INF/MANIFEST\.MF$' || true)"
-            if [ "$SIGCOUNT" -lt 2 ] || [ "$SIGCOUNT" -gt 6 ]; then
-              echo "::error title=Bad v1 signature trio::$apk has $SIGCOUNT JAR signature entries, expected ~3"
+            if [ "$SIGCOUNT" -lt 3 ] || [ "$SIGCOUNT" -gt 4 ]; then
+              echo "::error title=Bad v1 signature trio::$apk has $SIGCOUNT JAR signature entries, expected exactly one clean trio (3)"
               exit 1
             fi
             echo "  scheme: v1+v2+v3, META-INF v1 signature trio = $SIGCOUNT"
-            # v1(JAR) 签名按规范不覆盖 META-INF/ 下的依赖元数据，apksigner 会逐条报
-            # 「not protected by signature」。这是所有 Android APK 的固有 warning，
-            # 系统安装器由 v2/v3 全文件覆盖验签、不受影响；此处只统计、不拦构建。
+            # META-INF 已在签名前清空，apksigner 不应再报任何
+            # not protected by signature；一旦出现就说明清理没生效，直接阻断发布。
             WARNCOUNT="$(echo "$VERBOSE" | grep -ci 'WARNING' || true)"
             NOTPROT="$(echo "$VERBOSE" | grep -ci 'not protected by signature' || true)"
-            echo "::notice title=apksigner warnings::$apk has $WARNCOUNT warning(s), $NOTPROT are META-INF not-protected (JAR v1 spec, harmless)"
+            echo "::notice title=apksigner warnings::$apk has $WARNCOUNT warning(s), $NOTPROT not-protected"
+            if [ "$NOTPROT" -ne 0 ]; then
+              echo "::error title=META-INF not protected::$apk still reports $NOTPROT not-protected warnings: $(echo "$VERBOSE" | grep -i 'not protected by signature' | tr '\n' ' ')"
+              exit 1
+            fi
             OTHER_WARN="$(echo "$VERBOSE" | grep -i 'WARNING' | grep -viE 'not protected by signature' || true)"
             if [ -n "$OTHER_WARN" ]; then
               echo "::notice title=apksigner other warnings::$apk: $(echo "$OTHER_WARN" | tr '\n' ' ')"
@@ -607,8 +619,8 @@ jobs:
                   "res/ (>=100)": len(res) >= 100,
                   "lib/ (>=1)": len(lib) >= 1,
                   "assets/ (>=1)": len(assets) >= 1,
-                  "META-INF runtime payload retained (>=3)": len(payload) >= 3,
-                  "Rhino ScriptEngineFactory service kept": "META-INF/services/javax.script.ScriptEngineFactory" in names,
+                  "META-INF has zero non-signature payload": len(payload) == 0,
+                  "META-INF/services cleared (no ServiceLoader consumer in source)": not any(n.upper().startswith("META-INF/SERVICES/") for n in names),
                   "v1 signature trio present": 3 <= len(sigleft) <= 4,
               }
               record("--- %s ---" % name)

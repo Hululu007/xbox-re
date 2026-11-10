@@ -268,11 +268,14 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
       签名覆盖**，apksigner 逐条报 `not protected by signature`，我们曾把它加进
       WARNING 白名单，MT 却据此判「签名状态校验不通过」。
     - 修法在 `.github/workflows/android-release.yml` 的
-      `Clean META-INF metadata and realign before signing`：**签名前**删掉
-      META-INF 下除 `services/` 与签名三件套外的所有条目，然后**必须**紧跟
-      `zipalign -f -p 4`（`zip -d` 会重写 ZIP 破坏对齐）。顺序不能放到签名之后。
-    - `META-INF/services/` 是 ServiceLoader 配置，**不能删**；它由 MANIFEST 覆盖，
-      不会触发 not protected。
+      `Clear META-INF completely before signing`：**签名前**删掉 META-INF 下
+      **所有**条目，然后**必须**紧跟 `zipalign -f -p 4`（`zip -d` 会重写 ZIP
+      破坏对齐）。顺序不能放到签名之后。
+    - 2026-11-10 更正：JAR v1 排除的是**整个 `META-INF/` 目录**，不是只排除签名
+      文件；`META-INF/services/*` 同样会触发 `not protected by signature`，
+      「由 MANIFEST 覆盖、不会触发」是错的。全库 1146 个 Java 文件对
+      `ScriptEngineManager` / `ServiceLoader` / `META-INF/` 零引用，services/ 必须
+      一并清掉，详见第 36 条。
     - 签名后的 `Verify JAR (v1) integrity like MT` 必须硬断言
       「META-INF 除签名三件套与 services/ 外无残留」，并以 annotation 输出
       `not protected by signature` 的条数作为实证。
@@ -327,10 +330,30 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
     二次 `zipalign -f`）都会丢 AGP 写入的对齐 extra field，PackageManager 解析阶段直接拒绝。
     标准链固定为：`Gradle unsigned → zip -d 清无害元数据 → zipalign -p -f 4 → apksigner sign → 上传`，
     **签名后一个字节不碰**。`zipalign -c 4` 签名后只做只读硬断言，不阻断就发不出包。
-    `META-INF/services/*`（Rhino `ScriptEngineFactory`）与 `META-INF/nanohttpd/*.properties`
-    是运行时条目，任何清理都不得误删。`resources.arsc` Stored / 4 字节对齐、CD offset、
+    `META-INF/services/*` 与 `META-INF/nanohttpd/*.properties` 不是运行时依赖
+    （全库零引用），2026-11-10 起一并清掉，见第 36 条。`resources.arsc` Stored / 4 字节对齐、CD offset、
     Signing Block 位置这四项只作**诊断记录 + `::notice` 回传**，不做硬阻断（CI 42734843496
     实证：硬断言误杀正常包，签名链与 `zipalign -c 4` 全过）。真正硬失败的是 ZIP 完整性、
-    关键文件、v1 三件套、运行时条目保留、签名后 `zipalign -c 4`，以及回读 Release asset
+    关键文件、v1 三件套、META-INF 零残留、签名后 `zipalign -c 4`，以及回读 Release asset
     `digest` 与本地 sha256 一致。用户下载后自检 size + SHA256，
     不一致即为下载被截断/改写（v2/v3 全文件签名失败，报「安装包已损坏」）。
+
+36. **MT「签名状态校验不通过」收口：META-INF 必须清到只剩 v1 三件套（2026-11-10）**：
+    - AOSP《应用签名》与 apksigner verifier 实证：v1(JAR) 按规范**排除整个
+      `META-INF/` 目录**，不是只排除签名文件。只要该目录下存在任何非签名条目
+      （`androidx.*.version`、`app-metadata.properties`、`version-control-info.textproto`、
+      `META-INF/services/*`、`META-INF/nanohttpd/*`），apksigner 就逐条报
+      `not protected by signature`，MT 管理器的「签名状态」据此判「校验不通过」，
+      与 v1/v2/v3 是否齐全、系统能否安装无关。
+    - 只把 89/91 条降到 5 条（保留 services/ + nanohttpd/）**不够**：
+      `v5.6.0-202611100934` 实测能安装但 MT 仍报验签失败，正是这 5 条。
+    - 修法：签名前 `zip -d` 清掉 `META-INF/` 下**所有**条目（含依赖 jar 残留的旧
+      `MANIFEST.MF` / `*.SF` / `*.RSA`），硬断言清空后 META-INF 为空；
+      紧跟 `zipalign -p -f 4`，再 apksigner 一次签 v1+v2+v3，签名后零改写。
+      全库对 `ScriptEngineManager` / `ServiceLoader` / `META-INF/` 零引用，
+      删 services/ 不影响运行；原先那条「Rhino ScriptEngineFactory service kept」
+      硬断言是历史误判，已删除。
+    - CI 硬断言：`not protected by signature` 条数必须 **0**、META-INF 非签名条目
+      必须 **0**、v1 签名文件恰好一套（3 个）、`zipalign -c 4` 只读通过。
+      不再给 `not protected by signature` 留白名单。
+    - 顺序仍是「清理 → 对齐 → 签名」；任何签名后 ZIP 改写都会回到「安装包已损坏」（第 35 条）。
