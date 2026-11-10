@@ -357,3 +357,20 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
       必须 **0**、v1 签名文件恰好一套（3 个）、`zipalign -c 4` 只读通过。
       不再给 `not protected by signature` 留白名单。
     - 顺序仍是「清理 → 对齐 → 签名」；任何签名后 ZIP 改写都会回到「安装包已损坏」（第 35 条）。
+
+37. **「拓展接口」点击即闪退的防御口径（2026-11-10）**：
+    - `ScriptManageDialog.initTabs()` 不得在弹窗创建时无条件 `new HkPanelController().attach()`：
+      点开「拓展接口」默认落在本地脚本 tab，此时**完全不加载海阔代码**（懒加载）。
+      只有 `switchTab(true)` 才实例化，且整段包 `try/catch(Throwable)`，失败回退本地 tab
+      并提示 `hk_panel_fallback`，绝不让异常冒泡到 DialogFragment 把 APP 带崩。
+    - `HkStateStore.read()` 禁止 `java.nio.file.Files.readAllBytes(f.toPath())`：
+      `java.nio.file` / `File.toPath()` 是 **API 26+**，minSdk 24 的老车机 / TV（甲壳虫
+      助手常见环境）会抛 `NoClassDefFoundError` / `NoSuchMethodError`，属 **Error**，
+      `catch(Exception)` 抓不到，直接杀进程。改用 `FileInputStream + ByteArrayOutputStream`，
+      所有文件读写 catch `Throwable`。
+    - `HkStateUpdater.refreshAll/refreshFeed` 的后台线程体、`App.startBackgroundServices()`
+      的启动调用，一律 `try/catch(Throwable)` + `Log.e`：子线程未捕获异常同样会杀进程。
+    - 海阔引擎层（HkHttp / HkJsRuntime / HkRuleManager / HkCodeUtil 等星辰移植类）
+      仍保留 `java.nio.file` 用法，本次未改；只有真正录入口令、走到解析时才会加载。
+      若后续在老设备上「录口令后崩」，按同一口径第二批替换，不要再放回 Files。
+    - 顺序与签名无关：本条只动 app 代码，不改 workflow / 签名链 / ZIP 处理。

@@ -1478,4 +1478,5 @@
     <string name="home_buttons_reset">重置</string>
     <string name="hk_tab_local">本地脚本</string>
     <string name="hk_tab_hk">海阔脚本</string>
+    <string name="hk_panel_fallback">海阔脚本初始化失败，已保留本地脚本</string>
 </resources>

@@ -74,7 +74,7 @@ public final class HkStateStore {
             if (d.categories == null) d.categories = new ArrayList<>();
             if (d.feeds == null) d.feeds = new ArrayList<>();
             return d;
-        } catch (Exception e) {
+        } catch (Throwable e) {
             return new HkDoc(doc);
         }
     }
@@ -96,7 +96,7 @@ public final class HkStateStore {
             if (s == null) return new HkState();
             if (s.sites == null) s.sites = new ArrayList<>();
             return s;
-        } catch (Exception e) {
+        } catch (Throwable e) {
             return new HkState();
         }
     }
@@ -130,11 +130,23 @@ public final class HkStateStore {
         state.sites = keep;
     }
 
+    /** 不用 java.nio.file.Files：它 API 26+ 才提供，minSdk 24 的老车机/TV
+     *  （甲壳虫助手常见环境）会抛 NoClassDefFoundError / NoSuchMethodError，
+     *  且 Error 不会被 catch(Exception) 捕获，直接把 APP 带崩。 */
     private static String read(File f) {
+        java.io.FileInputStream in = null;
         try {
-            byte[] b = java.nio.file.Files.readAllBytes(f.toPath());
-            return new String(b, StandardCharsets.UTF_8);
-        } catch (Exception e) { return null; }
+            in = new java.io.FileInputStream(f);
+            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+            byte[] buf = new byte[8192];
+            int n;
+            while ((n = in.read(buf)) != -1) out.write(buf, 0, n);
+            return new String(out.toByteArray(), StandardCharsets.UTF_8);
+        } catch (Throwable e) {
+            return null;
+        } finally {
+            if (in != null) try { in.close(); } catch (Throwable ignored) {}
+        }
     }
 
     private static void write(File f, String text) {
@@ -147,6 +159,6 @@ public final class HkStateStore {
             }
             if (f.exists() && !f.delete()) return;
             tmp.renameTo(f);
-        } catch (Exception ignored) {}
+        } catch (Throwable ignored) {}
     }
 }

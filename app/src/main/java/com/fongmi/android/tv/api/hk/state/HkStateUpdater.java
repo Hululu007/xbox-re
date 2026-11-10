@@ -33,32 +33,46 @@ public final class HkStateUpdater {
     /** 全量刷新：所有 doc 重新解析，B 整体覆盖。冷启动 / 首页前台 / 顶部刷新走这里。 */
     public static void refreshAll(Done done) {
         new Thread(() -> {
-            HkState state = HkStateStore.readState();
-            Map<String, List<HkSiteEntry>> old = snapshot(state);
-            List<HkSiteEntry> all = new ArrayList<>();
-            for (String doc : HkStateStore.docNames()) {
-                all.addAll(refreshDocInternal(doc, state, old, false));
+            try {
+                HkState state = HkStateStore.readState();
+                Map<String, List<HkSiteEntry>> old = snapshot(state);
+                List<HkSiteEntry> all = new ArrayList<>();
+                for (String doc : HkStateStore.docNames()) {
+                    all.addAll(refreshDocInternal(doc, state, old, false));
+                }
+                state.sites = all;
+                HkStateStore.writeState(state);
+                App.post(() -> {
+                    try { publishNow(); } catch (Throwable e) { Log.e(TAG, "publish failed", e); }
+                    if (done != null) try { done.run(); } catch (Throwable e) { Log.e(TAG, "done failed", e); }
+                });
+            } catch (Throwable e) {
+                Log.e(TAG, "refreshAll failed", e);
             }
-            state.sites = all;
-            HkStateStore.writeState(state);
-            App.post(() -> { publishNow(); if (done != null) done.run(); });
         }, "hk-refresh").start();
     }
 
     /** 按 feed 增量：只重拉这一条、只替换 B 里该 feedId 段，不碰其它 doc。 */
     public static void refreshFeed(String doc, String feedId, Done done) {
         new Thread(() -> {
-            HkState state = HkStateStore.readState();
-            Map<String, List<HkSiteEntry>> old = snapshot(state);
-            HkDoc d = HkStateStore.readDoc(doc);
-            HkFeed target = null;
-            for (HkFeed f : d.feeds) if (feedId.equals(f.feedId)) { target = f; break; }
-            if (target != null) {
-                List<HkSiteEntry> fresh = resolveOne(doc, target, state, old);
-                HkStateStore.replaceFeed(state, doc, feedId, fresh);
-                HkStateStore.writeState(state);
+            try {
+                HkState state = HkStateStore.readState();
+                Map<String, List<HkSiteEntry>> old = snapshot(state);
+                HkDoc d = HkStateStore.readDoc(doc);
+                HkFeed target = null;
+                for (HkFeed f : d.feeds) if (feedId.equals(f.feedId)) { target = f; break; }
+                if (target != null) {
+                    List<HkSiteEntry> fresh = resolveOne(doc, target, state, old);
+                    HkStateStore.replaceFeed(state, doc, feedId, fresh);
+                    HkStateStore.writeState(state);
+                }
+                App.post(() -> {
+                    try { publishNow(); } catch (Throwable e) { Log.e(TAG, "publish failed", e); }
+                    if (done != null) try { done.run(); } catch (Throwable e) { Log.e(TAG, "done failed", e); }
+                });
+            } catch (Throwable e) {
+                Log.e(TAG, "refreshFeed failed", e);
             }
-            App.post(() -> { publishNow(); if (done != null) done.run(); });
         }, "hk-feed").start();
     }
 

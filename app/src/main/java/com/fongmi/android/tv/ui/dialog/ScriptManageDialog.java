@@ -7,6 +7,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.Pair;
 import android.view.Gravity;
 import android.view.View;
@@ -66,6 +67,7 @@ import java.util.Set;
  */
 public final class ScriptManageDialog extends BaseAlertDialog {
 
+    private static final String TAG = "ScriptManageDialog";
     private DialogScriptManageBinding binding;
     private Runnable callback;
     private String configUrl = "";
@@ -203,17 +205,29 @@ public final class ScriptManageDialog extends BaseAlertDialog {
         initTabs();
     }
 
-    /** 双 tab 共外壳：本地脚本那段一行不动，切 tab 只换第 2 行以下的可见性。 */
+    /** 双 tab 共外壳：本地脚本那段一行不动。海阔面板懒加载 —— 点开「拓展接口」
+     *  默认落在本地 tab，此时完全不加载海阔代码，避免任何海阔侧异常把整个弹窗带崩。 */
     private void initTabs() {
-        hkPanel = new HkPanelController(requireActivity());
-        hkPanel.attach(binding.hkPanelHost, configUrl);
         binding.tabLocal.setOnClickListener(v -> switchTab(false));
         binding.tabHk.setOnClickListener(v -> switchTab(true));
-        boolean hk = HkInterface.isHkUrl(configUrl);
-        switchTab(hk);
+        switchTab(HkInterface.isHkUrl(configUrl));
     }
 
     private void switchTab(boolean hk) {
+        if (hk && hkPanel == null) {
+            try {
+                HkPanelController panel = new HkPanelController(requireActivity());
+                panel.attach(binding.hkPanelHost, configUrl);
+                hkPanel = panel;
+            } catch (Throwable t) {
+                // 老设备缺 java.nio.file / 主题资源 / Gson 异常等一律兜住：
+                // 回退本地 tab，绝不把异常抛给 DialogFragment 导致 APP 退出。
+                hkPanel = null;
+                Log.e(TAG, "hk panel init failed, fallback to local scripts", t);
+                Notify.show(R.string.hk_panel_fallback);
+                hk = false;
+            }
+        }
         binding.tabLocal.setChecked(!hk);
         binding.tabHk.setChecked(hk);
         int local = hk ? android.view.View.GONE : android.view.View.VISIBLE;
@@ -224,7 +238,23 @@ public final class ScriptManageDialog extends BaseAlertDialog {
         binding.columns.setVisibility(local);
         binding.bottomRow.setVisibility(local);
         binding.hkPanelHost.setVisibility(hk ? android.view.View.VISIBLE : android.view.View.GONE);
-        if (hk) hkPanel.onShown();
+        if (hk) {
+            try { hkPanel.onShown(); }
+            catch (Throwable t) {
+                Log.e(TAG, "hk panel refresh failed", t);
+                hkPanel = null;
+                binding.tabLocal.setChecked(true);
+                binding.tabHk.setChecked(false);
+                binding.dirScroll.setVisibility(android.view.View.VISIBLE);
+                binding.summary.setVisibility(android.view.View.VISIBLE);
+                binding.filterRow.setVisibility(android.view.View.VISIBLE);
+                binding.actionRow.setVisibility(android.view.View.VISIBLE);
+                binding.columns.setVisibility(android.view.View.VISIBLE);
+                binding.bottomRow.setVisibility(android.view.View.VISIBLE);
+                binding.hkPanelHost.setVisibility(android.view.View.GONE);
+                Notify.show(R.string.hk_panel_fallback);
+            }
+        }
     }
 
     @Override
