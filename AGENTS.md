@@ -299,7 +299,7 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
 ## 实验室关键点（clean-lab）
 
 - `LabConfig.loadSync()` 本地源读不到配置时必须回退 APK 内置 `assets/lab_template.json`；`seedTemplate()` 写 /storage/emulated/0 失败不得导致空列表。
-- 模板里 php/python/nodejs 的 `127.0.0.1:{serverPort}/file/...` 只是本机 Server 占位，上游及所有派生仓库都没有这三个运行时的公网下载源（info 明写「需自备压缩包」）；不要再把「按上游原样搬运」当成修复。
+- 模板里 webhtv 上游模板里 php/python/nodejs 的 `127.0.0.1:{serverPort}/file/...` 只是本机 Server 占位；星辰仓库 `lab_env_catalog.json` 与 `XingChenApp/xingchen-lab-assets` 提供了 arm64 环境包（zip 直链或分片清单），已接入内置模板，分片由 `LabEnv.loadChunkedArchive()` 合并。自备导入与直链仍保留为兜底。
 - `LabEnv.expandUrl()` 支持 `LabConfig.getEnvSource()` 基址替换；缺包时错误信息须列出实际下载 URL 与搜索路径，不得静默 404。
 - 「设置 → 环境包源」为可选直链基址；留空时保留本机 EnvFiles 自备路径。
 
@@ -311,6 +311,16 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
 ## 实验室三段链（不可简化）
 
 - 清单：`LabConfig.loadSync()` 任何失败都必须回落到「缓存 → APK 内置模板」，**不得清空列表**；`LabActivity.onError` 不得 `render(null)`。
-- 环境包：5 个公网包（mihomo/alist/frp/aria2/ubuntu）下载必须走 `OkHttp` + `GithubProxy`，不得用裸 `HttpURLConnection`；php/python/nodejs 无官方 Android 构建，只提供自备导入/直链，不得宣称已提供下载。
+- 环境包：公网包下载必须走 `OkHttp` + `GithubProxy`，不得用裸 `HttpURLConnection`；php/python/nodejs/alist 走星辰实验室源，`env-*.json` 为分片清单须合并后再解压，`.zip` 直链沿用既有流程。
 - 内置接口：`LabEnv.syncVodPlusAssets()` 必须把 `assets/VodPlus/wwwroot` 镜像到 `<root>/wwwroot`，否则模板里 `php -S -t <root>/wwwroot` 与「复制点播接口」必然 404。
 - 验收以运行时为准：清单条目数、各包 installed、服务端口可达；**CI 全绿不等于功能可用**。
+
+## Gson 模型与 release 混淆（不可回退）
+`app/build.gradle` 的 release 构建 `minifyEnabled = !fastRelease`，CI 默认开启 R8。
+所有经 Gson 反序列化的模型类（含 `lab.LabModels`、`bean.**`、`api.hk.state.**`）
+必须同时满足：
+1. 每个字段显式标注 `@SerializedName("原始键名")`；
+2. `proguard-rules.pro` 保留 `-keepattributes Signature` 与对应类的 `-keep`；
+3. 解析入口在 `lists/groups` 为空或元素类型不是模型类时，改用按 JSON 原始键手工映射的兜底解析。
+违反任一条件，release 包里字段名会被混淆成 a/b/c，Gson 返回空壳，界面显示「配置解析失败 / 暂无可用包」，
+而 debug 包与 CI 全绿都看不出来。禁止仅凭 debug 包或构建成功判定数据层可用。

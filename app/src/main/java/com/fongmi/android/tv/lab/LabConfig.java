@@ -215,20 +215,26 @@ public final class LabConfig {
             loadError = "配置源解析失败，已回落内置模板：" + reason
                     + "；来源=" + (getSource() == SOURCE_URL ? getUrl() : "本地");
             LabModels.LabRoot fallback = null;
+            String fallbackError = "";
             String cached = readConfigCache();
             if (!TextUtils.isEmpty(cached)) {
                 try {
                     fallback = parse(cached);
-                } catch (Exception ignored) {
+                } catch (Exception e2) {
+                    fallbackError = "缓存:" + e2.getMessage();
                 }
             }
-            if (fallback == null || fallback.lists == null) {
+            if (fallback == null || fallback.lists == null || fallback.lists.isEmpty()) {
                 try (InputStream in = App.get().getAssets().open("lab_template.json")) {
                     fallback = parse(readAll(in));
-                } catch (Exception ignored) {
+                } catch (Exception e2) {
+                    fallbackError = "内置模板:" + e2.getMessage();
                 }
             }
-            if (fallback == null) fallback = new LabModels.LabRoot();
+            if (fallback == null || fallback.lists == null || fallback.lists.isEmpty()) {
+                fallback = new LabModels.LabRoot();
+                loadError = "配置源与内置模板均失败：" + reason + " / " + fallbackError;
+            }
             mergeImported(fallback);
             if (fallback.lists != null) {
                 for (LabModels.Item item : fallback.lists) {
@@ -558,11 +564,261 @@ public final class LabConfig {
     private LabModels.LabRoot parse(String text) {
         String json = extractJson(text);
         if (json == null) throw new IllegalArgumentException("配置解析失败");
-        LabModels.LabRoot parsed = gson.fromJson(json, LabModels.LabRoot.class);
-        if (parsed == null || parsed.lists == null) throw new IllegalArgumentException("配置解析失败");
+        LabModels.LabRoot parsed = null;
+        try {
+            parsed = gson.fromJson(json, LabModels.LabRoot.class);
+        } catch (Throwable ignored) {
+        }
+        // release 包开启 minifyEnabled 后，一旦 keep/注解规则被改坏，R8 会把
+        // LabRoot.lists 混淆成 a，Gson 反射拿到的一定是 lists=null 的空壳。
+        // 这里用原始 JSON 键手工映射兜底，保证内置清单在任何混淆配置下都能加载。
+        if (parsed == null || parsed.lists == null || parsed.lists.isEmpty()
+                || !(parsed.lists.get(0) instanceof LabModels.Item)) {
+            parsed = parseLenient(json);
+        }
+        if (parsed == null || parsed.lists == null || parsed.lists.isEmpty()) {
+            throw new IllegalArgumentException("配置解析失败");
+        }
         if (parsed.root != null && !parsed.root.isEmpty()) configRoot = parsed.root;
         else detectRoot(parsed);
         return parsed;
+    }
+
+    private LabModels.LabRoot parseLenient(String json) {
+        try {
+            com.google.gson.JsonObject o = com.google.gson.JsonParser.parseString(json).getAsJsonObject();
+            LabModels.LabRoot root = new LabModels.LabRoot();
+            root.version = str(o, "version");
+            root.root = str(o, "root");
+            root.groups = new java.util.ArrayList<>();
+            com.google.gson.JsonArray gs = arr(o, "groups");
+            if (gs != null) {
+                for (com.google.gson.JsonElement e : gs) {
+                    if (!e.isJsonObject()) continue;
+                    com.google.gson.JsonObject g = e.getAsJsonObject();
+                    LabModels.Group group = new LabModels.Group();
+                    group.id = str(g, "id");
+                    group.name = str(g, "name");
+                    group.order = integer(g, "order");
+                    root.groups.add(group);
+                }
+            }
+            root.lists = new java.util.ArrayList<>();
+            com.google.gson.JsonArray ls = arr(o, "lists");
+            if (ls != null) {
+                for (com.google.gson.JsonElement e : ls) {
+                    if (e.isJsonObject()) root.lists.add(parseItem(e.getAsJsonObject()));
+                }
+            }
+            return root;
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
+    private LabModels.Item parseItem(com.google.gson.JsonObject o) {
+        LabModels.Item it = new LabModels.Item();
+        it.name = str(o, "name");
+        it.group = str(o, "group");
+        it.version = str(o, "version");
+        it.min_version = integer(o, "min_version");
+        it.icon = str(o, "icon");
+        it.info = str(o, "info");
+        it.auto_install = bool(o, "auto_install");
+        it.available = bool(o, "available");
+        it.show = bool(o, "show");
+        it.binary_path = str(o, "binary_path");
+        it.cmd_name = str(o, "cmd_name");
+        it.rootfs = boolObj(o, "rootfs");
+        it.mkdir = valueOf(o.get("mkdir"));
+        it.var_path = strMap(o, "var_path");
+        com.google.gson.JsonArray ds = arr(o, "downloads");
+        if (ds != null) {
+            it.downloads = new java.util.ArrayList<>();
+            for (com.google.gson.JsonElement e : ds) {
+                if (!e.isJsonObject()) continue;
+                com.google.gson.JsonObject d = e.getAsJsonObject();
+                LabModels.Download dl = new LabModels.Download();
+                dl.arch = str(d, "arch");
+                dl.version = str(d, "version");
+                dl.url = str(d, "url");
+                dl.liburl = str(d, "liburl");
+                dl.size = str(d, "size");
+                dl.mirrors = mirrorsOf(d.get("mirrors"));
+                it.downloads.add(dl);
+            }
+        }
+        com.google.gson.JsonArray cs = arr(o, "commands");
+        if (cs != null) {
+            it.commands = new java.util.ArrayList<>();
+            for (com.google.gson.JsonElement e : cs) {
+                if (!e.isJsonObject()) continue;
+                com.google.gson.JsonObject c = e.getAsJsonObject();
+                LabModels.Command cmd = new LabModels.Command();
+                cmd.id = str(c, "id");
+                cmd.name = str(c, "name");
+                cmd.description = str(c, "description");
+                cmd.command = str(c, "command");
+                cmd.auto_execute = bool(c, "auto_execute");
+                cmd.background = bool(c, "background");
+                cmd.show_output = boolObj(c, "show_output");
+                cmd.min_version = integer(c, "min_version");
+                com.google.gson.JsonArray vs = arr(c, "variables");
+                if (vs != null) {
+                    cmd.variables = new java.util.ArrayList<>();
+                    for (com.google.gson.JsonElement v : vs) {
+                        if (!v.isJsonObject()) continue;
+                        com.google.gson.JsonObject vo = v.getAsJsonObject();
+                        LabModels.Variable var = new LabModels.Variable();
+                        var.key = str(vo, "key");
+                        var.name = str(vo, "name");
+                        var.type = str(vo, "type");
+                        var.defaultValue = str(vo, "default");
+                        var.hint = str(vo, "hint");
+                        var.filter = str(vo, "filter");
+                        var.required = bool(vo, "required");
+                        var.min = str(vo, "min");
+                        var.max = str(vo, "max");
+                        var.options = optionsOf(arr(vo, "options"));
+                        cmd.variables.add(var);
+                    }
+                }
+                com.google.gson.JsonArray ks = arr(c, "clicks");
+                if (ks != null) {
+                    cmd.clicks = new java.util.ArrayList<>();
+                    for (com.google.gson.JsonElement k : ks) {
+                        if (!k.isJsonObject()) continue;
+                        com.google.gson.JsonObject ko = k.getAsJsonObject();
+                        LabModels.Click click = new LabModels.Click();
+                        click.title = str(ko, "title");
+                        click.action = str(ko, "action");
+                        click.value = str(ko, "value");
+                        click.style = str(ko, "style");
+                        click.content = str(ko, "content");
+                        click.width = integer(ko, "width");
+                        click.height = integer(ko, "height");
+                        cmd.clicks.add(click);
+                    }
+                }
+                com.google.gson.JsonObject cd = obj(c, "download");
+                if (cd != null) {
+                    LabModels.CommandDownload d = new LabModels.CommandDownload();
+                    d.title = str(cd, "title");
+                    d.url = str(cd, "url");
+                    d.size = str(cd, "size");
+                    d.check_file = str(cd, "check_file");
+                    d.save_to = str(cd, "save_to");
+                    d.extract_to = str(cd, "extract_to");
+                    d.required = bool(cd, "required");
+                    d.mirrors = mirrorsOf(cd.get("mirrors"));
+                    cmd.download = d;
+                }
+                it.commands.add(cmd);
+            }
+        }
+        com.google.gson.JsonArray ss = arr(o, "settings");
+        if (ss != null) {
+            it.settings = new java.util.ArrayList<>();
+            for (com.google.gson.JsonElement e : ss) {
+                if (!e.isJsonObject()) continue;
+                com.google.gson.JsonObject so = e.getAsJsonObject();
+                LabModels.Setting st = new LabModels.Setting();
+                st.key = str(so, "key");
+                st.name = str(so, "name");
+                st.type = str(so, "type");
+                st.defaultValue = str(so, "default");
+                st.hint = str(so, "hint");
+                st.editable = boolObj(so, "editable");
+                st.options = optionsOf(arr(so, "options"));
+                it.settings.add(st);
+            }
+        }
+        return it;
+    }
+
+    private static List<LabModels.Option> optionsOf(com.google.gson.JsonArray a) {
+        if (a == null) return null;
+        List<LabModels.Option> list = new java.util.ArrayList<>();
+        for (com.google.gson.JsonElement e : a) {
+            if (!e.isJsonObject()) continue;
+            com.google.gson.JsonObject o = e.getAsJsonObject();
+            LabModels.Option op = new LabModels.Option();
+            op.label = str(o, "label");
+            op.value = str(o, "value");
+            list.add(op);
+        }
+        return list;
+    }
+
+    private static Object mirrorsOf(com.google.gson.JsonElement e) {
+        if (e == null || e.isJsonNull()) return null;
+        if (e.isJsonObject()) {
+            Map<String, String> map = new java.util.HashMap<>();
+            for (Map.Entry<String, com.google.gson.JsonElement> en : e.getAsJsonObject().entrySet()) {
+                try { map.put(en.getKey(), en.getValue().getAsString()); } catch (Exception ignored) {}
+            }
+            return map;
+        }
+        if (e.isJsonArray()) {
+            List<String> list = new java.util.ArrayList<>();
+            for (com.google.gson.JsonElement x : e.getAsJsonArray()) {
+                try { list.add(x.getAsString()); } catch (Exception ignored) {}
+            }
+            return list;
+        }
+        return null;
+    }
+
+    private static Object valueOf(com.google.gson.JsonElement e) {
+        if (e == null || e.isJsonNull()) return null;
+        if (e.isJsonArray()) {
+            List<String> list = new java.util.ArrayList<>();
+            for (com.google.gson.JsonElement x : e.getAsJsonArray()) {
+                try { list.add(x.getAsString()); } catch (Exception ignored) {}
+            }
+            return list;
+        }
+        try { return e.getAsString(); } catch (Exception ignored) { return null; }
+    }
+
+    private static Map<String, String> strMap(com.google.gson.JsonObject o, String key) {
+        com.google.gson.JsonObject m = obj(o, key);
+        if (m == null) return null;
+        Map<String, String> map = new java.util.HashMap<>();
+        for (Map.Entry<String, com.google.gson.JsonElement> en : m.entrySet()) {
+            try { map.put(en.getKey(), en.getValue().getAsString()); } catch (Exception ignored) {}
+        }
+        return map;
+    }
+
+    private static String str(com.google.gson.JsonObject o, String key) {
+        if (o == null || !o.has(key) || o.get(key).isJsonNull()) return null;
+        try { return o.get(key).getAsString(); } catch (Exception ignored) { return null; }
+    }
+
+    private static int integer(com.google.gson.JsonObject o, String key) {
+        if (o == null || !o.has(key) || o.get(key).isJsonNull()) return 0;
+        try { return o.get(key).getAsInt(); } catch (Exception ignored) { return 0; }
+    }
+
+    private static boolean bool(com.google.gson.JsonObject o, String key) {
+        if (o == null || !o.has(key) || o.get(key).isJsonNull()) return false;
+        try { return o.get(key).getAsBoolean(); } catch (Exception ignored) { return false; }
+    }
+
+    private static Boolean boolObj(com.google.gson.JsonObject o, String key) {
+        if (o == null || !o.has(key) || o.get(key).isJsonNull()) return null;
+        try { return o.get(key).getAsBoolean(); } catch (Exception ignored) { return null; }
+    }
+
+    private static com.google.gson.JsonArray arr(com.google.gson.JsonObject o, String key) {
+        if (o == null || !o.has(key) || !o.get(key).isJsonArray()) return null;
+        return o.getAsJsonArray(key);
+    }
+
+    private static com.google.gson.JsonObject obj(com.google.gson.JsonObject o, String key) {
+        if (o == null || !o.has(key) || !o.get(key).isJsonObject()) return null;
+        return o.getAsJsonObject(key);
     }
 
     private static String extractJson(String text) {

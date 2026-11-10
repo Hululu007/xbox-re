@@ -22,6 +22,12 @@
 -keep,allowobfuscation class com.fongmi.android.tv.player.engine.MpvPlayerEngine { *; }
 
 # Gson
+
+# Gson 反射模型：release 开启 minifyEnabled，字段名必须固定且保留泛型签名，
+# 否则 R8 会把 LabRoot.lists 混淆成 a，Gson 反序列化后 lists 恒为 null。
+-keepattributes Signature
+-keep class com.fongmi.android.tv.lab.LabModels { *; }
+-keep class com.fongmi.android.tv.lab.LabModels$* { *; }
 -keep class com.google.gson.** { *; }
 -keep class com.fongmi.android.tv.remote.** { *; }
 -keep class com.fongmi.android.tv.gitcloud.** { *; }

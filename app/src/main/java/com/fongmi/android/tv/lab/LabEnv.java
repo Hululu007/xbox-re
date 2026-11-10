@@ -408,7 +408,13 @@ public final class LabEnv {
                 File root = ubuntuRootfs ? new File(packageDir, "rootfs") : packageDir;
                 root.mkdirs();
                 String url = download.getUrlByMirror(mirror);
-                File archive = new File(context.getCacheDir(), "lab_" + item.name + "_" + sanitizeFileName(fileName(url)));
+                // 星辰分片清单以 .json 结尾，合并后的实体是 zip；文件名必须先改成 .zip，
+                // 否则 extract() 会按扩展名误判成 7z。
+                String archiveName = fileName(url);
+                if (archiveName.toLowerCase(Locale.ROOT).endsWith(".json")) {
+                    archiveName = archiveName.substring(0, archiveName.length() - 5) + ".zip";
+                }
+                File archive = new File(context.getCacheDir(), "lab_" + item.name + "_" + sanitizeFileName(archiveName));
                 if (!loadArchive(context, url, archive, item, callback)) {
                     throw new IOException("找不到压缩包：" + fileName(url)
                             + "\n已尝试下载：" + expandUrl(url)
@@ -520,6 +526,9 @@ public final class LabEnv {
             com.github.catvod.utils.Path.copy(local, target);
             return true;
         }
+        if (fileName.toLowerCase(Locale.ROOT).endsWith(".json")) {
+            return loadChunkedArchive(url, target, callback);
+        }
         String expanded = expandUrl(url);
         if (callback != null) App.post(() -> callback.onProgress("下载 " + fileName + " ..."));
         try {
@@ -528,6 +537,68 @@ public final class LabEnv {
         } catch (IOException e) {
             lastDownloadError = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
             return false;
+        }
+    }
+
+
+    /**
+     * 星辰实验室把大包切成 8MB 分片，env-*.json 里 parts 指向各片。
+     * 这里下载清单、按序拼接成完整 zip，再交回既有解压流程。
+     */
+    private static boolean loadChunkedArchive(String manifestUrl, File target, InstallCallback callback) {
+        String expanded = expandUrl(manifestUrl);
+        File manifest = new File(target.getParentFile(), target.getName() + ".manifest");
+        try {
+            download(expanded, manifest, null, null);
+            com.google.gson.JsonObject m = com.google.gson.JsonParser.parseString(readText(manifest)).getAsJsonObject();
+            com.google.gson.JsonArray parts = m.has("parts") && m.get("parts").isJsonArray() ? m.getAsJsonArray("parts") : null;
+            long total = m.has("size") && m.get("size").isJsonPrimitive() ? m.get("size").getAsLong() : 0;
+            if (parts == null || parts.size() == 0) throw new IOException("分片清单为空: " + expanded);
+            String repoBase = "https://raw.githubusercontent.com/XingChenApp/xingchen-lab-assets/main/";
+            long done = 0;
+            if (target.exists()) target.delete();
+            if (callback != null) App.post(() -> callback.onProgress("下载分片包 ..."));
+            try (FileOutputStream out = new FileOutputStream(target)) {
+                for (int i = 0; i < parts.size(); i++) {
+                    String part = parts.get(i).getAsString();
+                    String partUrl = part.startsWith("http") ? part : repoBase + part;
+                    File tmp = new File(target.getParentFile(), "chunk_" + i + ".part");
+                    try {
+                        download(partUrl, tmp, null, null);
+                        try (InputStream in = new FileInputStream(tmp)) {
+                            byte[] buf = new byte[16384];
+                            int len;
+                            while ((len = in.read(buf)) != -1) {
+                                out.write(buf, 0, len);
+                                done += len;
+                            }
+                        }
+                    } finally {
+                        tmp.delete();
+                    }
+                    final long d = done, t = total;
+                    if (callback != null) App.post(() -> callback.onDownloadProgress(d, t));
+                }
+            }
+            if (total > 0 && target.length() != total) {
+                throw new IOException("分片合并大小不符: " + target.length() + "/" + total);
+            }
+            return true;
+        } catch (Exception ex) {
+            lastDownloadError = ex.getMessage() == null ? ex.getClass().getSimpleName() : ex.getMessage();
+            return false;
+        } finally {
+            manifest.delete();
+        }
+    }
+
+    private static String readText(File file) throws IOException {
+        try (InputStream in = new FileInputStream(file)) {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            byte[] buf = new byte[8192];
+            int len;
+            while ((len = in.read(buf)) != -1) out.write(buf, 0, len);
+            return out.toString(StandardCharsets.UTF_8.name());
         }
     }
 
@@ -581,8 +652,8 @@ public final class LabEnv {
                 + root + "/Download\n"
                 + "/storage/emulated/0/Download\n"
                 + root
-                + "\n\nphp / python / nodejs 没有官方 Android 构建，需自备压缩包放进上述任一目录，"
-                + "或在「设置 → 环境包源」填可直连基址；"
+                + "\n\nphp / python / nodejs 使用星辰实验室环境包（分片清单自动合并安装）；"
+                + "也可自备压缩包放进上述任一目录，或在「设置 → 环境包源」填可直连基址；"
                 + "mihomo / alist / frp / aria2 / ubuntu 为公网地址，会自动走应用内 GitHub 代理下载。";
     }
 
