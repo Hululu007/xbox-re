@@ -78,15 +78,25 @@ public class HkEngine {
             rule.validate();
             String findRule = rule.getFindRule();
             boolean js = HkSelector.isJsRule(findRule);
+            // 对齐星辰 HkArticleFragment.prepareSubPageRule / HkEngineBridge.parseHomeJs：
+            // 首页（调用方传空）必须用规则自带的首段导航值，不能留空。小程序规则的
+            // JS 普遍读 MY_CLASS_URL / MY_CLASS_NAME 决定首页宫格与分类，url 模板里的
+            // fyclass/fyarea/... 也要用首段值替换；全传空串时首页取数必空。
+            String classUrl = !safe(cls).isEmpty() ? cls : firstSegment(rule.getClassUrl());
+            String className = classNameOf(classUrl);
+            if (className.isEmpty()) className = firstSegment(rule.getClassName());
+            String areaUrl = !safe(area).isEmpty() ? area : firstSegment(rule.getAreaUrl());
+            String yearUrl = !safe(year).isEmpty() ? year : firstSegment(rule.getYearUrl());
+            String sortUrl = !safe(sort).isEmpty() ? sort : firstSegment(rule.getSortUrl());
             // js: 规则的 MY_URL 必须是原始 url（保留 hiker://empty# 前缀），
             // 规则 JS 里常写 MY_URL.replace("hiker://empty##", host) 做替换。
             String url = js
-                    ? HkHttp.expandUrl(rule.getUrl(), cls, area, year, sort, page, false)
-                    : HkHttp.expandUrl(rule.getUrl(), cls, area, year, sort, page);
+                    ? HkHttp.expandUrl(rule.getUrl(), classUrl, areaUrl, yearUrl, sortUrl, page, false)
+                    : HkHttp.expandUrl(rule.getUrl(), classUrl, areaUrl, yearUrl, sortUrl, page);
             if (js) {
                 // P1：注入 MY_TYPE/MY_CLASS_URL/MY_CLASS_NAME 等官方变量
                 // MY_PARAMS 照 8.83 统一取规则的 params 字段（子页参数由 PageParser 写进该字段）
-                jsRuntime.setListContext("home", safe(cls), classNameOf(cls), rule.getParams(), safe(area), safe(year), safe(sort));
+                jsRuntime.setListContext("home", classUrl, className, rule.getParams(), areaUrl, yearUrl, sortUrl);
                 // R1: 8.83 所有 js: 规则 Java 层先抓页（JSEngine.smali:20401），正文进 resCodeMap，
                 // getResCode()/getCode() 可取。星辰之前完全不预抓，依赖 getResCode() 的规则必空。
                 String fetchUrl = stripEmptyPrefix(url);
@@ -114,10 +124,22 @@ public class HkEngine {
             return selector.parseList(html, findRule, url);
         } catch (Throwable e) {
             Logger.t(TAG).d("home failed: %s", e.getMessage());
-            // 死因隐身器拆掉：home 的异常以前只进 logcat，文件日志里必须留原文
-            SpiderDebug.log("hk", "home failed rule=%s err=%s", rule.getTitle(), String.valueOf(e));
+            // 死因隐身器拆掉：home 的异常以前只进 logcat，文件日志里必须留原文。
+            // 同时把 JS 运行时错误与 preRule 错误一并记录，首页空态时能直接看到真因。
+            String jsErr = "";
+            String preErr = "";
+            try { jsErr = safe(jsRuntime.getError()); } catch (Throwable ignored) {}
+            try { preErr = safe(jsRuntime.getPreRuleError()); } catch (Throwable ignored) {}
+            SpiderDebug.log("hk", "home failed rule=%s err=%s js=%s pre=%s",
+                    rule.getTitle(), String.valueOf(e), jsErr, preErr);
             return new ArrayList<>();
         }
+    }
+
+    /** 导航字段按 & 分隔取首段（星辰 prepareSubPageRule 口径）。 */
+    private static String firstSegment(String s) {
+        if (s == null || s.trim().isEmpty()) return "";
+        return s.split("&", -1)[0].trim();
     }
 
     /**
@@ -211,10 +233,10 @@ public class HkEngine {
      */
     private static String stripEmptyPrefix(String url) {
         if (url == null) return "";
-        String p = "hiker://empty#";
-        if (url.startsWith(p)) return url.substring(p.length());
-        // 兼容双 # 写法 hiker://empty##
+        // 双 # 必须先判：单 # 前缀会先命中 "hiker://empty##http..."，留下一个 #，
+        // strip 结果不再是 http 开头 → js: 规则跳过预抓、getResCode() 恒空、首页宫格全空。
         if (url.startsWith("hiker://empty##")) return url.substring("hiker://empty##".length());
+        if (url.startsWith("hiker://empty#")) return url.substring("hiker://empty#".length());
         return url;
     }
 
