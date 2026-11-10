@@ -306,3 +306,10 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
     拿不到 library provider，且错误文本不含 `What went wrong` 之后的关键词，CI 的
     `Report Gradle failure details` 抓不到具体行。新增依赖必须放 `[libraries]`（版本放 `[versions]`
     并用 `version.ref`），`[bundles]` 只放 `xxx = ["a","b"]`。
+
+33. **quickjs 的 `Parser` 必须用上游海阔增强版（CI 42728795219 实证）**：
+    `kuby007/xingchen@main:quickjs/src/main/java/com/fongmi/quickjs/utils/Parser.java`（497 行）
+    才带 `JsEvaluator` 接口、`setJsEvaluator()`、`hpdh/hpda/hpdfl` 和 8.83 口径的
+    `pdfh/pdfa/pdfl`。xbox-re 自带的 153 行旧版 Parser 缺这些符号，会让
+    `HkJsRuntime.java:89` 报 `cannot find symbol`、`parser.hp*()` 全部找不到方法。
+    已整文件替换；不要只补接口不补 `hp*` 方法，也不要改回旧版。
