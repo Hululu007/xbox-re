@@ -216,7 +216,7 @@ jobs:
           } > local.properties
           # 本轮统一从「完全未签名的 APK」开始，由 apksigner 一次签 v1+v2+v3。
           # 这里只在 CI 工作副本里关闭 Gradle 签名，不改仓库里的 build.gradle；
-          # 产出的 APK 之后不再做任何 ZIP 重建 / zipalign 重写（那是装不上的真因）。
+          # 所有 ZIP 改写只允许发生在签名前（下一步对齐），签名后一个字节都不碰。
           sed -i 's|signingConfig = hasReleaseSigning ? signingConfigs.release : signingConfigs.debug|signingConfig = null|' app/build.gradle
           grep -q 'signingConfig = null' app/build.gradle || {
             echo "::error title=Unsigned build not configured::Failed to disable Gradle signing in app/build.gradle"
@@ -290,6 +290,55 @@ jobs:
           done
           ls -lh dist/
 
+      - name: Align unsigned APKs before signing (only ZIP rewrite allowed)
+        # 「安装包已损坏」收敛：签名后再动 ZIP 会丢 AGP 写入的对齐 extra field，
+        # apksigner / aapt2 / unzip -t 都能过，但系统 PackageManager 解析时直接拒绝。
+        # 因此所有 ZIP 改写一律前移到签名之前：清掉无害元数据 → zipalign -p -f 4
+        # → 硬校验对齐与 ZIP 完整性；之后 apksigner 一次签名，签名后零改写。
+        # 运行时条目必须保留：META-INF/services/*（Rhino ScriptEngineFactory）、
+        # META-INF/nanohttpd/*.properties（内嵌 HTTP 服务）。
+        run: |
+          set -euo pipefail
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          BT_DIR="$(find "$SDK_ROOT/build-tools" -mindepth 1 -maxdepth 1 -type d | sort | tail -1)"
+          ZIPALIGN="$BT_DIR/zipalign"
+          test -x "$ZIPALIGN"
+          python3 - <<'PY'
+          import glob, os, subprocess, zipfile
+          for apk in sorted(glob.glob("dist/*.apk")):
+              z = zipfile.ZipFile(apk)
+              names = z.namelist()
+              z.close()
+              drop = [n for n in names if n.startswith("META-INF/") and (
+                  n.endswith(".version") or n.endswith(".kotlin_module")
+                  or "LICENSE" in n.upper()
+                  or n in ("META-INF/com/android/build/gradle/app-metadata.properties",
+                           "META-INF/version-control-info.textproto"))]
+              keep = [n for n in names if n.startswith("META-INF/services/")
+                      or n.startswith("META-INF/nanohttpd/")]
+              assert all(n not in drop for n in keep), "runtime META-INF entry must be kept"
+              if drop:
+                  r = subprocess.run(["zip", "-d", apk] + drop,
+                                     stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+                  if r.returncode not in (0, 12):
+                      raise SystemExit("zip -d failed: %s" % r.stderr.decode()[:400])
+              print("%s: dropped %d harmless metadata entries, kept %d runtime entries" %
+                    (os.path.basename(apk), len(drop), len(keep)))
+          PY
+          for apk in dist/*.apk; do
+            "$ZIPALIGN" -p -f 4 "$apk" "${apk}.aligned"
+            mv "${apk}.aligned" "$apk"
+            "$ZIPALIGN" -c 4 "$apk" || {
+              echo "::error title=Not aligned::$apk is not 4-byte aligned before signing"
+              exit 1
+            }
+            unzip -t "$apk" >/dev/null || {
+              echo "::error title=Broken ZIP::$apk failed ZIP integrity check"
+              exit 1
+            }
+            echo "$(basename "$apk"): aligned to 4 bytes, ZIP verified (unsigned)"
+          done
+
       - name: Sign APK with v1+v2+v3 in one pass (no ZIP rewrite)
         # 前几轮装不上、必须 MT 重签才能装，重新检查后的真因不是证书、也不是缺 v1：
         # 上一轮用 Python zipfile 逐条 writestr **重建了整份 APK ZIP**（丢失 AGP 写入的
@@ -360,19 +409,20 @@ jobs:
                 exit 1
               fi
             done
-            # 只读校验对齐（不阻断、不重写）：AGP 打包时已对齐，apksigner 的
-            # signing block 按 8 字节倍数插入，不会破坏 4 字节对齐。
+            # 签名之后只允许「只读」校验；对齐已在签名前由 zipalign -p -f 4 完成，
+            # 这里任何不 clean 都直接阻断发布，绝不重写已签名 ZIP。
             if "$ZIPALIGN" -c 4 "$apk" 2>/dev/null; then
               echo "  zipalign -c 4: OK (read-only, no rewrite)"
+              ALIGN_OK="OK"
             else
-              echo "::notice title=zipalign advisory::$apk alignment check not clean; v2/v3 full-file signature still valid"
+              echo "::error title=Alignment broken after signing::$apk is not 4-byte aligned; refusing to publish"
+              exit 1
             fi
             KEEP="$(unzip -Z1 "$apk" | grep -icE '^META-INF/[^/]+$' || true)"
             echo "::notice title=META-INF payload preserved::$apk keeps $KEEP META-INF entries (nothing deleted)"
-            # 只统计 META-INF 一级文件（不含 services/ 等多级路径），
-            # 两个变体实测 78 / 76；阈值 50 足以区分「被清空」(3) 与「完整保留」。
-            # 完整体检步骤会对全部 META-INF 条目做 >=60 的更强断言。
-            if [ "$KEEP" -lt 50 ]; then
+            # 签名前已清掉 *.version / LICENSE / app-metadata 等无害元数据，
+            # 只保留 services/ 与 nanohttpd/ 等运行时条目；阈值 3 用于防误清空。
+            if [ "$KEEP" -lt 3 ]; then
               echo "::error title=META-INF payload lost::$apk kept only $KEEP META-INF entries"
               exit 1
             fi
@@ -381,7 +431,7 @@ jobs:
               echo "ZIP entries before signing: $BEFORE"
               echo "ZIP entries after signing:  $AFTER (added $ADDED = v1 signature trio)"
               echo "META-INF entries kept:      $KEEP (no file removed, no ZIP rebuild)"
-              echo "zipalign -c 4: OK (read-only)"
+              echo "zipalign -c 4: $ALIGN_OK (read-only, no rewrite)"
               echo ""
             } >> /tmp/sign-report.txt
           done
@@ -509,6 +559,26 @@ jobs:
               bad = z.testzip()
               if bad is not None:
                   record("FAIL [%s] corrupt ZIP entry: %s" % (name, bad)); hard_failure = True
+              # 结构硬断言：resources.arsc 必须 Stored 且数据 4 字节对齐；
+              # central directory 里每个 local header offset 必须指向真实 PK 头；
+              # v2/v3 APK Signing Block 必须存在且位于 central directory 之前。
+              raw = open(apk, "rb").read()
+              arsc = z.getinfo("resources.arsc")
+              off = arsc.header_offset
+              nlen = int.from_bytes(raw[off + 26:off + 28], "little")
+              elen = int.from_bytes(raw[off + 28:off + 30], "little")
+              data_off = off + 30 + nlen + elen
+              arsc_stored = arsc.compress_type == 0
+              arsc_aligned = data_off % 4 == 0
+              cd_ok = all(raw[i.header_offset:i.header_offset + 4] == b"PK\x03\x04"
+                          for i in z.infolist())
+              sig_pos = raw.rfind(b"APK Sig Block 42")
+              cd_pos = raw.find(b"PK\x01\x02")
+              sig_block_ok = sig_pos != -1 and cd_pos != -1 and sig_pos < cd_pos
+              record("  resources.arsc: compress=%d data_offset=%d(stored=%s,aligned=%s) "
+                     "cd_offsets=%s signing_block=%s" %
+                     (arsc.compress_type, data_off, arsc_stored, arsc_aligned,
+                      cd_ok, sig_block_ok))
               meta = [n for n in names if n.upper().startswith("META-INF/")]
               meta_files = [n for n in meta if not n.endswith("/")]
               payload = [n for n in meta_files if not SIG.match(n)]
@@ -525,7 +595,12 @@ jobs:
                   "res/ (>=100)": len(res) >= 100,
                   "lib/ (>=1)": len(lib) >= 1,
                   "assets/ (>=1)": len(assets) >= 1,
-                  "META-INF payload preserved (>=60)": len(payload) >= 60,
+                  "META-INF runtime payload retained (>=3)": len(payload) >= 3,
+                  "Rhino ScriptEngineFactory service kept": "META-INF/services/javax.script.ScriptEngineFactory" in names,
+                  "resources.arsc Stored (uncompressed)": arsc_stored,
+                  "resources.arsc 4-byte aligned": arsc_aligned,
+                  "central directory offsets valid": cd_ok,
+                  "APK Signing Block before CD": sig_block_ok,
                   "v1 signature trio present": 3 <= len(sigleft) <= 4,
               }
               record("--- %s ---" % name)
@@ -739,9 +814,30 @@ jobs:
           stripped = ""
           if os.path.exists("/tmp/sign-report.txt"):
               stripped = open("/tmp/sign-report.txt", encoding="utf-8", errors="replace").read()
+          import glob, hashlib
+          rows, mismatch = [], []
+          assets = {a["name"]: a for a in rel.get("assets", [])}
+          for apk in sorted(glob.glob("dist/*.apk")):
+              name = os.path.basename(apk)
+              data = open(apk, "rb").read()
+              local = hashlib.sha256(data).hexdigest()
+              remote = assets.get(name, {}).get("digest", "")
+              ok = (remote == "sha256:" + local) if remote else None
+              if ok is False:
+                  mismatch.append("%s local=%s remote=%s" % (name, local, remote))
+              rows.append("| `%s` | %d | `%s` | %s |" %
+                          (name, len(data), local,
+                           "一致" if ok else ("发布端未返回 digest" if ok is None else "不一致")))
+          if mismatch:
+              raise SystemExit("::error title=Uploaded asset mismatch::" + "; ".join(mismatch))
+          table = ("\n\n### 下载自检（先核对，再安装）\n\n"
+                   "下载后请核对文件大小与 SHA256；任一不符说明下载被截断或被改写，"
+                   "v2/v3 全文件签名必然失败，安装器就会报「安装包已损坏」。\n\n"
+                   "| 文件 | 字节 | SHA256 | 发布端回读 |\n|---|---|---|---|\n"
+                   + "\n".join(rows) + "\n")
           extra = ("\n\n---\n\n## 签名与完整性自检报告（构建时真实输出）\n\n```text\n" + report
-                   + "\n```\n\n### ZIP 结构核验（本轮零改写：Gradle 原生 APK 直接一次签名）\n\n```text\n"
-                   + (stripped or "(none)") + "\n```\n")
+                   + "\n```\n\n### ZIP 结构核验（签名前对齐、签名后零改写）\n\n```text\n"
+                   + (stripped or "(none)") + "\n```\n" + table)
           call("PATCH", api + "/repos/" + repo + "/releases/" + str(rel["id"]),
                {"body": (rel.get("body") or "") + extra})
           print("signature + ZIP-structure + completeness evidence attached:", len(extra), "chars")

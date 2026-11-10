@@ -320,3 +320,15 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
     本地 89 行旧版缺这些，`HkHttp.java:957` 会报 `cannot find symbol`。
     `catvod/.../net/OkDns.java` 需有 `clearDoh()`（`XingChenDoh.java:73` 用），
     旧版只有 `clear()` 且它清的是 hosts 覆盖表、不清 DoH；补方法时不要改 `clear()` 语义。
+
+35. **APK 的 ZIP 改写只允许发生在签名之前（真机「安装包已损坏」复盘）**：
+    `apksigner / aapt2 / unzip -t` 全过、v1/v2/v3 齐全、Release 资产 `digest` 与构建产物
+    sha256 一致，都不代表系统能装。签名后任何 ZIP 重建（含「清 META-INF 元数据」、
+    二次 `zipalign -f`）都会丢 AGP 写入的对齐 extra field，PackageManager 解析阶段直接拒绝。
+    标准链固定为：`Gradle unsigned → zip -d 清无害元数据 → zipalign -p -f 4 → apksigner sign → 上传`，
+    **签名后一个字节不碰**。`zipalign -c 4` 签名后只做只读硬断言，不阻断就发不出包。
+    `META-INF/services/*`（Rhino `ScriptEngineFactory`）与 `META-INF/nanohttpd/*.properties`
+    是运行时条目，任何清理都不得误删。CI 还需断言 `resources.arsc` Stored + 4 字节对齐、
+    central directory offset 全指向 `PK\x03\x04`、APK Signing Block 位于 CD 之前，
+    并回读 Release asset `digest` 与本地 sha256 一致。用户下载后自检 size + SHA256，
+    不一致即为下载被截断/改写（v2/v3 全文件签名失败，报「安装包已损坏」）。
