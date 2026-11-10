@@ -99,3 +99,13 @@
 
 # Zxing
 -keep class com.google.zxing.** { *; }
+
+# 海阔 A/B 两级 json 的 Gson 数据类：字段名与泛型签名都必须保留。
+# 不加这两行时 R8 把 public 字段混淆成 a/b/c，写出的 json 是 {"a":"123","b":[],"c":[..]}，
+# 且 Signature 丢失会让 c 的元素被 Gson 读成 LinkedTreeMap，
+# 遍历 for (HkFeed f : d.feeds) 抛 ClassCastException（表现为列表空 / 操作失败）。
+-keepattributes Signature
+-keep class com.fongmi.android.tv.api.hk.state.** { *; }
+-keepclassmembers class com.fongmi.android.tv.api.hk.** {
+    @com.google.gson.annotations.SerializedName <fields>;
+}
