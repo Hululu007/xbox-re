@@ -92,6 +92,7 @@ public final class LabModels {
         public String key;
         @SerializedName("name")
         public String name;
+        @SerializedName("type")
         public String type;
         @SerializedName("default")
         public String defaultValue;
@@ -229,6 +230,7 @@ public final class LabModels {
         public String key;
         @SerializedName("name")
         public String name;
+        @SerializedName("type")
         public String type;
         @SerializedName("default")
         public String defaultValue;

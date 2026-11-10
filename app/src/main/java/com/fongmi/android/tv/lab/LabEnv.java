@@ -410,11 +410,11 @@ public final class LabEnv {
                 String url = download.getUrlByMirror(mirror);
                 // 星辰分片清单以 .json 结尾，合并后的实体是 zip；文件名必须先改成 .zip，
                 // 否则 extract() 会按扩展名误判成 7z。
-                String archiveName = fileName(url);
-                if (archiveName.toLowerCase(Locale.ROOT).endsWith(".json")) {
-                    archiveName = archiveName.substring(0, archiveName.length() - 5) + ".zip";
+                String downloadName = fileName(url);
+                if (downloadName.toLowerCase(Locale.ROOT).endsWith(".json")) {
+                    downloadName = downloadName.substring(0, downloadName.length() - 5) + ".zip";
                 }
-                File archive = new File(context.getCacheDir(), "lab_" + item.name + "_" + sanitizeFileName(archiveName));
+                File archive = new File(context.getCacheDir(), "lab_" + item.name + "_" + sanitizeFileName(downloadName));
                 if (!loadArchive(context, url, archive, item, callback)) {
                     throw new IOException("找不到压缩包：" + fileName(url)
                             + "\n已尝试下载：" + expandUrl(url)
