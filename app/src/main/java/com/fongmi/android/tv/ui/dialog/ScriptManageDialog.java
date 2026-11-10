@@ -41,6 +41,7 @@ import com.fongmi.android.tv.utils.LocalScriptSource;
 import com.fongmi.android.tv.api.hk.state.HkInterface;
 import com.fongmi.android.tv.api.hk.state.HkStateStore;
 import com.fongmi.android.tv.api.hk.ui.HkPanelController;
+import com.fongmi.android.tv.api.hk.state.HkStateUpdater;
 import com.fongmi.android.tv.utils.Notify;
 import com.fongmi.android.tv.utils.ResUtil;
 import com.fongmi.android.tv.utils.Task;
@@ -72,6 +73,7 @@ public final class ScriptManageDialog extends BaseAlertDialog {
     private Runnable callback;
     private String configUrl = "";
     private HkPanelController hkPanel;
+    private boolean hkTab;
     private String currentDir = "";
     private String filter = "all";
     private boolean dirty;
@@ -221,6 +223,7 @@ public final class ScriptManageDialog extends BaseAlertDialog {
     }
 
     private void switchTab(boolean hk) {
+        hkTab = hk;
         if (hk && hkPanel == null) {
             try {
                 HkPanelController panel = new HkPanelController(requireActivity());
@@ -243,7 +246,8 @@ public final class ScriptManageDialog extends BaseAlertDialog {
         binding.filterRow.setVisibility(local);
         binding.actionRow.setVisibility(local);
         binding.columns.setVisibility(local);
-        binding.bottomRow.setVisibility(local);
+        // 底部「取消 / 确定」两个 tab 常驻，元素与本地脚本一致
+        binding.bottomRow.setVisibility(android.view.View.VISIBLE);
         binding.hkPanelHost.setVisibility(hk ? android.view.View.VISIBLE : android.view.View.GONE);
         if (hk && hkPanel != null) {
             try { hkPanel.onShown(); }
@@ -287,8 +291,21 @@ public final class ScriptManageDialog extends BaseAlertDialog {
 
     @Override
     protected void initEvent() {
-        binding.reset.setOnClickListener(v -> onTool(1));
+        // 顶部「重置 / 刷新」两个 tab 共用，按当前 tab 分派，避免海阔 tab 去动本地脚本
+        binding.reset.setOnClickListener(v -> {
+            if (hkTab) {
+                if (hkPanel != null) { try { hkPanel.resetView(); } catch (Throwable t) { Log.e(TAG, "hk reset failed", t); } }
+            } else {
+                onTool(1);
+            }
+        });
         binding.refresh.setOnClickListener(v -> {
+            if (hkTab) {
+                HkStateUpdater.refreshAll(() -> {
+                    if (hkPanel != null) try { hkPanel.onShown(); } catch (Throwable t) { Log.e(TAG, "hk refresh failed", t); }
+                });
+                return;
+            }
             if (TextUtils.isEmpty(currentDir)) return;
             dirty = true;
             Task.execute(() -> {

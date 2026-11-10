@@ -203,6 +203,15 @@
 
     </androidx.appcompat.widget.LinearLayoutCompat>
 
+    <!-- 海阔脚本 tab：与本地脚本共外壳，第 2 行以下整体换内容 -->
+    <FrameLayout
+        android:id="@+id/hkPanelHost"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="6dp"
+        android:layout_weight="1"
+        android:visibility="gone" />
+
     <!-- 底部：取消 / 确定 分散对齐 -->
     <androidx.appcompat.widget.LinearLayoutCompat
         android:id="@+id/bottomRow"
@@ -240,14 +249,5 @@
             app:backgroundTint="@color/dialog_primary_button_bg" />
 
     </androidx.appcompat.widget.LinearLayoutCompat>
-
-    <!-- 海阔脚本 tab：与本地脚本共外壳，第 2 行以下整体换内容 -->
-    <FrameLayout
-        android:id="@+id/hkPanelHost"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginTop="6dp"
-        android:layout_weight="1"
-        android:visibility="gone" />
 
 </androidx.appcompat.widget.LinearLayoutCompat>

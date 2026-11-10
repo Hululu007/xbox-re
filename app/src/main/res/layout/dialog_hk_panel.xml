@@ -5,11 +5,12 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <!-- 第 2 行：一级接口切换 / 创建 -->
+    <!-- 第 2 行：一级接口切换 / 创建（与本地脚本「已添加文件夹」行同间距） -->
     <HorizontalScrollView
         android:id="@+id/docScroll"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
         android:overScrollMode="never"
         android:scrollbars="none">
         <androidx.appcompat.widget.LinearLayoutCompat
@@ -18,6 +19,17 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal" />
     </HorizontalScrollView>
+
+    <!-- 第 3 行：接口 / 目录摘要，与本地脚本 summary 行同款色号与省略方式 -->
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/hkSummary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:ellipsize="middle"
+        android:singleLine="true"
+        android:textColor="@color/sync_device_subtext"
+        android:textSize="12sp" />
 
     <!-- 第 4 行：分类（全部 / 黑名单 常驻）+ 添加口令 -->
     <HorizontalScrollView
@@ -34,7 +46,7 @@
             android:orientation="horizontal" />
     </HorizontalScrollView>
 
-    <!-- 第 5 行：批量工具行（管理区 / 黑名单区由代码切顺序） -->
+    <!-- 第 5 行：批量工具行（与本地脚本 actionRow 同三段布局，含两段 4dp Space） -->
     <androidx.appcompat.widget.LinearLayoutCompat
         android:id="@+id/actionRow"
         android:layout_width="match_parent"
@@ -51,12 +63,20 @@
             android:gravity="start|center_vertical"
             android:orientation="horizontal" />
 
+        <Space
+            android:layout_width="4dp"
+            android:layout_height="1dp" />
+
         <androidx.appcompat.widget.LinearLayoutCompat
             android:id="@+id/actionCenter"
             android:layout_width="84dp"
             android:layout_height="wrap_content"
             android:gravity="center"
             android:orientation="horizontal" />
+
+        <Space
+            android:layout_width="4dp"
+            android:layout_height="1dp" />
 
         <androidx.appcompat.widget.LinearLayoutCompat
             android:id="@+id/actionRight"

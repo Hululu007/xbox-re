@@ -3,6 +3,7 @@ package com.fongmi.android.tv.api.hk.ui;
 import android.content.pm.PackageManager;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,6 +14,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.AppCompatCheckBox;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -26,6 +28,7 @@ import com.fongmi.android.tv.api.hk.state.HkSiteEntry;
 import com.fongmi.android.tv.api.hk.state.HkState;
 import com.fongmi.android.tv.api.hk.state.HkStateStore;
 import com.fongmi.android.tv.api.hk.state.HkStateUpdater;
+import com.fongmi.android.tv.utils.ResUtil;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textview.MaterialTextView;
@@ -51,6 +54,7 @@ public final class HkPanelController {
     private boolean errorShown;
     private View root;
     private LinearLayoutCompat docList, catRow, actionLeft, actionCenter, actionRight;
+    private MaterialTextView hkSummary;
     private RecyclerView feedRecycler, siteRecycler;
     private FeedAdapter feedAdapter;
     private SiteAdapter siteAdapter;
@@ -85,6 +89,7 @@ public final class HkPanelController {
         errorShown = false;
         root = LayoutInflater.from(ui).inflate(R.layout.dialog_hk_panel, host, true);
         docList = root.findViewById(R.id.docList);
+        hkSummary = root.findViewById(R.id.hkSummary);
         catRow = root.findViewById(R.id.catRow);
         actionLeft = root.findViewById(R.id.actionLeft);
         actionCenter = root.findViewById(R.id.actionCenter);
@@ -107,11 +112,27 @@ public final class HkPanelController {
 
     public void onShown() { refresh(); }
 
+    /** 顶部「重置」在海阔 tab 的语义：回全部视图、清空勾选与焦点，不动任何 json。 */
+    public void resetView() {
+        mode = "全部";
+        focusFeed = "";
+        lastDocTap = "";
+        lastCatTap = "";
+        feedSel.clear();
+        siteSel.clear();
+        refresh();
+    }
+
     private boolean blackMode() { return "黑名单".equals(mode); }
 
     /* ---------------- 渲染 ---------------- */
 
     private void refresh() {
+        // 第 3 行摘要，与本地脚本 summary 同一位置同一色号
+        try {
+            if (hkSummary != null) hkSummary.setText("接口：" + (TextUtils.isEmpty(doc) ? "（未添加）" : doc)
+                    + "   ·   目录：" + HkStateStore.rootDir());
+        } catch (Throwable t) { Log.e(TAG, "summary render failed", t); }
         // 每一段独立兜底：任何一段失败都不许把整个面板打成「初始化失败」。
         try { renderDocs(); } catch (Throwable t) { warn(t, "一级接口"); }
         try { renderCats(); } catch (Throwable t) { warn(t, "分类行"); }
@@ -397,42 +418,71 @@ public final class HkPanelController {
                 .show();
     }
 
+    /** 与 ScriptManageDialog.makeChip 同一套色表/字号/内边距/描边，两个 tab 的 chip 外观一致。
+     *  海阔的两行都放在 HorizontalScrollView 里（分类数量动态），故统一用 wrap_content，
+     *  不套用本地第 4 行的 weight=1 分散对齐；fill 形参保留兼容既有调用。 */
     private MaterialButton chip(String text, boolean selected, boolean fill) {
         MaterialButton b = new MaterialButton(ui, null,
                 com.google.android.material.R.attr.materialButtonOutlinedStyle);
         b.setText(text);
+        b.setSingleLine(true);
+        b.setEllipsize(TextUtils.TruncateAt.END);
+        b.setGravity(Gravity.CENTER);
+        b.setAllCaps(false);
         b.setCheckable(true);
         b.setChecked(selected);
         b.setMinWidth(0);
         b.setMinHeight(0);
-        b.setPadding(12, 8, 12, 8);
+        b.setMinimumWidth(0);
+        b.setMinimumHeight(0);
+        b.setInsetTop(0);
+        b.setInsetBottom(0);
+        b.setPadding(dp(6), dp(7), dp(6), dp(7));
         b.setTextSize(11);
-        b.setEllipsize(android.text.TextUtils.TruncateAt.MIDDLE);
-        b.setSingleLine(true);
+        b.setTextColor(ContextCompat.getColorStateList(ui, R.color.dialog_toggle_button_text));
+        b.setBackgroundTintList(ContextCompat.getColorStateList(ui, R.color.dialog_toggle_button_bg));
+        b.setStrokeColor(ContextCompat.getColorStateList(ui, R.color.dialog_outlined_button_stroke));
         LinearLayoutCompat.LayoutParams lp = new LinearLayoutCompat.LayoutParams(
                 LinearLayoutCompat.LayoutParams.WRAP_CONTENT, LinearLayoutCompat.LayoutParams.WRAP_CONTENT);
-        lp.setMargins(0, 0, 6, 0);
+        lp.setMarginStart(dp(4));
         b.setLayoutParams(lp);
         return b;
     }
 
+    /** 与 ScriptManageDialog.addText 同款：14sp、dialog_text_button、24dp 高、可聚焦。 */
     private void addText(LinearLayoutCompat row, String text, View.OnClickListener click) {
         MaterialTextView t = new MaterialTextView(ui);
         t.setText(text);
-        t.setTextSize(12);
-        t.setPadding(8, 8, 8, 8);
+        t.setSingleLine(true);
+        t.setGravity(Gravity.CENTER);
+        t.setTextSize(14);
+        t.setTextColor(ContextCompat.getColorStateList(ui, R.color.dialog_text_button));
         t.setFocusable(true);
+        t.setMinWidth(dp(24));
+        t.setPadding(dp(4), dp(2), dp(4), dp(2));
         t.setOnClickListener(safe(click));
+        LinearLayoutCompat.LayoutParams lp = new LinearLayoutCompat.LayoutParams(
+                LinearLayoutCompat.LayoutParams.WRAP_CONTENT, dp(24));
+        t.setLayoutParams(lp);
         row.addView(t);
     }
 
+    /** 与 ScriptManageDialog.addLabel 同款：13sp、dialog_outlined_button_text、24dp 高。 */
     private void addLabel(LinearLayoutCompat row, String text) {
         MaterialTextView t = new MaterialTextView(ui);
         t.setText(text);
-        t.setTextSize(11);
-        t.setPadding(4, 8, 4, 8);
+        t.setSingleLine(true);
+        t.setGravity(Gravity.CENTER);
+        t.setTextSize(13);
+        t.setTextColor(ContextCompat.getColorStateList(ui, R.color.dialog_outlined_button_text));
+        LinearLayoutCompat.LayoutParams lp = new LinearLayoutCompat.LayoutParams(
+                LinearLayoutCompat.LayoutParams.WRAP_CONTENT, dp(24));
+        lp.setMarginStart(dp(2));
+        t.setLayoutParams(lp);
         row.addView(t);
     }
+
+    private int dp(int value) { return ResUtil.dp2px(value); }
 
     private void toast(String msg) { Toast.makeText(activity, msg, Toast.LENGTH_SHORT).show(); }
 
@@ -455,7 +505,7 @@ public final class HkPanelController {
                 if (on) feedSel.add(f.feedId); else feedSel.remove(f.feedId);
             });
             h.text.setText(f.raw);                 // start 省略，保尾；完整原串在二次点击弹框
-            h.text.setSelected(focusFeed.equals(f.feedId));
+            h.itemView.setSelected(focusFeed.equals(f.feedId));   // 整行高亮，与本地脚本条目同款
             h.text.setOnClickListener(safe(v -> {
                 if (focusFeed.equals(f.feedId)) { editFeed(f); return; }
                 focusFeed = f.feedId;
@@ -467,10 +517,12 @@ public final class HkPanelController {
         @Override public int getItemCount() { return items.size(); }
 
         final class Holder extends RecyclerView.ViewHolder {
+            final View itemView;
             final AppCompatCheckBox check;
             final MaterialTextView text;
             Holder(View v) {
                 super(v);
+                itemView = v;
                 check = v.findViewById(R.id.check);
                 text = v.findViewById(R.id.text);
             }
