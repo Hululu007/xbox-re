@@ -90,8 +90,8 @@ android {
                 keyPassword releaseKeyPassword
                 storePassword localProps['storePassword']
             }
-            // minSdk 24 时 AGP 9.2.1 不生成 v1/JAR 签名（此 DSL 开关实测无效）。
-            // v1 由 CI 在打包后统一用 apksigner 补签，见 android-release.yml。
+            // minSdk 24：v2 从 API 24 起由系统支持，v1/JAR 签名不需要也不允许。
+            // CI 只用 apksigner 签 v2+v3，见 android-release.yml；本 DSL 不启用 v1。
         }
     }
 
@@ -104,27 +104,26 @@ android {
         }
     }
 
-    // APK 签名卫生（通用规则，勿删）：v1(JAR) 签名按规范不覆盖 META-INF/ 下的
-    // 非签名条目，只要它们存在，apksigner 就会逐条报 not protected by signature，
-    // MT 等工具据此判「签名校验不通过」。历史做法是在签名后用 zip -d / Python
-    // zipfile / zipalign -f 重写 ZIP 来清掉它们，结果丢失 AGP 写入的对齐 extra
-    // field 与 resources.arsc 的 Stored 标记，Android 改报「安装包已损坏」。
-    // 两个错误共用同一个开关，所以修好一个另一个必然回来。
+    // APK 签名卫生（通用规则，勿删）：本工程只签 v2+v3，不签 v1。
     //
-    // 正确做法：在 mergeJavaResource 阶段就把 META-INF 依赖元数据排除掉，
-    // AGP 产出的未签名 APK 原生且 META-INF 为空；之后只由 apksigner 写入
-    // v1 三件套，全程零 ZIP 重写。签名后的 CI 硬断言（payload=0、
-    // not protected=0、zipalign -c 4、resources.arsc Stored+4 字节对齐）
-    // 任何一条不满足就不许发 Release。
+    // 历史两个互斥错误共用同一个开关，来回横跳的根因就在这里：
+    //   · 开 v1(JAR) 签名 + 保留 META-INF 依赖元数据 → v1 按规范不覆盖
+    //     META-INF/ 下的非签名条目，apksigner 逐条报 not protected by signature，
+    //     MT 等工具据此判「签名校验不通过」。
+    //   · 为了让 v1 干净，在签名前后用 zip -d / Python zipfile / zipalign -f
+    //     重写 ZIP 清条目 → 丢 AGP 对齐 extra field 与 resources.arsc Stored
+    //     标记 → Android PackageManager 报「安装包已损坏」。
     //
-    // 全库零 ServiceLoader / ScriptEngineManager / javax.script 引用，
-    // META-INF/services/** 等条目非运行时依赖，排除安全。
-    packaging {
-        resources {
-            // '**' 只覆盖子目录路径，'*' 补齐 META-INF 一级文件（*.version / LICENSE 等）
-            excludes += ['META-INF/**', 'META-INF/*']
-        }
-    }
+    // 正确做法（已在 CI 落地）：minSdk 24 不需要 v1，v2 从 API 24 起系统支持，
+    // v3 在 24-27 自动回退 v2。CI 用 apksigner 一次签 v2+v3 且显式关闭 v1，
+    // 不做 JAR 签名 → META-INF 条目全部由 v2/v3 全文件签名覆盖 → 无需排除、
+    // 无需清理、无需任何 ZIP 重写，两个错误同时消失。
+    //
+    // 禁止在此写 packaging.resources.excludes 排除 META-INF：实径实测
+    // 'META-INF/**' + 'META-INF/*' 仍残留 10 条（AGP 自生成的 app-metadata.properties、
+    // version-control-info.textproto 与依赖的 *.kotlin_module / services/**），
+    // 会让「payload=0」这类硬断言永不可达、构建必然失败；且排除 services/**
+    // 有破坏依赖运行时加载的风险。保持 AGP 原生打包即可。
 
     configurations.configureEach {
         exclude group: 'stax', module: 'stax-api'

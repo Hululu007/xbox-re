@@ -122,17 +122,21 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
 
 本节记录本仓库 CI 已经踩过的坑。任何改动构建脚本、签名、资源目录或发版步骤之前，必须先逐条对照；dispatch 之前必须完成本节的预检。一条不满足就不许触发构建。
 
-1. **v1 签名只能从「完全未签名的 APK」一次签成**。apksigner 无法给已经带 v2/v3 签名的 APK 追加 v1（即使加 `--v1-signing-enabled true --min-sdk-version 21` 也无效）。minSdk 24 + AGP 9 默认只出 v2/v3；`signingConfigs { enableV1Signing = true }` 实测无效。正确做法：CI 工作副本把 `signingConfig` 置空，让 Gradle 输出未签名 APK，再用 apksigner 一次签 v1+v2+v3。
-2. **校验口径**：`apksigner verify --verbose` 在 minSdk 24 的 APK 上会报 `Verified using v1 scheme (JAR signing): false`，即使 META-INF 里确实有 v1 签名。必须用 `apksigner verify --min-sdk-version 21 --verbose`，并且客观统计 `META-INF/*.RSA|DSA|EC|SF` 数量 ≥ 1。不能只看默认的 scheme 行。
+> **签名规则总纲（优先于本节所有旧条目）**：见第 29 条。本仓库只签 **v2+v3**，
+> **不签 v1**。下面第 1、2、9、11 条中关于「补 v1 / 校验 v1 / zip -d 清 META-INF /
+> warning 加白名单」的结论均已废止，只作为历史教训保留，不得照做。
+
+1. **（已废止，见第 29 条）**v1 签名只能从「完全未签名的 APK」一次签成**。apksigner 无法给已经带 v2/v3 签名的 APK 追加 v1（即使加 `--v1-signing-enabled true --min-sdk-version 21` 也无效）。minSdk 24 + AGP 9 默认只出 v2/v3；`signingConfigs { enableV1Signing = true }` 实测无效。正确做法：CI 工作副本把 `signingConfig` 置空，让 Gradle 输出未签名 APK，再用 apksigner 一次签 v1+v2+v3。
+2. **（已废止，见第 29 条）**校验口径**：`apksigner verify --verbose` 在 minSdk 24 的 APK 上会报 `Verified using v1 scheme (JAR signing): false`，即使 META-INF 里确实有 v1 签名。必须用 `apksigner verify --min-sdk-version 21 --verbose`，并且客观统计 `META-INF/*.RSA|DSA|EC|SF` 数量 ≥ 1。不能只看默认的 scheme 行。
 3. **失败 annotation 必须单行化**。多行输出写成 `::error` 时只会显示第一行（曾只显示一个「Verifies」，白耗一轮构建）。所有诊断先把换行压成空格再输出，并把 apksigner 全文与 META-INF 数量一起打进 annotation。
 4. **新增 Java 引用先查 import**。曾因 `leanback SiteDialog.java` 用了 `R.string.script_reloaded` 却漏 `import com.fongmi.android.tv.R`，编译直接失败。改动后必须逐个核对新增 R 引用与 import。
 5. **drawable 禁止跨变体重名**。曾把 `ic_action_check.xml` 同时放进 main 与 mobile 导致资源冲突；新建图标一律用带用途前缀的唯一名（如 `ic_script_check`、`ic_popup_import`），并确认 main / mobile / leanback 三处不重名。
 6. **资源目录改名必须同步 workflow 门禁路径**。曾把 `values-zh-rCN` 改成 `values-zh`，workflow 里两行 grep 还指旧路径，`set -e` 直接退出。凡移动/改名 `res/values-*`，同步搜索 `.github/workflows/` 里的硬编码路径。
 7. **Gradle 日志要留得下来**：`tee` + `set -o pipefail` + 独立的失败诊断步骤；失败先读 annotation 与日志定位，再改，不盲目重跑。
 8. **不检查就出包、重复构建一律禁止**。dispatch 前固定预检：该 HEAD 已有 run 数必须为 0、4 个签名 secrets 齐全、workflow YAML 可解析、源码门禁断言本地模拟全过、tag 不冲突、门禁/校验步骤的关键字齐全。一次 HEAD 只 dispatch 一次；修复构建也不许在同一 HEAD 上重复触发。CI `completed/success` 且 8 个资产齐全之后，才允许报「构建成功」。
-9. **CI 全绿 ≠ 用户工具通过**。曾把「apksigner verify 通过 + v1:true + CN 正确」当成验收完成，而测试人员用 MT 管理器看到「签名状态：校验不通过」——方案显示 V1+V2+V3 齐全，说明缺 v1 已修好，但 MT 会逐个校验 `META-INF/` 里的 JAR 签名文件；Gradle 未签名包可能残留第三方 `*.SF/.RSA/.DSA/.EC` 与旧 `MANIFEST.MF`，apksigner 只追加不清理，MT 遇到对不上当前证书的那套就判不通过。**补签前必须先 `zip -d` 清干净所有旧签名条目**；断言从「≥1 个签名文件」收紧为「恰好 1 个签名块 + 无 apksigner WARNING」。
+9. **（已废止，见第 29 条）**CI 全绿 ≠ 用户工具通过**。曾把「apksigner verify 通过 + v1:true + CN 正确」当成验收完成，而测试人员用 MT 管理器看到「签名状态：校验不通过」——方案显示 V1+V2+V3 齐全，说明缺 v1 已修好，但 MT 会逐个校验 `META-INF/` 里的 JAR 签名文件；Gradle 未签名包可能残留第三方 `*.SF/.RSA/.DSA/.EC` 与旧 `MANIFEST.MF`，apksigner 只追加不清理，MT 遇到对不上当前证书的那套就判不通过。**补签前必须先 `zip -d` 清干净所有旧签名条目**；断言从「≥1 个签名文件」收紧为「恰好 1 个签名块 + 无 apksigner WARNING」。
 10. **端到端验证不能只靠 CI 自述**。沙盒出网被网关挡住，Release 资产与 Actions artifact 均下载不了（403），所以每轮都必须如实写明「未做端到端验包」。修复方式：CI 生成 `dist/signature-report.txt`（每个 APK 的 META-INF 清单、apksigner verify 全文、证书、sha256）并作为 Release 资产上传，让用户能直接对照 MT 显示的指纹；不得在未声明这一限制的情况下说「签名已验证/完成」。用户工具报错时先问清具体文字与签名方案，不要凭 CI 结果反推「已经修好」。
-11. **收紧门禁前先看正常输出长什么样**。曾为「更严谨」加了「拒绝任何 apksigner WARNING」，结果 run `42268600502` 倒在验签步骤：AGP 打的包必然对 `META-INF/app-metadata.properties`、`version-control-info.textproto`、`androidx.*.version` 报 `WARNING: ... not protected by signature`，这是标准提示，与签名有效性无关，MT 也不会因此判不通过。断言必须带白名单（只拦截 `not protected by signature` 之外的 WARNING），不能一刀切。新增任何「全量拒绝型」断言前，先跑一次看真实输出。
+11. **（已废止，见第 29 条）**收紧门禁前先看正常输出长什么样**。曾为「更严谨」加了「拒绝任何 apksigner WARNING」，结果 run `42268600502` 倒在验签步骤：AGP 打的包必然对 `META-INF/app-metadata.properties`、`version-control-info.textproto`、`androidx.*.version` 报 `WARNING: ... not protected by signature`，这是标准提示，与签名有效性无关，MT 也不会因此判不通过。断言必须带白名单（只拦截 `not protected by signature` 之外的 WARNING），不能一刀切。新增任何「全量拒绝型」断言前，先跑一次看真实输出。
 
 
 
@@ -152,7 +156,7 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
 
 - 当前 `main` HEAD 与预期一致，且 `actions/runs?head_sha=<HEAD>` 返回 0
 - secrets：`RELEASE_KEYSTORE_BASE64` / `RELEASE_KEY_ALIAS` / `RELEASE_STORE_PASSWORD` / `RELEASE_KEY_PASSWORD`
-- workflow YAML 可解析；关键步骤计数正确（未签名构建、补签、v1 校验、REST 发版）
+- workflow YAML 可解析；关键步骤计数正确（未签名构建、v2+v3 补签、验签、REST 发版）
 - 源码门禁断言逐条本地模拟，失败项为 0
 - 预计 tag 不存在
 - 正式签名 `CN=xbox-re`、applicationId `.xbox` 共存、APK 数量与本次 `apk_variants` 输入一致（默认 4，可指定 2）
@@ -260,27 +264,36 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
       这条链路本分支完整，不要切断。
 
 29. **APK 签名卫生：唯一允许的通用解法（禁止改回任何旧做法）**：
-    - 两个历史错误共用同一个开关，来回横跳的根因就在这里：
-      · 保留 META-INF 依赖元数据 → v1(JAR) 签名不覆盖它们，apksigner 逐条报
-        `not protected by signature` → MT 判「签名状态校验不通过」。
-      · 签名后用 `zip -d` / Python zipfile 重建 / `zipalign -f` 重写 ZIP 来清掉它们
-        → 丢失 AGP 写入的对齐 extra field 与 `resources.arsc` 的 Stored 标记
-        → Android PackageManager 报「安装包已损坏」。
-    - **唯一正确做法**：在 `app/build.gradle` 的 `android.packaging.resources.excludes`
-      里加 `'META-INF/**'`，让 AGP 在 mergeJavaResource 阶段就排除依赖元数据；
-      未签名 APK 的 META-INF 为空，之后只由 apksigner 写入 v1 三件套，
-      **签名前后都不允许任何 ZIP 重写**。全库零 ServiceLoader / ScriptEngineManager /
-      javax.script 引用，services/ 等条目非运行时依赖，排除安全。
-      （旧条目说「services/ 不能删、由 MANIFEST 覆盖、不会触发 not protected」是错的，已废止。）
+    - **总纲：本仓库只签 v2+v3，不签 v1**。minSdk=24，APK Signature Scheme v2
+      从 Android 7.0(API 24) 起由系统支持，v3 从 API 28 起支持并在 24–27 上自动
+      回退到 v2；**没有任何合法目标设备需要 v1/JAR 签名**。
+    - 反复横跳的根因是把 MT 通过建立在 v1 上：v1(JAR) 按规范不覆盖 `META-INF/`
+      下的非签名条目 → apksigner 逐条报 `not protected by signature` → MT
+      「签名校验不通过」；为了让 v1 干净就得清 META-INF，而签名前后用
+      `zip -d` / Python zipfile / `zipalign -f` 重写 ZIP 会丢 AGP 对齐 extra field
+      与 `resources.arsc` 的 Stored 标记 → Android「安装包已损坏」。
+      两个错误共用同一个开关，所以修好一个另一个必然回来。
+    - **唯一正确做法**：CI 用 `--min-sdk-version 24 --v1-signing-enabled false
+      --v2-signing-enabled true --v3-signing-enabled true` 一次签；不做 JAR 签名，
+      就不存在「未被签名保护的 META-INF 条目」，META-INF 里 AGP 自生成的
+      `app-metadata.properties` / `version-control-info.textproto`、依赖带的
+      `*.kotlin_module` / `services/**` 全部由 v2/v3 全文件签名覆盖，
+      **无需排除、无需清理、无需任何 ZIP 重写**。`app/build.gradle` 不得再写
+      `packaging.resources.excludes`：实测 `'META-INF/**' + 'META-INF/*'` 仍残留
+      10 条（AGP 自己写入的条目不走该排除），会让 `payload=0` 这类硬断言
+      永不可达、构建必然失败（run 42833783733 实证）。
     - `.github/workflows/android-release.yml` 的判据必须全部**硬失败**：
-      META-INF 非签名 payload=0、`not protected by signature`=0、其它 WARNING=0、
-      `zipalign -c 4` 通过、`resources.arsc` Stored + 4 字节对齐、
-      v1/v2/v3 全 true、证书为 `CN=xbox-re`。任何一条不满足就 `exit 1`，
-      不许把 warning 加白名单、不许用 notice 代替失败、不许「只作诊断」。
-    - 禁止恢复 `KEEP >= 50` / `payload >= 60` 这类**方向相反**的断言；它们会强制
-      保留正是 MT 拒绝的条目。
-    - 同包名不同证书（例如 `com.fongmi.android.oktv` 撞已装官方版）仍属设备侧
-      冲突，需先卸载，与 APK 签名卫生无关。
+      v2/v3 均 verified=true、v1 明确为 false、META-INF 下无 v1 三件套、
+      `not protected by signature`=0、其它 WARNING=0、签名前后 ZIP 条目数不变
+      （ADDED=0，证明零条目改写）、`zipalign -c 4` 只读通过、
+      `resources.arsc` Stored + 4 字节对齐、证书为 `CN=xbox-re`、
+      applicationId 与 APK 数量正确。任何一条不满足 `exit 1`，不许把 warning
+      加白名单、不许用 notice 代替失败、不许「只作诊断」。
+    - 禁止恢复：`--v1-signing-enabled true`、v1 三件套数量断言、`KEEP >= 50`、
+      `payload >= 60`、`payload = 0`、任何签名前后的 ZIP 重建命令。
+    - 工具边界：MT / NP 等现代工具会显示 v2、v3 方案并判校验通过；只认 v1
+      的老版工具会显示「未签名」，请升级工具，**不要为此把 v1 加回来**。
+      同包名不同证书（撞已装官方版）仍属设备侧冲突，需先卸载。
 
 
 ## 实验室关键点（clean-lab）
@@ -290,5 +303,6 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
 - `LabEnv.expandUrl()` 支持 `LabConfig.getEnvSource()` 基址替换；缺包时错误信息须列出实际下载 URL 与搜索路径，不得静默 404。
 - 「设置 → 环境包源」为可选直链基址；留空时保留本机 EnvFiles 自备路径。
 
-- 签名卫生只由 `app/build.gradle` 的 `packaging.resources.excludes` + workflow 硬断言负责；
-  不要在实验室、关于页或其它功能分支里另起一套签名/打包逻辑。
+- 签名卫生只由 `.github/workflows/android-release.yml` 的「v2+v3 单次签 + 硬断言」负责；
+  `app/build.gradle` 不得写 `packaging.resources.excludes`；不要在实验室、关于页
+  或其它功能分支里另起一套签名/打包逻辑。
