@@ -90,8 +90,8 @@ android {
                 keyPassword releaseKeyPassword
                 storePassword localProps['storePassword']
             }
-            // minSdk 24：v2 从 API 24 起由系统支持，v1/JAR 签名不需要也不允许。
-            // CI 只用 apksigner 签 v2+v3，见 android-release.yml；本 DSL 不启用 v1。
+            // minSdk 24：v2 从 API 24 起由系统支持，v1/JAR 与 v3 均不需要（本仓库不做密钥轮换）。
+            // CI 只用 apksigner 签 v2（v1/v3 关闭），见 android-release.yml；本 DSL 不启用 v1。
         }
     }
 
@@ -104,7 +104,7 @@ android {
         }
     }
 
-    // APK 签名卫生（通用规则，勿删）：本工程只签 v2+v3，不签 v1。
+    // APK 签名卫生（通用规则，勿删）：本工程只签 v2，v1/v3 均关闭。
     //
     // 历史两个互斥错误共用同一个开关，来回横跳的根因就在这里：
     //   · 开 v1(JAR) 签名 + 保留 META-INF 依赖元数据 → v1 按规范不覆盖
@@ -114,10 +114,11 @@ android {
     //     重写 ZIP 清条目 → 丢 AGP 对齐 extra field 与 resources.arsc Stored
     //     标记 → Android PackageManager 报「安装包已损坏」。
     //
-    // 正确做法（已在 CI 落地）：minSdk 24 不需要 v1，v2 从 API 24 起系统支持，
-    // v3 在 24-27 自动回退 v2。CI 用 apksigner 一次签 v2+v3 且显式关闭 v1，
-    // 不做 JAR 签名 → META-INF 条目全部由 v2/v3 全文件签名覆盖 → 无需排除、
+    // 正确做法（已在 CI 落地）：minSdk 24 不需要 v1，v2 从 API 24 起系统支持；
+    // v3 只用于密钥轮换、本仓库不用，故 CI 用 apksigner 只签 v2（显式关闭 v1/v3），
+    // 不做 JAR 签名 → META-INF 条目全部由 v2 全文件签名覆盖 → 无需排除、
     // 无需清理、无需任何 ZIP 重写，两个错误同时消失。
+    // 对齐同类发行包（默影视 MT 显示仅 V2）：方案固定为 v2-only，禁止改回 v3。
     //
     // 禁止在此写 packaging.resources.excludes 排除 META-INF：实径实测
     // 'META-INF/**' + 'META-INF/*' 仍残留 10 条（AGP 自生成的 app-metadata.properties、
