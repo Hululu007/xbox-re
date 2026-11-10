@@ -7,7 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.FrameLayout;
-import android.widget.LinearLayout;
+import androidx.appcompat.widget.LinearLayoutCompat;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -44,7 +44,7 @@ public final class HkPanelController {
     private final FragmentActivity activity;
     private final boolean tv;
     private View root;
-    private LinearLayout docList, catRow, actionLeft, actionCenter, actionRight;
+    private LinearLayoutCompat docList, catRow, actionLeft, actionCenter, actionRight;
     private RecyclerView feedRecycler, siteRecycler;
     private FeedAdapter feedAdapter;
     private SiteAdapter siteAdapter;
@@ -361,14 +361,14 @@ public final class HkPanelController {
         b.setTextSize(11);
         b.setEllipsize(android.text.TextUtils.TruncateAt.MIDDLE);
         b.setSingleLine(true);
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        LinearLayoutCompat.LayoutParams lp = new LinearLayoutCompat.LayoutParams(
+                LinearLayoutCompat.LayoutParams.WRAP_CONTENT, LinearLayoutCompat.LayoutParams.WRAP_CONTENT);
         lp.setMargins(0, 0, 6, 0);
         b.setLayoutParams(lp);
         return b;
     }
 
-    private void addText(LinearLayout row, String text, View.OnClickListener click) {
+    private void addText(LinearLayoutCompat row, String text, View.OnClickListener click) {
         MaterialTextView t = new MaterialTextView(activity);
         t.setText(text);
         t.setTextSize(12);
@@ -378,7 +378,7 @@ public final class HkPanelController {
         row.addView(t);
     }
 
-    private void addLabel(LinearLayout row, String text) {
+    private void addLabel(LinearLayoutCompat row, String text) {
         MaterialTextView t = new MaterialTextView(activity);
         t.setText(text);
         t.setTextSize(11);

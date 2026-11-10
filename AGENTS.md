@@ -374,3 +374,22 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
       仍保留 `java.nio.file` 用法，本次未改；只有真正录入口令、走到解析时才会加载。
       若后续在老设备上「录口令后崩」，按同一口径第二批替换，不要再放回 Files。
     - 顺序与签名无关：本条只动 app 代码，不改 workflow / 签名链 / ZIP 处理。
+
+38. **「拓展接口」崩溃实证结论（2026-11-10 11:51:56，OnePlus PJZ110 / Android 15 / SDK 35）**：
+    - 用户提供的崩溃栈为 `java.lang.ClassCastException: androidx.appcompat.widget.LinearLayoutCompat
+      cannot be cast to android.widget.LinearLayout`，发生在主线程 Handler 回调链。
+      **这才是真因**：`HkPanelController` 把 `dialog_hk_panel.xml` 中全部为
+      `LinearLayoutCompat` 的 `docList / catRow / actionLeft / actionCenter / actionRight`
+      字段声明成 `android.widget.LinearLayout`，`findViewById` 隐式 cast 直接抛异常；
+      `chip()` 的 LayoutParams 与 `addText/addLabel` 的形参同样用错类型。
+    - 修法：统一改成 `androidx.appcompat.widget.LinearLayoutCompat` 及其
+      `LayoutParams`。`HkFeedQrDialog` 里的 `android.widget.LinearLayout` 是
+      `new LinearLayout(activity)` 自建、配自己的 LayoutParams，**不要误改**。
+    - 第 37 条的懒加载 + `catch(Throwable)` + 去 `java.nio.file.Files` 保留有效，
+      但那只是防御：它会把这次的 ClassCastException 兜成「海阔 tab 初始化失败」
+      而非退出，**不等于功能可用**。判断修复是否完成，必须看海阔 tab 能否正常
+      显示一级接口/分类/左右双列，不能只看「不崩了」。
+    - 通用约束：本项目自定义 dialog 布局一律用 `LinearLayoutCompat`（见
+      `dialog_script_manage.xml` / `dialog_hk_panel.xml` / `hk_item_*.xml`），
+      Java 侧 findViewById 与 LayoutParams 必须用同族类型，禁止混用
+      `android.widget.LinearLayout`。
