@@ -104,6 +104,27 @@ android {
         }
     }
 
+    // APK 签名卫生（通用规则，勿删）：v1(JAR) 签名按规范不覆盖 META-INF/ 下的
+    // 非签名条目，只要它们存在，apksigner 就会逐条报 not protected by signature，
+    // MT 等工具据此判「签名校验不通过」。历史做法是在签名后用 zip -d / Python
+    // zipfile / zipalign -f 重写 ZIP 来清掉它们，结果丢失 AGP 写入的对齐 extra
+    // field 与 resources.arsc 的 Stored 标记，Android 改报「安装包已损坏」。
+    // 两个错误共用同一个开关，所以修好一个另一个必然回来。
+    //
+    // 正确做法：在 mergeJavaResource 阶段就把 META-INF 依赖元数据排除掉，
+    // AGP 产出的未签名 APK 原生且 META-INF 为空；之后只由 apksigner 写入
+    // v1 三件套，全程零 ZIP 重写。签名后的 CI 硬断言（payload=0、
+    // not protected=0、zipalign -c 4、resources.arsc Stored+4 字节对齐）
+    // 任何一条不满足就不许发 Release。
+    //
+    // 全库零 ServiceLoader / ScriptEngineManager / javax.script 引用，
+    // META-INF/services/** 等条目非运行时依赖，排除安全。
+    packaging {
+        resources {
+            excludes += ['META-INF/**']
+        }
+    }
+
     configurations.configureEach {
         exclude group: 'stax', module: 'stax-api'
         exclude group: 'xpp3', module: 'xpp3'

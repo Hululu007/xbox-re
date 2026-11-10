@@ -291,16 +291,15 @@ jobs:
           ls -lh dist/
 
       - name: Sign APK with v1+v2+v3 in one pass (no ZIP rewrite)
-        # 前几轮装不上、必须 MT 重签才能装，重新检查后的真因不是证书、也不是缺 v1：
-        # 上一轮用 Python zipfile 逐条 writestr **重建了整份 APK ZIP**（丢失 AGP 写入的
-        # 对齐 extra field），再 zipalign -f 4 重写。apksigner verify / aapt2 / unzip -t
-        # 都能过，但系统 PackageManager 解析 APK 时拒绝 → 表现为「签名问题/装不上」。
-        # MT 重签之所以能装，正因为 MT 会重新打包 ZIP、把结构修回去。
+        # 通用解法（勿改回旧做法）：META-INF 依赖元数据已在 app/build.gradle 的
+        # packaging.resources.excludes 编译期排除，未签名 APK 里 META-INF 为空。
+        # 这里只做 apksigner 一次签 v1+v2+v3，之后一个字节都不碰 ZIP。
         #
-        # 本轮：Gradle 产出的**未签名 APK 原封不动**交给 apksigner 一次签
-        # v1+v2+v3，不做任何 ZIP 重建、不删任何文件、不跑 zipalign -f。
-        # 结果：META-INF 88/86 个依赖元数据全部保留，ZIP 结构 100% AGP 原生，
-        # 签名方案 v1+v2+v3 全覆盖（老安装器看 v1，新安装器看 v2/v3）。
+        # 历史两个互斥错误共用同一个开关：
+        #   · 保留 META-INF 条目 → apksigner 报 not protected → MT「签名校验不通过」
+        #   · 签名后用 zip -d / Python zipfile / zipalign -f 重写 ZIP 清条目
+        #     → 丢 AGP 对齐 extra field 与 resources.arsc Stored →「安装包已损坏」
+        # 编译期排除同时满足两边，且下面所有判据都是硬失败，不许发残包。
         env:
           RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
           RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
@@ -365,22 +364,23 @@ jobs:
             if "$ZIPALIGN" -c 4 "$apk" 2>/dev/null; then
               echo "  zipalign -c 4: OK (read-only, no rewrite)"
             else
-              echo "::notice title=zipalign advisory::$apk alignment check not clean; v2/v3 full-file signature still valid"
-            fi
-            KEEP="$(unzip -Z1 "$apk" | grep -icE '^META-INF/[^/]+$' || true)"
-            echo "::notice title=META-INF payload preserved::$apk keeps $KEEP META-INF entries (nothing deleted)"
-            # 只统计 META-INF 一级文件（不含 services/ 等多级路径），
-            # 两个变体实测 78 / 76；阈值 50 足以区分「被清空」(3) 与「完整保留」。
-            # 完整体检步骤会对全部 META-INF 条目做 >=60 的更强断言。
-            if [ "$KEEP" -lt 50 ]; then
-              echo "::error title=META-INF payload lost::$apk kept only $KEEP META-INF entries"
+              echo "::error title=zipalign -c 4 failed::$apk alignment is not clean; refusing to publish"
               exit 1
             fi
+            # 硬断言：编译期排除生效后，META-INF 只允许 apksigner 写入的 v1 三件套。
+            # 任何残留 = MT 会报「签名校验不通过」，直接拦下，不再发残包。
+            PAYLOAD="$(unzip -Z1 "$apk" | grep -iE '^META-INF/' | grep -viE '^META-INF/(MANIFEST\.MF|[^/]*\.(SF|RSA|DSA|EC)|SIG-[^/]*)$' | grep -c . || true)"
+            echo "  META-INF non-signature payload: $PAYLOAD (must be 0)"
+            if [ "$PAYLOAD" -ne 0 ]; then
+              echo "::error title=META-INF payload present::$apk has $PAYLOAD unsigned META-INF entries; compile-time exclusion failed"
+              exit 1
+            fi
+            KEEP="$(unzip -Z1 "$apk" | grep -icE '^META-INF/' || true)"
             {
               echo "=== $(basename "$apk") ==="
               echo "ZIP entries before signing: $BEFORE"
               echo "ZIP entries after signing:  $AFTER (added $ADDED = v1 signature trio)"
-              echo "META-INF entries kept:      $KEEP (no file removed, no ZIP rebuild)"
+              echo "META-INF entries:           $KEEP (signature trio only, payload=0)"
               echo "zipalign -c 4: OK (read-only)"
               echo ""
             } >> /tmp/sign-report.txt
@@ -419,15 +419,18 @@ jobs:
               exit 1
             fi
             echo "  scheme: v1+v2+v3, META-INF v1 signature trio = $SIGCOUNT"
-            # v1(JAR) 签名按规范不覆盖 META-INF/ 下的依赖元数据，apksigner 会逐条报
-            # 「not protected by signature」。这是所有 Android APK 的固有 warning，
-            # 系统安装器由 v2/v3 全文件覆盖验签、不受影响；此处只统计、不拦构建。
-            WARNCOUNT="$(echo "$VERBOSE" | grep -ci 'WARNING' || true)"
+            # 硬断言：MT 判「签名状态」看的就是这两类 warning，必须都是 0。
+            # 过去把它们当 harmless notice 只统计不拦，正是问题反复出现的原因。
             NOTPROT="$(echo "$VERBOSE" | grep -ci 'not protected by signature' || true)"
-            echo "::notice title=apksigner warnings::$apk has $WARNCOUNT warning(s), $NOTPROT are META-INF not-protected (JAR v1 spec, harmless)"
             OTHER_WARN="$(echo "$VERBOSE" | grep -i 'WARNING' | grep -viE 'not protected by signature' || true)"
+            echo "  apksigner warnings: not-protected=$NOTPROT other=$(echo "$OTHER_WARN" | grep -c . || true)"
+            if [ "$NOTPROT" -ne 0 ]; then
+              echo "::error title=MT signature check would fail::$apk has $NOTPROT 'not protected by signature' warnings"
+              exit 1
+            fi
             if [ -n "$OTHER_WARN" ]; then
-              echo "::notice title=apksigner other warnings::$apk: $(echo "$OTHER_WARN" | tr '\n' ' ')"
+              echo "::error title=Unexpected apksigner warnings::$apk: $(echo "$OTHER_WARN" | tr '\n' ' ')"
+              exit 1
             fi
             if echo "$CERTS" | grep -qi "Android Debug"; then
               echo "::error title=Debug-signed APK::Refusing to publish a debug-signed release."
@@ -442,11 +445,11 @@ jobs:
           EXPECTED="${{ steps.build_apks.outputs.expected_apk_count }}"
           [ -n "$EXPECTED" ] || EXPECTED=4
           test "$count" -eq "$EXPECTED" || { echo "::error title=APK count::Expected $EXPECTED APKs, got $count"; exit 1; }
-          echo "Verified $count v1+v2+v3-signed APKs with the oktv applicationId (native AGP ZIP, all files preserved)"
+          echo "Verified $count v1+v2+v3-signed APKs (AGP native ZIP, META-INF payload=0, no ZIP rewrite)"
           # 可下载的自检报告：用户能拿 MT 显示的证书指纹 / 签名方案直接对照，
           # 不必依赖 CI 自述，也不必下载几十 MB 的 APK 去验。
           {
-            echo "xbox-re 签名与完整性自检报告（v1+v2+v3 单次签 / AGP 原生 ZIP / 文件全保留）"
+            echo "xbox-re 签名与完整性自检报告（v1+v2+v3 单次签 / 编译期排除 META-INF / 零 ZIP 重写）"
             echo "tag: ${{ steps.meta.outputs.tag }}"
             echo "commit: $GITHUB_SHA"
             echo "SHA256 证书指纹: 82:7C:75:5F:F6:04:3C:5B:3B:F0:65:8B:BD:21:10:C5:79:88:6C:9B:DC:91:55:CA:00:4A:BF:66:E5:59:D5:7B"
@@ -467,9 +470,10 @@ jobs:
           echo "signature-report.txt generated"
 
       - name: Verify APK completeness and installability
-        # 用户反馈「文件不全、都不算安装包」。本步不再只验签名，而是把 APK
-        # 当一个安装包整体体检：ZIP 完整性、aapt2 能否解析出 package/
-        # versionCode/label、关键文件是否齐全、META-INF 保留了多少条目。
+        # 把 APK 当安装包整体体检：ZIP 完整性、aapt2 能否解析出 package/
+        # versionCode/label、关键文件是否齐全、META-INF payload 是否为 0、
+        # resources.arsc 是否仍为 Stored 且 4 字节对齐（AGP 原生结构的判据）。
+        # 全部硬失败，任何一条不满足都不发 Release。
         # 结果追加到 dist/signature-report.txt，再由后面的步骤回传 Release notes。
         run: |
           set -euo pipefail
@@ -514,6 +518,9 @@ jobs:
               payload = [n for n in meta_files if not SIG.match(n)]
               sigleft = [n for n in meta_files if SIG.match(n)]
               dex = [n for n in names if re.match(r'^classes\d*\.dex$', n)]
+              arsc = z.getinfo("resources.arsc") if "resources.arsc" in names else None
+              arsc_stored = arsc is not None and arsc.compress_type == zipfile.ZIP_STORED
+              arsc_aligned = arsc is not None and (arsc.header_offset % 4) == 0
               res = [n for n in names if n.startswith("res/") and not n.endswith("/")]
               lib = [n for n in names if n.startswith("lib/") and not n.endswith("/")]
               assets = [n for n in names if n.startswith("assets/") and not n.endswith("/")]
@@ -525,8 +532,10 @@ jobs:
                   "res/ (>=100)": len(res) >= 100,
                   "lib/ (>=1)": len(lib) >= 1,
                   "assets/ (>=1)": len(assets) >= 1,
-                  "META-INF payload preserved (>=60)": len(payload) >= 60,
+                  "META-INF payload = 0 (v1-clean)": len(payload) == 0,
                   "v1 signature trio present": 3 <= len(sigleft) <= 4,
+                  "resources.arsc Stored (AGP native)": arsc_stored,
+                  "resources.arsc 4-byte aligned": arsc_aligned,
               }
               record("--- %s ---" % name)
               record("  entries=%d dex=%s res=%d lib=%d assets=%d META-INF=%d(payload=%d sig=%d)" %
@@ -534,6 +543,8 @@ jobs:
                       len(meta_files), len(payload), len(sigleft)))
               record("  META-INF payload sample: %s" % ", ".join(sorted(payload)[:12]))
               record("  v1 signature files: %s" % ", ".join(sorted(sigleft)))
+              record("  resources.arsc: stored=%s aligned=%s header_offset=%s" %
+                     (arsc_stored, arsc_aligned, arsc.header_offset if arsc else "missing"))
               for k, v in checks.items():
                   record("  %-40s %s" % (k, "OK" if v else "FAIL"))
                   if not v: hard_failure = True

@@ -259,26 +259,28 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
     - `LabConfig.serverPort()` 依赖 `Server.startManage()` / `Proxy.getPort()`，
       这条链路本分支完整，不要切断。
 
-29. **MT「签名状态校验不通过（v1+v2+v3 都在）」的真正根因与修法**：
-    - 不是缺 v1，也不是 META-INF 里混了第二套签名（那两个都有断言）。
-    - 恢复分支引入 jgit / commons-compress / zxing 等依赖后，APK 的 META-INF 下
-      会堆到 89~91 个条目：`androidx.*.*.version`、
-      `com/android/build/gradle/app-metadata.properties`、
-      `version-control-info.textproto`、`LICENSE`/`NOTICE` 等。这些条目**不被 v1
-      签名覆盖**，apksigner 逐条报 `not protected by signature`，我们曾把它加进
-      WARNING 白名单，MT 却据此判「签名状态校验不通过」。
-    - 修法在 `.github/workflows/android-release.yml` 的
-      `Clean META-INF metadata and realign before signing`：**签名前**删掉
-      META-INF 下除 `services/` 与签名三件套外的所有条目，然后**必须**紧跟
-      `zipalign -f -p 4`（`zip -d` 会重写 ZIP 破坏对齐）。顺序不能放到签名之后。
-    - `META-INF/services/` 是 ServiceLoader 配置，**不能删**；它由 MANIFEST 覆盖，
-      不会触发 not protected。
-    - 签名后的 `Verify JAR (v1) integrity like MT` 必须硬断言
-      「META-INF 除签名三件套与 services/ 外无残留」，并以 annotation 输出
-      `not protected by signature` 的条数作为实证。
-    - 别再靠「CI 全绿」推断「MT 通过」：CI 用的是 apksigner 口径，MT 更严。
-      另外同包名不同证书（例如 `com.fongmi.android.oktv` 撞已装官方版）也会让
-      MT 显示签名不一致、安装被系统拒绝，属设备侧冲突，不是 APK 签名坏了。
+29. **APK 签名卫生：唯一允许的通用解法（禁止改回任何旧做法）**：
+    - 两个历史错误共用同一个开关，来回横跳的根因就在这里：
+      · 保留 META-INF 依赖元数据 → v1(JAR) 签名不覆盖它们，apksigner 逐条报
+        `not protected by signature` → MT 判「签名状态校验不通过」。
+      · 签名后用 `zip -d` / Python zipfile 重建 / `zipalign -f` 重写 ZIP 来清掉它们
+        → 丢失 AGP 写入的对齐 extra field 与 `resources.arsc` 的 Stored 标记
+        → Android PackageManager 报「安装包已损坏」。
+    - **唯一正确做法**：在 `app/build.gradle` 的 `android.packaging.resources.excludes`
+      里加 `'META-INF/**'`，让 AGP 在 mergeJavaResource 阶段就排除依赖元数据；
+      未签名 APK 的 META-INF 为空，之后只由 apksigner 写入 v1 三件套，
+      **签名前后都不允许任何 ZIP 重写**。全库零 ServiceLoader / ScriptEngineManager /
+      javax.script 引用，services/ 等条目非运行时依赖，排除安全。
+      （旧条目说「services/ 不能删、由 MANIFEST 覆盖、不会触发 not protected」是错的，已废止。）
+    - `.github/workflows/android-release.yml` 的判据必须全部**硬失败**：
+      META-INF 非签名 payload=0、`not protected by signature`=0、其它 WARNING=0、
+      `zipalign -c 4` 通过、`resources.arsc` Stored + 4 字节对齐、
+      v1/v2/v3 全 true、证书为 `CN=xbox-re`。任何一条不满足就 `exit 1`，
+      不许把 warning 加白名单、不许用 notice 代替失败、不许「只作诊断」。
+    - 禁止恢复 `KEEP >= 50` / `payload >= 60` 这类**方向相反**的断言；它们会强制
+      保留正是 MT 拒绝的条目。
+    - 同包名不同证书（例如 `com.fongmi.android.oktv` 撞已装官方版）仍属设备侧
+      冲突，需先卸载，与 APK 签名卫生无关。
 
 
 ## 实验室关键点（clean-lab）
@@ -287,3 +289,6 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
 - 模板里 php/python/nodejs 的 `127.0.0.1:{serverPort}/file/...` 只是本机 Server 占位，上游及所有派生仓库都没有这三个运行时的公网下载源（info 明写「需自备压缩包」）；不要再把「按上游原样搬运」当成修复。
 - `LabEnv.expandUrl()` 支持 `LabConfig.getEnvSource()` 基址替换；缺包时错误信息须列出实际下载 URL 与搜索路径，不得静默 404。
 - 「设置 → 环境包源」为可选直链基址；留空时保留本机 EnvFiles 自备路径。
+
+- 签名卫生只由 `app/build.gradle` 的 `packaging.resources.excludes` + workflow 硬断言负责；
+  不要在实验室、关于页或其它功能分支里另起一套签名/打包逻辑。
