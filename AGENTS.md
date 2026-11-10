@@ -313,3 +313,10 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
     `pdfh/pdfa/pdfl`。xbox-re 自带的 153 行旧版 Parser 缺这些符号，会让
     `HkJsRuntime.java:89` 报 `cannot find symbol`、`parser.hp*()` 全部找不到方法。
     已整文件替换；不要只补接口不补 `hp*` 方法，也不要改回旧版。
+
+34. **quickjs `Req` / catvod `OkDns` 要跟上游对齐（CI 42729906553 实证）**：
+    `kuby007/xingchen@main` 的 `quickjs/.../bean/Req.java`（152 行）带 `rejectCoding` 字段、
+    `isRejectCoding()` 和 `normalizeBody()`（布尔 redirect / 对象 body / 单数 header 归一化），
+    本地 89 行旧版缺这些，`HkHttp.java:957` 会报 `cannot find symbol`。
+    `catvod/.../net/OkDns.java` 需有 `clearDoh()`（`XingChenDoh.java:73` 用），
+    旧版只有 `clear()` 且它清的是 hosts 覆盖表、不清 DoH；补方法时不要改 `clear()` 语义。

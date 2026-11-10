@@ -39,6 +39,12 @@ public class OkDns implements Dns {
         this.supplier = supplier;
     }
 
+    /** 清除 DoH 设置，恢复系统 DNS（用于「系统」模式）；不清 map（hosts 覆盖表）。 */
+    public synchronized void clearDoh() {
+        this.doh = null;
+        this.supplier = null;
+    }
+
     public void clear() {
         map.clear();
     }
