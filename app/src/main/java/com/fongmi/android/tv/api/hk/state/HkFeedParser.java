@@ -51,14 +51,36 @@ public final class HkFeedParser {
         return s;
     }
 
-    /** 口令集：一条记录里可有多个子口令；子口令内先去重、不解析重复项。 */
+    /** 口令集：一条记录里可有多个子口令；子口令内先去重、不解析重复项。
+     *  云口令密码可能另起一行：把紧跟云口令的纯密码 token 吸附到口令行尾部，
+     *  交给 parseByCloudCode 从尾部空格提取（星辰 PastemeImporter 同款切法）。 */
     public static List<String> subFeeds(String raw) {
-        Set<String> out = new LinkedHashSet<>();
+        List<String> lines = new ArrayList<>();
         for (String line : (raw == null ? "" : raw).split("[\r\n]+")) {
             String n = normalize(line);
-            if (!n.isEmpty()) out.add(n);
+            if (!n.isEmpty()) lines.add(n);
         }
-        return new ArrayList<>(out);
+        List<String> merged = new ArrayList<>();
+        for (int i = 0; i < lines.size(); i++) {
+            String cur = lines.get(i);
+            if (HkRuleManager.isCloudCode(cur) && i + 1 < lines.size()
+                    && isPasswordToken(lines.get(i + 1))) {
+                merged.add(cur + " " + lines.get(i + 1));
+                i++;
+            } else {
+                merged.add(cur);
+            }
+        }
+        return new ArrayList<>(new LinkedHashSet<>(merged));
+    }
+
+    /** 纯密码行：短 token、非 URL、非云口令、非规则文本、无空白。 */
+    private static boolean isPasswordToken(String s) {
+        if (s == null || s.isEmpty() || s.length() > 32) return false;
+        if (s.startsWith("http") || s.startsWith("{") || s.startsWith("[")
+                || s.contains("://") || s.contains("￥") || s.contains("¥")
+                || HkRuleManager.isCloudCode(s) || HkRuleManager.isJsRuleText(s)) return false;
+        return s.split("\\s+").length == 1;
     }
 
     /** 解析一条口令（可能含多个子口令）。在后台线程调用。 */
@@ -70,16 +92,28 @@ public final class HkFeedParser {
         for (String sub : subs) {
             try {
                 String body;
-                if (HkRuleManager.isCloudCode(sub)) {
-                    body = HkRuleManager.get().fetchPasteRawText(sub);
-                    if (TextUtils.isEmpty(body)) { out.fetchFailed = true; continue; }
-                } else if (sub.startsWith("http://") || sub.startsWith("https://")) {
+                if (sub.startsWith("http://") || sub.startsWith("https://")) {
                     body = OkHttp.string(sub);
                     if (TextUtils.isEmpty(body)) { out.fetchFailed = true; continue; }
                 } else {
+                    // 云口令（含尾部空格密码 / 内嵌 (@密码)）、明文分享口令、
+                    // 裸规则、规则数组、js: 文本：一律按星辰 parseJsonList 中央分发。
+                    // 此前云口令被 fetchPasteRawText 拦下（只有云5 返回原文，
+                    // 云1/2/6/7/9/10 全返回 null），导致云6 等口令 0 站点、密码完全丢失。
                     body = sub;
                 }
+                int before = out.sites.size();
                 collect(doc, feed.feedId, body, seenFingerprint, out);
+                // 云端内容不是规则 JSON（聚合类/接口列表）时，回退取便签原文再解析一次。
+                if (out.sites.size() == before && HkRuleManager.isCloudCode(sub)) {
+                    String rawText = HkRuleManager.get().fetchPasteRawText(sub);
+                    if (!TextUtils.isEmpty(rawText) && !rawText.trim().equals(body.trim())) {
+                        boolean prev = out.fetchFailed;
+                        out.fetchFailed = false;
+                        collect(doc, feed.feedId, rawText, seenFingerprint, out);
+                        if (out.sites.size() == before) out.fetchFailed = prev;
+                    }
+                }
             } catch (Throwable e) {
                 // Error（如 minSdk 24 上 java.nio 的 NoClassDefFoundError）也必须兜住，
                 // 否则后台线程未捕获异常直接杀进程。
