@@ -4,6 +4,10 @@ import android.content.SharedPreferences;
 
 import com.fongmi.android.tv.App;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.File;
@@ -30,14 +34,25 @@ public final class HkStateStore {
 
     public static String rootDir() {
         String d = sp().getString(KEY_ROOT, "");
-        if (d != null && !d.isEmpty() && new File(d).isDirectory()) return d;
+        // 必须可读可写：Android 10+ 分区存储下 isDirectory() 可能为 true 但 canWrite() 为 false，
+        // 否则 A 写外部、B 回落私有，两份 json 分裂 → 列表永远空。
+        if (d != null && !d.isEmpty()) {
+            File dir = new File(d);
+            if (dir.isDirectory() && dir.canRead() && dir.canWrite()) return d;
+        }
         File f = new File(App.get().getFilesDir(), "hk");
         if (!f.exists()) f.mkdirs();
         return f.getAbsolutePath();
     }
 
-    public static void setRootDir(String dir) {
-        sp().edit().putString(KEY_ROOT, dir == null ? "" : dir).apply();
+    /** 返回是否真正可用；不可用时调用方要明确提示，不能静默回落。 */
+    public static boolean setRootDir(String dir) {
+        if (dir == null || dir.trim().isEmpty()) return false;
+        File f = new File(dir.trim());
+        if (!f.isDirectory() && !f.mkdirs()) return false;
+        if (!f.canWrite()) return false;
+        sp().edit().putString(KEY_ROOT, f.getAbsolutePath()).apply();
+        return true;
     }
 
     public static String currentDoc() { return sp().getString(KEY_DOC, ""); }
@@ -66,16 +81,53 @@ public final class HkStateStore {
 
     public static HkDoc readDoc(String doc) {
         try {
-            String text = read(docFile(doc));
+            String text = migrateDocJson(read(docFile(doc)));
             if (text == null || text.isEmpty()) return new HkDoc(doc);
             HkDoc d = new Gson().fromJson(text, HkDoc.class);
             if (d == null) return new HkDoc(doc);
             if (d.name == null || d.name.isEmpty()) d.name = doc;
             if (d.categories == null) d.categories = new ArrayList<>();
-            if (d.feeds == null) d.feeds = new ArrayList<>();
+            // 出口净化：Gson 若把元素读成 LinkedTreeMap（混淆/坏数据），直接丢掉，
+            // 保证后面所有 for (HkFeed f : d.feeds) 都不会 ClassCastException。
+            List<HkFeed> clean = new ArrayList<>();
+            if (d.feeds != null) for (Object o : d.feeds) if (o instanceof HkFeed) clean.add((HkFeed) o);
+            d.feeds = clean;
             return d;
         } catch (Throwable e) {
             return new HkDoc(doc);
+        }
+    }
+
+    /** 兼容「修复前」由 R8 混淆字段名写出的旧 json：
+     *  HkDoc a/b/c → name/categories/feeds；HkFeed a/b/c/d → feedId/raw/category/mark。
+     *  用户已生成的 123.json 不用删，读一次即自动转正（下次 writeDoc 会写成标准字段名）。 */
+    private static String migrateDocJson(String text) {
+        if (text == null || text.isEmpty() || !text.trim().startsWith("{")) return text;
+        try {
+            JsonElement el = JsonParser.parseString(text);
+            if (!el.isJsonObject()) return text;
+            JsonObject o = el.getAsJsonObject();
+            boolean legacy = o.has("a") || o.has("b") || o.has("c");
+            if (!legacy) return text;
+            rename(o, new String[]{"a", "b", "c"},
+                       new String[]{"name", "categories", "feeds"});
+            if (o.has("feeds") && o.get("feeds").isJsonArray()) {
+                for (JsonElement e : o.getAsJsonArray("feeds")) {
+                    if (!e.isJsonObject()) continue;
+                    rename(e.getAsJsonObject(),
+                        new String[]{"a", "b", "c", "d"},
+                        new String[]{"feedId", "raw", "category", "mark"});
+                }
+            }
+            return o.toString();
+        } catch (Throwable e) {
+            return text;
+        }
+    }
+
+    private static void rename(JsonObject o, String[] from, String[] to) {
+        for (int i = 0; i < from.length; i++) {
+            if (o.has(from[i]) && !o.has(to[i])) o.add(to[i], o.remove(from[i]));
         }
     }
 
@@ -90,14 +142,40 @@ public final class HkStateStore {
 
     public static HkState readState() {
         try {
-            String text = read(stateFile());
+            String text = migrateStateJson(read(stateFile()));
             if (text == null || text.isEmpty()) return new HkState();
             HkState s = new Gson().fromJson(text, HkState.class);
             if (s == null) return new HkState();
-            if (s.sites == null) s.sites = new ArrayList<>();
+            List<HkSiteEntry> clean = new ArrayList<>();
+            if (s.sites != null) for (Object o : s.sites) if (o instanceof HkSiteEntry) clean.add((HkSiteEntry) o);
+            s.sites = clean;
             return s;
         } catch (Throwable e) {
             return new HkState();
+        }
+    }
+
+    /** B 的旧混淆字段：HkState a/b → version/sites；
+     *  HkSiteEntry a..h → doc/feedId/id/title/displayName/mark/origin/firstSeen。 */
+    private static String migrateStateJson(String text) {
+        if (text == null || text.isEmpty() || !text.trim().startsWith("{")) return text;
+        try {
+            JsonElement el = JsonParser.parseString(text);
+            if (!el.isJsonObject()) return text;
+            JsonObject o = el.getAsJsonObject();
+            if (!(o.has("a") || o.has("b"))) return text;
+            rename(o, new String[]{"a", "b"}, new String[]{"version", "sites"});
+            if (o.has("sites") && o.get("sites").isJsonArray()) {
+                for (JsonElement e : o.getAsJsonArray("sites")) {
+                    if (!e.isJsonObject()) continue;
+                    rename(e.getAsJsonObject(),
+                        new String[]{"a", "b", "c", "d", "e", "f", "g", "h"},
+                        new String[]{"doc", "feedId", "id", "title", "displayName", "mark", "origin", "firstSeen"});
+                }
+            }
+            return o.toString();
+        } catch (Throwable e) {
+            return text;
         }
     }
 
