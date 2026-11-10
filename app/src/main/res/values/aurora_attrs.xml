@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- xbox-re 原生主题令牌 (Aurora)。值由 Theme.App.* 预设 / ThemeOverlay.Aurora.* 提供，
+         Theme.Base（两个变体）带一份兜底默认值，保证任何 Activity 都能解析，不崩。 -->
+    <attr name="auroraBackdrop" format="color" />
+    <attr name="auroraSurface" format="color" />
+    <attr name="auroraSurfaceHigh" format="color" />
+    <attr name="auroraSurfaceLow" format="color" />
+    <attr name="auroraOnSurface" format="color" />
+    <attr name="auroraOnSurfaceVariant" format="color" />
+    <attr name="auroraAccent" format="color" />
+    <attr name="auroraAccentSoft" format="color" />
+    <attr name="auroraOutline" format="color" />
+    <attr name="auroraCorner" format="dimension" />
+    <attr name="auroraCornerLarge" format="dimension" />
+    <attr name="auroraTextSize" format="dimension" />
+    <attr name="auroraButtonShape" format="integer" />
+    <attr name="auroraTileShape" format="integer" />
+    <attr name="auroraDialogStyle" format="integer" />
+    <attr name="auroraDialogGravity" format="integer" />
+</resources>

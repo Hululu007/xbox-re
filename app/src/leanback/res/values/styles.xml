@@ -7,6 +7,23 @@
         <item name="android:windowTranslucentStatus">true</item>
         <item name="android:windowTranslucentNavigation">true</item>
         <item name="android:windowAnimationStyle">@style/NoAnim</item>
+        <!-- Aurora 原生主题兜底：未应用预设的 Activity 也能解析这些属性，杜绝资源解析崩溃 -->
+        <item name="auroraBackdrop">#FF141A18</item>
+        <item name="auroraSurface">#FF1A221F</item>
+        <item name="auroraSurfaceHigh">#FF232C28</item>
+        <item name="auroraSurfaceLow">#FF111614</item>
+        <item name="auroraOnSurface">#FFE8EEEB</item>
+        <item name="auroraOnSurfaceVariant">#FFA8B5B0</item>
+        <item name="auroraAccent">#FF5FC79A</item>
+        <item name="auroraAccentSoft">#FF1E3A30</item>
+        <item name="auroraOutline">#FF2E3A35</item>
+        <item name="auroraCorner">8dp</item>
+        <item name="auroraCornerLarge">14dp</item>
+        <item name="auroraTextSize">14sp</item>
+        <item name="auroraButtonShape">0</item>
+        <item name="auroraTileShape">0</item>
+        <item name="auroraDialogStyle">0</item>
+        <item name="auroraDialogGravity">17</item>
     </style>
 
     <style name="Theme.Splash" parent="Theme.Base">

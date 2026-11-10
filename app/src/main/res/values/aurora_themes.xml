@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 原生 UI 主题预设：默认柔雾青（深色 TV 适配，保留浅色版色相基因），
+         纸白为真正的黑字白底，夜墨为低亮度深色，流光玻璃为流行拟态。
+         全部继承各变体自己的 Theme.App，不改任何现有 style 定义。 -->
+    <style name="Theme.App.Aurora" parent="Theme.App">
+        <item name="auroraBackdrop">#FF141A18</item>
+        <item name="auroraSurface">#FF1A221F</item>
+        <item name="auroraSurfaceHigh">#FF232C28</item>
+        <item name="auroraSurfaceLow">#FF111614</item>
+        <item name="auroraOnSurface">#FFE8EEEB</item>
+        <item name="auroraOnSurfaceVariant">#FFA8B5B0</item>
+        <item name="auroraAccent">#FF5FC79A</item>
+        <item name="auroraAccentSoft">#FF1E3A30</item>
+        <item name="auroraOutline">#FF2E3A35</item>
+        <item name="auroraCorner">12dp</item>
+        <item name="auroraCornerLarge">20dp</item>
+        <item name="auroraTextSize">14sp</item>
+        <item name="auroraButtonShape">0</item>
+        <item name="auroraTileShape">0</item>
+        <item name="auroraDialogStyle">0</item>
+        <item name="auroraDialogGravity">17</item>
+        <item name="android:windowBackground">#FF141A18</item>
+        <item name="android:colorBackground">#FF141A18</item>
+        <item name="android:statusBarColor">#FF141A18</item>
+        <item name="android:navigationBarColor">#FF141A18</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:textColorPrimary">#FFE8EEEB</item>
+        <item name="android:textColorSecondary">#FFA8B5B0</item>
+        <item name="android:textColorHint">#FFA8B5B0</item>
+        <item name="colorPrimary">#FF5FC79A</item>
+        <item name="colorOnPrimary">#FF10231B</item>
+        <item name="colorSecondary">#FF5FC79A</item>
+        <item name="colorSurface">#FF1A221F</item>
+        <item name="colorOnSurface">#FFE8EEEB</item>
+        <item name="colorSurfaceVariant">#FF232C28</item>
+        <item name="colorOnSurfaceVariant">#FFA8B5B0</item>
+        <item name="colorSurfaceContainer">#FF1A221F</item>
+        <item name="colorSurfaceContainerHigh">#FF232C28</item>
+        <item name="colorSurfaceContainerLow">#FF111614</item>
+        <item name="colorOutline">#FF2E3A35</item>
+        <item name="colorControlActivated">#FF5FC79A</item>
+        <item name="colorControlNormal">#FFA8B5B0</item>
+        <item name="isLightTheme">false</item>
+    </style>
+
+    <style name="Theme.App.Paper" parent="Theme.App">
+        <item name="auroraBackdrop">#FFF4F6F5</item>
+        <item name="auroraSurface">#FFFFFFFF</item>
+        <item name="auroraSurfaceHigh">#FFEDF1EF</item>
+        <item name="auroraSurfaceLow">#FFFAFBFA</item>
+        <item name="auroraOnSurface">#FF18231F</item>
+        <item name="auroraOnSurfaceVariant">#FF5A6762</item>
+        <item name="auroraAccent">#FF2E8B68</item>
+        <item name="auroraAccentSoft">#FFE3F0EA</item>
+        <item name="auroraOutline">#FFDCE4E0</item>
+        <item name="auroraCorner">8dp</item>
+        <item name="auroraCornerLarge">14dp</item>
+        <item name="auroraTextSize">14sp</item>
+        <item name="auroraButtonShape">2</item>
+        <item name="auroraTileShape">1</item>
+        <item name="auroraDialogStyle">1</item>
+        <item name="auroraDialogGravity">17</item>
+        <item name="android:windowBackground">#FFF4F6F5</item>
+        <item name="android:colorBackground">#FFF4F6F5</item>
+        <item name="android:statusBarColor">#FFF4F6F5</item>
+        <item name="android:navigationBarColor">#FFF4F6F5</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:textColorPrimary">#FF18231F</item>
+        <item name="android:textColorSecondary">#FF5A6762</item>
+        <item name="android:textColorHint">#FF5A6762</item>
+        <item name="colorPrimary">#FF2E8B68</item>
+        <item name="colorOnPrimary">#FFFFFFFF</item>
+        <item name="colorSecondary">#FF2E8B68</item>
+        <item name="colorSurface">#FFFFFFFF</item>
+        <item name="colorOnSurface">#FF18231F</item>
+        <item name="colorSurfaceVariant">#FFEDF1EF</item>
+        <item name="colorOnSurfaceVariant">#FF5A6762</item>
+        <item name="colorSurfaceContainer">#FFFFFFFF</item>
+        <item name="colorSurfaceContainerHigh">#FFEDF1EF</item>
+        <item name="colorSurfaceContainerLow">#FFFAFBFA</item>
+        <item name="colorOutline">#FFDCE4E0</item>
+        <item name="colorControlActivated">#FF2E8B68</item>
+        <item name="colorControlNormal">#FF5A6762</item>
+        <item name="isLightTheme">true</item>
+    </style>
+
+    <style name="Theme.App.Ink" parent="Theme.App">
+        <item name="auroraBackdrop">#FF0E1014</item>
+        <item name="auroraSurface">#FF161A20</item>
+        <item name="auroraSurfaceHigh">#FF20252D</item>
+        <item name="auroraSurfaceLow">#FF0A0C10</item>
+        <item name="auroraOnSurface">#FFE9ECF2</item>
+        <item name="auroraOnSurfaceVariant">#FF9AA3B2</item>
+        <item name="auroraAccent">#FF7FB3FF</item>
+        <item name="auroraAccentSoft">#FF1B2A3C</item>
+        <item name="auroraOutline">#FF2C323C</item>
+        <item name="auroraCorner">6dp</item>
+        <item name="auroraCornerLarge">12dp</item>
+        <item name="auroraTextSize">14sp</item>
+        <item name="auroraButtonShape">1</item>
+        <item name="auroraTileShape">2</item>
+        <item name="auroraDialogStyle">2</item>
+        <item name="auroraDialogGravity">81</item>
+        <item name="android:windowBackground">#FF0E1014</item>
+        <item name="android:colorBackground">#FF0E1014</item>
+        <item name="android:statusBarColor">#FF0E1014</item>
+        <item name="android:navigationBarColor">#FF0E1014</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:textColorPrimary">#FFE9ECF2</item>
+        <item name="android:textColorSecondary">#FF9AA3B2</item>
+        <item name="android:textColorHint">#FF9AA3B2</item>
+        <item name="colorPrimary">#FF7FB3FF</item>
+        <item name="colorOnPrimary">#FF0E1014</item>
+        <item name="colorSecondary">#FF7FB3FF</item>
+        <item name="colorSurface">#FF161A20</item>
+        <item name="colorOnSurface">#FFE9ECF2</item>
+        <item name="colorSurfaceVariant">#FF20252D</item>
+        <item name="colorOnSurfaceVariant">#FF9AA3B2</item>
+        <item name="colorSurfaceContainer">#FF161A20</item>
+        <item name="colorSurfaceContainerHigh">#FF20252D</item>
+        <item name="colorSurfaceContainerLow">#FF0A0C10</item>
+        <item name="colorOutline">#FF2C323C</item>
+        <item name="colorControlActivated">#FF7FB3FF</item>
+        <item name="colorControlNormal">#FF9AA3B2</item>
+        <item name="isLightTheme">false</item>
+    </style>
+
+    <style name="Theme.App.Glass" parent="Theme.App">
+        <item name="auroraBackdrop">#FF141327</item>
+        <item name="auroraSurface">#FF23223C</item>
+        <item name="auroraSurfaceHigh">#FF302F4C</item>
+        <item name="auroraSurfaceLow">#FF101020</item>
+        <item name="auroraOnSurface">#FFF2F3FB</item>
+        <item name="auroraOnSurfaceVariant">#FFB9BED6</item>
+        <item name="auroraAccent">#FFA99BFF</item>
+        <item name="auroraAccentSoft">#FF2E2B4D</item>
+        <item name="auroraOutline">#FF3A3960</item>
+        <item name="auroraCorner">18dp</item>
+        <item name="auroraCornerLarge">28dp</item>
+        <item name="auroraTextSize">15sp</item>
+        <item name="auroraButtonShape">4</item>
+        <item name="auroraTileShape">2</item>
+        <item name="auroraDialogStyle">3</item>
+        <item name="auroraDialogGravity">17</item>
+        <item name="android:windowBackground">#FF141327</item>
+        <item name="android:colorBackground">#FF141327</item>
+        <item name="android:statusBarColor">#FF141327</item>
+        <item name="android:navigationBarColor">#FF141327</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:textColorPrimary">#FFF2F3FB</item>
+        <item name="android:textColorSecondary">#FFB9BED6</item>
+        <item name="android:textColorHint">#FFB9BED6</item>
+        <item name="colorPrimary">#FFA99BFF</item>
+        <item name="colorOnPrimary">#FF141327</item>
+        <item name="colorSecondary">#FFA99BFF</item>
+        <item name="colorSurface">#FF23223C</item>
+        <item name="colorOnSurface">#FFF2F3FB</item>
+        <item name="colorSurfaceVariant">#FF302F4C</item>
+        <item name="colorOnSurfaceVariant">#FFB9BED6</item>
+        <item name="colorSurfaceContainer">#FF23223C</item>
+        <item name="colorSurfaceContainerHigh">#FF302F4C</item>
+        <item name="colorSurfaceContainerLow">#FF101020</item>
+        <item name="colorOutline">#FF3A3960</item>
+        <item name="colorControlActivated">#FFA99BFF</item>
+        <item name="colorControlNormal">#FFB9BED6</item>
+        <item name="isLightTheme">false</item>
+    </style>
+</resources>

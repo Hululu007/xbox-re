@@ -20,6 +20,7 @@ import com.fongmi.android.tv.event.RefreshEvent;
 import com.fongmi.android.tv.server.process.ApkUrlPush;
 import com.fongmi.android.tv.setting.Setting;
 import com.fongmi.android.tv.ui.custom.CustomWallView;
+import com.fongmi.android.tv.ui.theme.AuroraTheme;
 import com.fongmi.android.tv.utils.Util;
 
 import org.greenrobot.eventbus.EventBus;
@@ -39,7 +40,9 @@ public abstract class BaseActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        AuroraTheme.applyPreset(this);
         super.onCreate(savedInstanceState);
+        AuroraTheme.applyOverlay(this);
         setContentView(getBinding().getRoot());
         EventBus.getDefault().register(this);
         initView(savedInstanceState);
