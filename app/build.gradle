@@ -121,7 +121,8 @@ android {
     // META-INF/services/** 等条目非运行时依赖，排除安全。
     packaging {
         resources {
-            excludes += ['META-INF/**']
+            // '**' 只覆盖子目录路径，'*' 补齐 META-INF 一级文件（*.version / LICENSE 等）
+            excludes += ['META-INF/**', 'META-INF/*']
         }
     }
 

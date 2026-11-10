@@ -372,7 +372,7 @@ jobs:
             PAYLOAD="$(unzip -Z1 "$apk" | grep -iE '^META-INF/' | grep -viE '^META-INF/(MANIFEST\.MF|[^/]*\.(SF|RSA|DSA|EC)|SIG-[^/]*)$' | grep -c . || true)"
             echo "  META-INF non-signature payload: $PAYLOAD (must be 0)"
             if [ "$PAYLOAD" -ne 0 ]; then
-              echo "::error title=META-INF payload present::$apk has $PAYLOAD unsigned META-INF entries; compile-time exclusion failed"
+              echo "::error title=META-INF payload present::$apk has $PAYLOAD unsigned META-INF entries: $(unzip -Z1 "$apk" | grep -iE '^META-INF/' | grep -viE '^META-INF/(MANIFEST\.MF|[^/]*\.(SF|RSA|DSA|EC)|SIG-[^/]*)$' | tr '\n' ' ') ; compile-time exclusion failed"
               exit 1
             fi
             KEEP="$(unzip -Z1 "$apk" | grep -icE '^META-INF/' || true)"
