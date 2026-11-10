@@ -46,6 +46,9 @@ public final class HkPanelController {
 
     private final FragmentActivity activity;
     private final boolean tv;
+    /** 与本地脚本 tab 的 requireContext() 一致，避免 Activity/Dialog 主题差异。 */
+    private android.content.Context ui;
+    private boolean errorShown;
     private View root;
     private LinearLayoutCompat docList, catRow, actionLeft, actionCenter, actionRight;
     private RecyclerView feedRecycler, siteRecycler;
@@ -75,7 +78,9 @@ public final class HkPanelController {
     }
 
     public void attach(FrameLayout host, String configUrl) {
-        root = LayoutInflater.from(activity).inflate(R.layout.dialog_hk_panel, host, true);
+        ui = host.getContext();
+        errorShown = false;
+        root = LayoutInflater.from(ui).inflate(R.layout.dialog_hk_panel, host, true);
         docList = root.findViewById(R.id.docList);
         catRow = root.findViewById(R.id.catRow);
         actionLeft = root.findViewById(R.id.actionLeft);
@@ -94,7 +99,6 @@ public final class HkPanelController {
             doc = docs.isEmpty() ? "" : docs.get(0);
         }
         HkStateStore.setCurrentDoc(doc);
-        buildActions();
         refresh();
     }
 
@@ -105,28 +109,40 @@ public final class HkPanelController {
     /* ---------------- 渲染 ---------------- */
 
     private void refresh() {
-        renderDocs();
-        renderCats();
-        buildActions();
+        // 每一段独立兜底：任何一段失败都不许把整个面板打成「初始化失败」。
+        try { renderDocs(); } catch (Throwable t) { warn(t, "一级接口"); }
+        try { renderCats(); } catch (Throwable t) { warn(t, "分类行"); }
+        try { buildActions(); } catch (Throwable t) { warn(t, "工具行"); }
         HkState state = HkStateStore.readState();
         HkDoc d = HkStateStore.readDoc(doc);
-        List<HkFeed> feeds = new ArrayList<>();
-        for (HkFeed f : d.feeds) {
-            boolean bad = !"正常".equals(f.mark);
-            if (blackMode() != bad) continue;
-            if (!blackMode() && !"全部".equals(mode) && !mode.equals(f.category)) continue;
-            feeds.add(f);
-        }
-        feedAdapter.submit(feeds);
-        List<HkSiteEntry> sites = new ArrayList<>();
-        if (!TextUtils.isEmpty(focusFeed)) {
-            for (HkSiteEntry e : state.sites) {
-                if (!doc.equals(e.doc) || !focusFeed.equals(e.feedId)) continue;
-                boolean bad = !"正常".equals(e.mark);
-                if (blackMode() == bad) sites.add(e);
+        try {
+            List<HkFeed> feeds = new ArrayList<>();
+            for (HkFeed f : d.feeds) {
+                boolean bad = !"正常".equals(f.mark);
+                if (blackMode() != bad) continue;
+                if (!blackMode() && !"全部".equals(mode) && !mode.equals(f.category)) continue;
+                feeds.add(f);
             }
-        }
-        siteAdapter.submit(sites);
+            feedAdapter.submit(feeds);
+        } catch (Throwable t) { warn(t, "口令列表"); }
+        try {
+            List<HkSiteEntry> sites = new ArrayList<>();
+            if (!TextUtils.isEmpty(focusFeed)) {
+                for (HkSiteEntry e : state.sites) {
+                    if (!doc.equals(e.doc) || !focusFeed.equals(e.feedId)) continue;
+                    boolean bad = !"正常".equals(e.mark);
+                    if (blackMode() == bad) sites.add(e);
+                }
+            }
+            siteAdapter.submit(sites);
+        } catch (Throwable t) { warn(t, "站点列表"); }
+    }
+
+    private void warn(Throwable t, String part) {
+        Log.e(TAG, part + " render failed", t);
+        if (errorShown) return;
+        errorShown = true;
+        toast("海阔面板「" + part + "」异常：" + t.getClass().getSimpleName() + ": " + t.getMessage());
     }
 
     private void renderDocs() {
@@ -369,7 +385,7 @@ public final class HkPanelController {
     }
 
     private MaterialButton chip(String text, boolean selected, boolean fill) {
-        MaterialButton b = new MaterialButton(activity, null,
+        MaterialButton b = new MaterialButton(ui, null,
                 com.google.android.material.R.attr.materialButtonOutlinedStyle);
         b.setText(text);
         b.setCheckable(true);
@@ -388,7 +404,7 @@ public final class HkPanelController {
     }
 
     private void addText(LinearLayoutCompat row, String text, View.OnClickListener click) {
-        MaterialTextView t = new MaterialTextView(activity);
+        MaterialTextView t = new MaterialTextView(ui);
         t.setText(text);
         t.setTextSize(12);
         t.setPadding(8, 8, 8, 8);
@@ -398,7 +414,7 @@ public final class HkPanelController {
     }
 
     private void addLabel(LinearLayoutCompat row, String text) {
-        MaterialTextView t = new MaterialTextView(activity);
+        MaterialTextView t = new MaterialTextView(ui);
         t.setText(text);
         t.setTextSize(11);
         t.setPadding(4, 8, 4, 8);
@@ -415,7 +431,7 @@ public final class HkPanelController {
         void submit(List<HkFeed> list) { items.clear(); items.addAll(list); notifyDataSetChanged(); }
 
         @NonNull @Override public Holder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            return new Holder(LayoutInflater.from(activity).inflate(R.layout.hk_item_feed, parent, false));
+            return new Holder(LayoutInflater.from(ui).inflate(R.layout.hk_item_feed, parent, false));
         }
 
         @Override public void onBindViewHolder(@NonNull Holder h, int pos) {
@@ -454,7 +470,7 @@ public final class HkPanelController {
         void submit(List<HkSiteEntry> list) { items.clear(); items.addAll(list); notifyDataSetChanged(); }
 
         @NonNull @Override public Holder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            return new Holder(LayoutInflater.from(activity).inflate(R.layout.hk_item_site, parent, false));
+            return new Holder(LayoutInflater.from(ui).inflate(R.layout.hk_item_site, parent, false));
         }
 
         @Override public void onBindViewHolder(@NonNull Holder h, int pos) {
