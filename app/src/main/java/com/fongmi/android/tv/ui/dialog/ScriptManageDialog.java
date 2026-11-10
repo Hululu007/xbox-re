@@ -210,7 +210,14 @@ public final class ScriptManageDialog extends BaseAlertDialog {
     private void initTabs() {
         binding.tabLocal.setOnClickListener(v -> switchTab(false));
         binding.tabHk.setOnClickListener(v -> switchTab(true));
-        switchTab(HkInterface.isHkUrl(configUrl));
+        boolean hk = false;
+        try {
+            hk = HkInterface.isHkUrl(configUrl);
+        } catch (Throwable t) {
+            // 判定接口类型本身也不能把弹窗带崩：失败一律落本地 tab。
+            Log.e(TAG, "hk url detect failed, fallback to local scripts", t);
+        }
+        switchTab(hk);
     }
 
     private void switchTab(boolean hk) {

@@ -393,3 +393,16 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
       `dialog_script_manage.xml` / `dialog_hk_panel.xml` / `hk_item_*.xml`），
       Java 侧 findViewById 与 LayoutParams 必须用同族类型，禁止混用
       `android.widget.LinearLayout`。
+
+39. **关于页内容与出处（用户 2026-11-10 指定）**：`about_disclaimer` 必须采用用户给出的
+    「聚合展示 / 资源来自网上 / 24 小时内删除 / 打包分发请保留出处」文案，并保留两条
+    可点击的上游出处：`https://github.com/CatVodTVOfficial/TVBoxOSC` 与
+    `https://github.com/FongMi/TV`。注意用户从页面复制时 URL 会断成
+    `https://github. com/...` 带空格，**入库必须写成完整无空格 URL**，否则链接不可点。
+    两个语言目录都要同步（values 英文译文 / values-zh 中文原文）。
+
+40. **排查纪律**：用户反馈「又回到上上版的错误」但没有给出新崩溃栈或具体提示时，
+    不得声称「已修复该未知问题」，也不得把 CI 全绿等同于真机通过。必须先摆出
+    可核验的构建端证据（各 tag 的 `payload` / `not protected` / `WARNING` /
+    `resources.arsc` 指标），再请用户确认现象属于：① 甲壳虫崩溃页 ② MT 签名校验
+    不通过 ③ 安装包已损坏 ④ 关于页内容。任何一项定向处理，禁止一次性「猜着修」。

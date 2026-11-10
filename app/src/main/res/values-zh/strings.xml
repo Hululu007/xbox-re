@@ -688,7 +688,7 @@
     <string name="about_title">关于 OK影视+</string>
     <string name="about_free_badge">精简版</string>
     <string name="about_version">版本 %1$s · %2$s/%3$s</string>
-    <string name="about_disclaimer">OK影视+ 是基于 webhtv 二次开发后精简的独立分支，包名 com.fongmi.android.oktv，可与原版共存安装。\n\n本版本不提供在线更新，也不会检查或安装上游项目的安装包；请勿使用上游仓库的同名应用覆盖安装。如需新版本，请以本项目发布的版本为准。\n\n软件本体完全免费，不提供任何付费服务、影视内容、直播源、接口源、资源存储或内容分发能力。本软件仅供技术学习、研究和个人测试使用，请在下载、安装或试用后 24 小时内自行卸载；继续使用所产生的一切行为及后果由使用者自行承担。\n\n本软件不内置、不售卖、不传播任何影视资源，不对用户自行添加的接口、站源、插件、脚本、链接、网盘资源或第三方服务内容负责。使用者应遵守所在地法律法规，尊重版权方和内容提供方的合法权益，不得用于侵权、盗版或传播非法内容。\n\n严禁任何个人或组织以本软件名义进行售卖、引流、收费维护、会员服务、广告变现、盒子预装、电视盒子捆绑销售或其他获益行为。\n\n如你不同意以上声明，请立即停止使用并卸载本软件。</string>
+    <string name="about_disclaimer">本软件只提供聚合展示功能，所有资源来自网上，软件不参与任何制作、上传、储存、下载等内容。软件仅供学习参考，请于安装后24小时内删除。\n\n打包分发请保留出处：\nhttps://github.com/CatVodTVOfficial/TVBoxOSC\nhttps://github.com/FongMi/TV</string>
     <string name="about_acknowledge">我已知悉</string>
 
     <!-- Backup & Restore -->
