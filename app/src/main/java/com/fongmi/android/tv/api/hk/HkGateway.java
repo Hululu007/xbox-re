@@ -116,8 +116,17 @@ public final class HkGateway {
         String title = titleOf(site.getKey());
         try {
             HkRule rule = HkRuleManager.get().getRule(title);
+            if (rule == null) return Result.error("海阔规则不存在：" + title);
             HkRouter router = router(title);
             List<HkItem> items = router.home(1, "", "", "", "");
+            // 首页空态以前只显示"暂无数据"，真因藏在 logcat。把 JS / preRule 错误直接
+            // 回显到首页，便于按截图定位（对齐星辰空态错误三段同文的可观测性）。
+            if (items == null || items.isEmpty()) {
+                String err = "";
+                try { err = nvl(router.getEngine().getError()); } catch (Throwable ignored) {}
+                if (err.isEmpty()) try { err = nvl(router.getEngine().getJsRuntime().getPreRuleError()); } catch (Throwable ignored) {}
+                if (!err.isEmpty()) return Result.error("海阔首页为空：" + err);
+            }
             Result result = Result.list(toVods(items, site));
             result.setTypes(typesOf(rule));
             return result;
@@ -136,7 +145,10 @@ public final class HkGateway {
             String area = extend == null ? "" : nvl(extend.get("area"));
             String year = extend == null ? "" : nvl(extend.get("year"));
             String sort = extend == null ? "" : nvl(extend.get("sort"));
-            List<HkItem> items = router(title).home(p, nvl(tid), area, year, sort);
+            // TVBox tid 可能是 class_url，也可能是 class_url 为空时退回的 class_name；
+            // 反查回真实替换词，避免把中文分类名塞进 fyclass 导致取数失败。
+            HkRule rule = HkRuleManager.get().getRule(title);
+            List<HkItem> items = router(title).home(p, classUrlOf(rule, tid), area, year, sort);
             return Result.list(toVods(items, siteOf(key, title)));
         } catch (Throwable e) {
             Log.e(TAG, "category failed: " + title, e);
@@ -238,6 +250,19 @@ public final class HkGateway {
         synchronized (ITEMS) {
             ITEMS.put(item.getUrl(), item);
         }
+    }
+
+    /** tid → 真实 class_url 替换词（class_url 为空时用 name，与 typesOf 的 typeId 口径一致）。 */
+    private static String classUrlOf(HkRule rule, String tid) {
+        String t = nvl(tid);
+        if (rule == null || t.isEmpty()) return t;
+        try {
+            for (String[] pair : rule.getClassPairs()) {
+                if (t.equals(pair[1])) return pair[1];
+                if (t.equals(pair[0])) return pair[1].isEmpty() ? pair[0] : pair[1];
+            }
+        } catch (Throwable ignored) {}
+        return t;
     }
 
     private static List<com.fongmi.android.tv.bean.Class> typesOf(HkRule rule) {
