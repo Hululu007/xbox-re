@@ -406,3 +406,19 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
     可核验的构建端证据（各 tag 的 `payload` / `not protected` / `WARNING` /
     `resources.arsc` 指标），再请用户确认现象属于：① 甲壳虫崩溃页 ② MT 签名校验
     不通过 ③ 安装包已损坏 ④ 关于页内容。任何一项定向处理，禁止一次性「猜着修」。
+
+41. **小程序口令与导入链路（2026-11-10 用户实证反馈）**：
+    - 海阔「小程序」= 一条规则。官方分享口令格式由 `HkRuleManager.buildShareCommand()`
+      给出：`海阔视界规则分享，当前分享的是：小程序￥home_rule￥{json}`；
+      星辰 `HkShareHelper.importFromText()` / `HkRuleManager.parseJsonList()` 是权威导入链。
+    - **统一入口**：任何口令文本必须先交给 `HkRuleManager.parseJsonList()` 中央分发
+      （云口令 / ￥home_rule￥ / base64:// / 单规则 / 规则数组 + 逐条 validate），
+      再 `saveRule()` 落盘。**禁止**在 `HkFeedParser` 里另写「只认 { 或 [ 开头」的
+      简化判断 —— 那会把小程序分享口令判成「无法识别的订阅格式」，产生 0 站点、
+      口令自动标失效（用户看到的就是「录入后列表看不到小程序」）。
+    - **Error 穿透纪律**：解析/落盘/UI 回调一律 `catch (Throwable)`。
+      `HkRuleManager` 不得再用 `File.toPath()` / `java.nio.file.Files`（API 26+，
+      minSdk 24 抛 Error）；统一走 `readBytes/writeBytes/appendBytes` 经典 IO。
+      面板点击与 dialog 回调统一包 `safe()`。
+    - 比对基准：`kuby007/xingchen@main` 的 `api/hk/` 目录；当前分支该目录的
+      `HkRuleManager.java` 与星辰逐字节一致（除本条兼容性替换）。

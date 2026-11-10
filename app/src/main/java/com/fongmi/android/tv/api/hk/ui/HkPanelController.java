@@ -2,6 +2,7 @@ package com.fongmi.android.tv.api.hk.ui;
 
 import android.content.pm.PackageManager;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -41,6 +42,8 @@ import java.util.Set;
  */
 public final class HkPanelController {
 
+    private static final String TAG = "HkPanelController";
+
     private final FragmentActivity activity;
     private final boolean tv;
     private View root;
@@ -56,6 +59,15 @@ public final class HkPanelController {
     private String lastCatTap = "";
     private final Set<String> feedSel = new LinkedHashSet<>();
     private final Set<String> siteSel = new LinkedHashSet<>();
+
+
+    /** 面板所有主线程点击统一兜底：任何异常/Error 都不许冒到 DialogFragment 把 APP 带崩。 */
+    private View.OnClickListener safe(View.OnClickListener l) {
+        return v -> {
+            try { l.onClick(v); }
+            catch (Throwable t) { Log.e(TAG, "hk panel action failed", t); toast("操作失败，已阻止异常"); }
+        };
+    }
 
     public HkPanelController(FragmentActivity activity) {
         this.activity = activity;
@@ -122,23 +134,23 @@ public final class HkPanelController {
         List<String> docs = HkInterface.docs();
         for (String name : docs) {
             MaterialButton chip = chip(name, name.equals(doc), false);
-            chip.setOnClickListener(v -> {
+            chip.setOnClickListener(safe(v -> {
                 if (!tv && name.equals(doc) && name.equals(lastDocTap)) { renameDoc(name); return; }
                 doc = name; lastDocTap = name; mode = "全部"; focusFeed = "";
                 feedSel.clear(); siteSel.clear();
                 HkStateStore.setCurrentDoc(name);
                 refresh();
-            });
+            }));
             docList.addView(chip);
         }
         if (!tv) {
             MaterialButton add = chip("+ 添加接口", false, false);
-            add.setOnClickListener(v -> inputDialog("新建一级接口", "", name -> {
+            add.setOnClickListener(safe(v -> inputDialog("新建一级接口", "", name -> {
                 if (TextUtils.isEmpty(name) || HkInterface.docs().contains(name)) { toast("名称无效或已存在"); return; }
                 HkInterface.create(name);
                 doc = name; HkStateStore.setCurrentDoc(name);
                 refresh();
-            }));
+            })));
             docList.addView(add);
         }
     }
@@ -147,7 +159,7 @@ public final class HkPanelController {
         catRow.removeAllViews();
         for (String name : new String[]{"全部", "黑名单"}) {
             MaterialButton chip = chip(name, name.equals(mode), true);
-            chip.setOnClickListener(v -> { mode = name; lastCatTap = ""; refresh(); });
+            chip.setOnClickListener(safe(v -> { mode = name; lastCatTap = ""; refresh(); }));
             catRow.addView(chip);
         }
         HkDoc d = HkStateStore.readDoc(doc);
@@ -155,30 +167,30 @@ public final class HkPanelController {
         for (HkFeed f : d.feeds) if (!TextUtils.isEmpty(f.category)) used.add(f.category);
         for (String name : used) {
             MaterialButton chip = chip(name, name.equals(mode), true);
-            chip.setOnClickListener(v -> {
+            chip.setOnClickListener(safe(v -> {
                 if (!tv && name.equals(mode) && name.equals(lastCatTap)) { renameCategory(name); return; }
                 mode = name; lastCatTap = name; refresh();
-            });
+            }));
             catRow.addView(chip);
         }
         if (!tv) {
             MaterialButton add = chip("+ 口令", false, true);
-            add.setOnClickListener(v -> inputDialog("录入口令（支持口令集多行）", "", raw -> {
+            add.setOnClickListener(safe(v -> inputDialog("录入口令（支持口令集多行）", "", raw -> {
                 if (TextUtils.isEmpty(raw)) return;
                 addFeed(raw, mode.equals("全部") || mode.equals("黑名单") ? "" : mode);
-            }));
+            })));
             catRow.addView(add);
         }
         MaterialButton refresh = chip("刷新", false, true);
-        refresh.setOnClickListener(v -> HkStateUpdater.refreshAll(this::refresh));
+        refresh.setOnClickListener(safe(v -> HkStateUpdater.refreshAll(this::refresh)));
         catRow.addView(refresh);
         if (!tv) {
             MaterialButton dir = chip("设置目录", false, true);
-            dir.setOnClickListener(v -> inputDialog("一级/二级 json 存放目录", HkStateStore.rootDir(), path -> {
+            dir.setOnClickListener(safe(v -> inputDialog("一级/二级 json 存放目录", HkStateStore.rootDir(), path -> {
                 java.io.File f = new java.io.File(path);
                 if (!f.isDirectory() && !f.mkdirs()) { toast("目录不可用"); return; }
                 HkStateStore.setRootDir(path); refresh();
-            }));
+            })));
             catRow.addView(dir);
         }
     }
@@ -253,6 +265,7 @@ public final class HkPanelController {
         new MaterialAlertDialogBuilder(activity)
                 .setTitle("移动分类")
                 .setItems(opts.toArray(new String[0]), (dlg, which) -> {
+                    try {
                     if (which == opts.size() - 1) {
                         inputDialog("新分类名称", "", name -> {
                             HkStateUpdater.moveFeeds(doc, new ArrayList<>(feedSel), name);
@@ -262,6 +275,7 @@ public final class HkPanelController {
                         HkStateUpdater.moveFeeds(doc, new ArrayList<>(feedSel), opts.get(which));
                         feedSel.clear(); refresh();
                     }
+                    } catch (Throwable t) { Log.e(TAG, "move category failed", t); toast("操作失败"); }
                 })
                 .setNegativeButton("取消", null)
                 .show();
@@ -295,8 +309,10 @@ public final class HkPanelController {
                 .setTitle("删除口令")
                 .setMessage("将删除 " + n + " 条，不可恢复")
                 .setPositiveButton("删除", (dlg, w) -> {
-                    for (String fid : new ArrayList<>(feedSel)) HkStateUpdater.deleteFeed(doc, fid);
-                    feedSel.clear(); HkStateUpdater.injectHomeSites(); refresh();
+                    try {
+                        for (String fid : new ArrayList<>(feedSel)) HkStateUpdater.deleteFeed(doc, fid);
+                        feedSel.clear(); HkStateUpdater.injectHomeSites(); refresh();
+                    } catch (Throwable t) { Log.e(TAG, "delete feed failed", t); toast("操作失败"); }
                 })
                 .setNegativeButton("取消", null)
                 .show();
@@ -344,7 +360,10 @@ public final class HkPanelController {
         new MaterialAlertDialogBuilder(activity)
                 .setTitle(title)
                 .setView(box)
-                .setPositiveButton("确定", (dlg, w) -> onOk.accept(et.getText().toString().trim()))
+                .setPositiveButton("确定", (dlg, w) -> {
+                    try { onOk.accept(et.getText().toString().trim()); }
+                    catch (Throwable t) { Log.e(TAG, "input ok failed", t); toast("操作失败"); }
+                })
                 .setNegativeButton("取消", null)
                 .show();
     }
@@ -374,7 +393,7 @@ public final class HkPanelController {
         t.setTextSize(12);
         t.setPadding(8, 8, 8, 8);
         t.setFocusable(true);
-        t.setOnClickListener(click);
+        t.setOnClickListener(safe(click));
         row.addView(t);
     }
 
@@ -408,12 +427,12 @@ public final class HkPanelController {
             });
             h.text.setText(f.raw);                 // start 省略，保尾；完整原串在二次点击弹框
             h.text.setSelected(focusFeed.equals(f.feedId));
-            h.text.setOnClickListener(v -> {
+            h.text.setOnClickListener(safe(v -> {
                 if (focusFeed.equals(f.feedId)) { editFeed(f); return; }
                 focusFeed = f.feedId;
                 siteSel.clear();
                 refresh();
-            });
+            }));
         }
 
         @Override public int getItemCount() { return items.size(); }
@@ -443,10 +462,10 @@ public final class HkPanelController {
             h.name.setText(e.displayName);
             h.mark.setText("正常".equals(e.mark) ? "" : e.mark);
             h.itemView.setSelected(siteSel.contains(e.id));
-            h.itemView.setOnClickListener(v -> {
+            h.itemView.setOnClickListener(safe(v -> {
                 if (siteSel.contains(e.id)) siteSel.remove(e.id); else siteSel.add(e.id);
                 notifyItemChanged(pos);
-            });
+            }));
         }
 
         @Override public int getItemCount() { return items.size(); }

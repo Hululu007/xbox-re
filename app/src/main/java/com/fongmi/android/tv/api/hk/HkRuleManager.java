@@ -17,7 +17,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
@@ -117,7 +116,7 @@ public class HkRuleManager {
         try {
             File f = new File(getDir(), safeFileName(title) + ".json");
             if (!f.exists()) return null;
-            byte[] bytes = java.nio.file.Files.readAllBytes(f.toPath());
+            byte[] bytes = readBytes(f);
             return new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
         } catch (Throwable e) {
             return null;
@@ -132,7 +131,7 @@ public class HkRuleManager {
         try {
             File f = new File(getDir(), safeFileName(title) + ".json");
             if (!f.exists()) return null;
-            byte[] bytes = java.nio.file.Files.readAllBytes(f.toPath());
+            byte[] bytes = readBytes(f);
             String json = new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
             return parseJson(json);
         } catch (Throwable e) {
@@ -168,7 +167,7 @@ public class HkRuleManager {
         try {
             File f = getRuleConfigFile(title);
             if (f == null) return "{}";
-            byte[] bytes = java.nio.file.Files.readAllBytes(f.toPath());
+            byte[] bytes = readBytes(f);
             String s = new String(bytes, java.nio.charset.Charset.forName("UTF-8")).trim();
             return s.isEmpty() ? "{}" : s;
         } catch (Throwable ignored) {
@@ -180,8 +179,7 @@ public class HkRuleManager {
     public void saveRuleConfig(String title, String json) {
         try {
             File f = new File(getConfigDir(), safeFileName(title) + ".json");
-            java.nio.file.Files.write(f.toPath(),
-                    (json == null || json.trim().isEmpty() ? "{}" : json.trim()).getBytes("UTF-8"));
+            writeBytes(f, (json == null || json.trim().isEmpty() ? "{}" : json.trim()).getBytes("UTF-8"));
         } catch (Throwable ignored) {
         }
     }
@@ -267,7 +265,7 @@ public class HkRuleManager {
         // 同标题只许一份：先清掉其它文件名下标题相同的旧副本（历史遗留/改名残留），
         // 否则 getRules 去重按文件顺序取舍，导入新版后仍可能读到旧的那份。
         deleteSameTitleFiles(rule.getTitle(), target.getName());
-        Files.write(target.toPath(), rawJson.getBytes(StandardCharsets.UTF_8));
+        writeBytes(target, rawJson.getBytes(StandardCharsets.UTF_8));
         SAVE_STAMP.incrementAndGet();
         rule.setEnabled(isEnabled(rule.getTitle()));
     }
@@ -282,7 +280,7 @@ public class HkRuleManager {
             for (File f : files) {
                 if (f.getName().equals(keepName)) continue;
                 try {
-                    byte[] bytes = Files.readAllBytes(f.toPath());
+                    byte[] bytes = readBytes(f);
                     HkRule other = gson.fromJson(new String(bytes, StandardCharsets.UTF_8), HkRule.class);
                     if (other != null && title.equals(other.getTitle())) f.delete();
                 } catch (Exception ignored) {
@@ -307,7 +305,7 @@ public class HkRuleManager {
     /** 从文件导入规则。 */
     public HkRule importFile(File src) throws Exception {
         if (src == null || !src.exists()) throw new IllegalArgumentException("规则文件不存在");
-        byte[] bytes = Files.readAllBytes(src.toPath());
+        byte[] bytes = readBytes(src);
         return importJson(new String(bytes, StandardCharsets.UTF_8));
     }
 
@@ -451,7 +449,7 @@ public class HkRuleManager {
             File dataDir = getDataDir(rule.getTitle());
             if (data.requireJson != null) {
                 try {
-                    Files.write(new File(dataDir, "require.json").toPath(), data.requireJson);
+                    writeBytes(new File(dataDir, "require.json"), data.requireJson);
                 } catch (Exception ignored) {
                 }
             }
@@ -460,7 +458,7 @@ public class HkRuleManager {
                 libsDir.mkdirs();
                 for (Map.Entry<String, byte[]> e : data.libs.entrySet()) {
                     try {
-                        Files.write(new File(libsDir, e.getKey()).toPath(), e.getValue());
+                        writeBytes(new File(libsDir, e.getKey()), e.getValue());
                     } catch (Exception ignored) {
                     }
                 }
@@ -476,7 +474,7 @@ public class HkRuleManager {
                         File out = new File(extDataDir, rel);
                         File parent = out.getParentFile();
                         if (parent != null) parent.mkdirs();
-                        Files.write(out.toPath(), e.getValue());
+                        writeBytes(out, e.getValue());
                     } catch (Exception ignored) {
                     }
                 }
@@ -502,6 +500,36 @@ public class HkRuleManager {
         // 落盘 require.json 与 libs，供 require() 本地加载
         saveHkZipAssets(data, imported);
         return imported;
+    }
+
+    /** minSdk 24 兼容：File.toPath() 与 java.nio.file.Files 都是 API 26+，
+     *  在老 TV/车机上抛 NoSuchMethodError / NoClassDefFoundError（Error 不受
+     *  catch(Exception) 约束）。全部换成经典 IO，语义与 Files 一致。 */
+    private static byte[] readBytes(File f) throws Exception {
+        java.io.FileInputStream in = new java.io.FileInputStream(f);
+        try {
+            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+            byte[] buf = new byte[8192];
+            int n;
+            while ((n = in.read(buf)) != -1) out.write(buf, 0, n);
+            return out.toByteArray();
+        } finally {
+            try { in.close(); } catch (Throwable ignored) {}
+        }
+    }
+
+    private static void writeBytes(File f, byte[] bytes) throws Exception {
+        File parent = f.getParentFile();
+        if (parent != null) parent.mkdirs();
+        java.io.FileOutputStream os = new java.io.FileOutputStream(f);
+        try { os.write(bytes); } finally { try { os.close(); } catch (Throwable ignored) {} }
+    }
+
+    private static void appendBytes(File f, byte[] bytes) throws Exception {
+        File parent = f.getParentFile();
+        if (parent != null) parent.mkdirs();
+        java.io.FileOutputStream os = new java.io.FileOutputStream(f, true);
+        try { os.write(bytes); } finally { try { os.close(); } catch (Throwable ignored) {} }
     }
 
     /** 经典 IO 读流（API 24 可用，不依赖 java.nio）。 */
@@ -1038,7 +1066,7 @@ public class HkRuleManager {
     public String exportAsCloudCode(String title) throws Exception {
         File f = new File(getDir(), safeFileName(title) + ".json");
         if (!f.exists()) throw new IllegalArgumentException("规则不存在：" + title);
-        byte[] bytes = Files.readAllBytes(f.toPath());
+        byte[] bytes = readBytes(f);
         String json = new String(bytes, StandardCharsets.UTF_8);
         String b64 = Base64.encodeToString(json.getBytes(StandardCharsets.UTF_8), Base64.NO_WRAP);
         String key = "xc" + System.currentTimeMillis() / 1000 + "_" + Math.abs(title.hashCode());
@@ -1077,7 +1105,7 @@ public class HkRuleManager {
     public String exportAsCmdImCode(String title) throws Exception {
         File f = new File(getDir(), safeFileName(title) + ".json");
         if (!f.exists()) throw new IllegalArgumentException("规则不存在：" + title);
-        byte[] bytes = Files.readAllBytes(f.toPath());
+        byte[] bytes = readBytes(f);
         String json = new String(bytes, StandardCharsets.UTF_8);
 
         OkHttpClient client = new OkHttpClient.Builder()
@@ -1112,8 +1140,8 @@ public class HkRuleManager {
         if (destDir != null && !destDir.exists()) destDir.mkdirs();
         File dest = new File(destDir != null ? destDir : getDir(),
                 safeFileName(title) + ".hkrule.json");
-        byte[] bytes = Files.readAllBytes(src.toPath());
-        Files.write(dest.toPath(), bytes);
+        byte[] bytes = readBytes(src);
+        writeBytes(dest, bytes);
         return dest;
     }
 
@@ -1142,18 +1170,18 @@ public class HkRuleManager {
         if (!src.exists()) throw new IllegalArgumentException("规则不存在：" + title);
         if (destDir != null && !destDir.exists()) destDir.mkdirs();
         File dest = new File(destDir != null ? destDir : getDir(), safeFileName(title) + ext);
-        try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(dest.toPath()))) {
-            writeZipEntry(zos, "rule.json", Files.readAllBytes(src.toPath()));
+        try (ZipOutputStream zos = new ZipOutputStream(new java.io.FileOutputStream(dest))) {
+            writeZipEntry(zos, "rule.json", readBytes(src));
             File dataDir = getDataDir(title);
             File require = new File(dataDir, "require.json");
-            if (require.exists()) writeZipEntry(zos, "require.json", Files.readAllBytes(require.toPath()));
+            if (require.exists()) writeZipEntry(zos, "require.json", readBytes(require));
             File libsDir = new File(dataDir, "libs");
             File[] libs = libsDir.isDirectory() ? libsDir.listFiles() : null;
             if (libs != null && libs.length > 0) {
                 ByteArrayOutputStream libsZip = new ByteArrayOutputStream();
                 try (ZipOutputStream lzos = new ZipOutputStream(libsZip)) {
                     for (File f : libs) {
-                        if (f.isFile()) writeZipEntry(lzos, f.getName(), Files.readAllBytes(f.toPath()));
+                        if (f.isFile()) writeZipEntry(lzos, f.getName(), readBytes(f));
                     }
                 }
                 writeZipEntry(zos, "libs.zip", libsZip.toByteArray());
@@ -1184,7 +1212,7 @@ public class HkRuleManager {
         java.util.Map<String, Boolean> bestCanonical = new java.util.HashMap<>();
         for (File f : files) {
             try {
-                byte[] bytes = Files.readAllBytes(f.toPath());
+                byte[] bytes = readBytes(f);
                 HkRule rule = gson.fromJson(new String(bytes, StandardCharsets.UTF_8), HkRule.class);
                 if (rule == null) continue;
                 // 标题脏数据（空/"undefined"/"null"）时用文件名回退，保证 tab 有名可显示
@@ -1225,8 +1253,7 @@ public class HkRuleManager {
             File log = new File(ctx.getFilesDir(), "hk_rule_error.log");
             String msg = new java.text.SimpleDateFormat("MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(new java.util.Date())
                     + " parse failed: " + fileName + " | " + e.getClass().getSimpleName() + ": " + e.getMessage() + "\n";
-            java.nio.file.Files.write(log.toPath(), msg.getBytes(StandardCharsets.UTF_8),
-                    java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.APPEND);
+            appendBytes(log, msg.getBytes(StandardCharsets.UTF_8));
         } catch (Exception ignored) {
         }
     }
@@ -1237,7 +1264,7 @@ public class HkRuleManager {
         File f = new File(getDir(), safeFileName(title) + ".json");
         if (!f.exists()) return null;
         try {
-            byte[] bytes = Files.readAllBytes(f.toPath());
+            byte[] bytes = readBytes(f);
             HkRule rule = new Gson().fromJson(new String(bytes, StandardCharsets.UTF_8), HkRule.class);
             if (rule != null) rule.setEnabled(isEnabled(rule.getTitle()));
             return rule;
