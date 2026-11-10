@@ -145,10 +145,22 @@ public final class HkGateway {
             String area = extend == null ? "" : nvl(extend.get("area"));
             String year = extend == null ? "" : nvl(extend.get("year"));
             String sort = extend == null ? "" : nvl(extend.get("sort"));
-            // TVBox tid 可能是 class_url，也可能是 class_url 为空时退回的 class_name；
-            // 反查回真实替换词，避免把中文分类名塞进 fyclass 导致取数失败。
+            // 分类栏四组（class/area/year/sort）共用一个 typeId 通道，用 hk|<组>|<值> 编码；
+            // 解码后只把选中组的值传进去，其余组留空由 HkEngine.home 补规则首段值。
+            String[] gt = decodeTid(tid);
+            String cls = "class".equals(gt[0]) ? gt[1] : "";
+            if ("area".equals(gt[0])) area = gt[1];
+            if ("year".equals(gt[0])) year = gt[1];
+            if ("sort".equals(gt[0])) sort = gt[1];
+            // TVBox 筛选参数若带同组值，优先用它（与 extend 语义一致）
+            if (extend != null) {
+                if (!nvl(extend.get("area")).isEmpty()) area = nvl(extend.get("area"));
+                if (!nvl(extend.get("year")).isEmpty()) year = nvl(extend.get("year"));
+                if (!nvl(extend.get("sort")).isEmpty()) sort = nvl(extend.get("sort"));
+            }
             HkRule rule = HkRuleManager.get().getRule(title);
-            List<HkItem> items = router(title).home(p, classUrlOf(rule, tid), area, year, sort);
+            if (!cls.isEmpty()) cls = classUrlOf(rule, cls);
+            List<HkItem> items = router(title).home(p, cls, area, year, sort);
             return Result.list(toVods(items, siteOf(key, title)));
         } catch (Throwable e) {
             Log.e(TAG, "category failed: " + title, e);
@@ -253,8 +265,8 @@ public final class HkGateway {
     }
 
     /** tid → 真实 class_url 替换词（class_url 为空时用 name，与 typesOf 的 typeId 口径一致）。 */
-    private static String classUrlOf(HkRule rule, String tid) {
-        String t = nvl(tid);
+    private static String classUrlOf(HkRule rule, String value) {
+        String t = nvl(value);
         if (rule == null || t.isEmpty()) return t;
         try {
             for (String[] pair : rule.getClassPairs()) {
@@ -265,17 +277,32 @@ public final class HkGateway {
         return t;
     }
 
+    /** 分类 typeId 编码：hk|<组>|<值>；兼容未编码的旧 tid（一律当 class）。 */
+    private static String encodeTid(String group, String url, String name) {
+        return "hk|" + group + "|" + (url == null || url.isEmpty() ? nvl(name) : url);
+    }
+
+    private static String[] decodeTid(String tid) {
+        String t = nvl(tid);
+        if (t.startsWith("hk|")) {
+            String[] parts = t.split("\\|", 3);
+            if (parts.length == 3) {
+                String g = parts[1];
+                if ("class".equals(g) || "area".equals(g) || "year".equals(g) || "sort".equals(g))
+                    return new String[]{g, parts[2]};
+            }
+        }
+        return new String[]{"class", t};
+    }
+
+    /** 对齐星辰 HkArticleFragment.initHeader：分类栏含 class/area/year/sort 四组。 */
     private static List<com.fongmi.android.tv.bean.Class> typesOf(HkRule rule) {
         List<com.fongmi.android.tv.bean.Class> types = new ArrayList<>();
-        try {
-            for (String[] pair : rule.getClassPairs()) {
-                if (pair == null || pair.length == 0) continue;
-                com.fongmi.android.tv.bean.Class c = new com.fongmi.android.tv.bean.Class();
-                c.setTypeName(nvl(pair[0]));
-                c.setTypeId(pair.length > 1 ? nvl(pair[1]) : nvl(pair[0]));
-                types.add(c);
-            }
-        } catch (Throwable ignored) {
+        if (rule != null) {
+            addGroup(types, "class", rule.getClassPairs());
+            addGroup(types, "area", rule.getAreaPairs());
+            addGroup(types, "year", rule.getYearPairs());
+            addGroup(types, "sort", rule.getSortPairs());
         }
         if (types.isEmpty()) {
             com.fongmi.android.tv.bean.Class c = new com.fongmi.android.tv.bean.Class();
@@ -284,6 +311,20 @@ public final class HkGateway {
             types.add(c);
         }
         return types;
+    }
+
+    private static void addGroup(List<com.fongmi.android.tv.bean.Class> types, String group,
+                                 List<String[]> pairs) {
+        if (pairs == null) return;
+        try {
+            for (String[] pair : pairs) {
+                if (pair == null || pair.length == 0 || nvl(pair[0]).isEmpty()) continue;
+                com.fongmi.android.tv.bean.Class c = new com.fongmi.android.tv.bean.Class();
+                c.setTypeName(nvl(pair[0]));
+                c.setTypeId(encodeTid(group, pair.length > 1 ? pair[1] : "", pair[0]));
+                types.add(c);
+            }
+        } catch (Throwable ignored) {}
     }
 
     private static Site siteOf(String key, String title) {
