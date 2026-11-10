@@ -38,6 +38,7 @@ junit = "4.13.2"
 juniversalchardet = "1.0.3"
 jsoup = "1.22.2"
 logger = "2.2.0"
+rhino = "1.7.15"
 lottie = "6.7.1"
 material = "1.14.0"
 materialdesigncolors = "1.0.0"
@@ -136,6 +137,8 @@ textdrawable = { group = "com.github.jahirfiquitiva", name = "TextDrawable", ver
 zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxingCore" }
 jgit = { group = "org.eclipse.jgit", name = "org.eclipse.jgit", version.ref = "jgit" }
 
+rhino = { group = "org.mozilla", name = "rhino", version.ref = "rhino" }
+
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
@@ -146,4 +149,3 @@ glide = ["glide", "glide-annotations", "glide-avif-integration", "glide-okhttp3-
 jupnp = ["org-jupnp", "org-jupnp-android", "org-jupnp-support"]
 media3 = ["media3-common", "media3-container", "media3-database", "media3-datasource", "media3-datasource-okhttp", "media3-datasource-rtmp", "media3-decoder", "media3-effect", "media3-exoplayer", "media3-exoplayer-dash", "media3-exoplayer-hls", "media3-exoplayer-rtsp", "media3-exoplayer-smoothstreaming", "media3-extractor", "media3-session", "media3-ui", "media3-ui-danmaku"]
 okhttp = ["okhttp", "okhttp-dnsoverhttps", "okhttp-logging-interceptor"]
-rhino = { group = "org.mozilla", name = "rhino", version = "1.7.15" }

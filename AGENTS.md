@@ -298,3 +298,11 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
     - 写完 A/B 必须 `HkStateUpdater.publish()`：清 `HkGateway` Router/条目缓存 → 重建首页 → 发 `ConfigEvent.vod()`。`refreshAll` / `refreshFeed` 收尾与所有用户动作（拉黑、恢复、删除、归类、更名）都已接上；禁止再出现「B 更新了但首页不重建」。
     - `ScriptManageDialog.show(activity, callback, url)` 才是「点什么接口就编辑什么接口」：历史条目编辑必须传 `item.getUrl()`；`ConfigDialog` / `SiteDialog` / 设置页 / 点播菜单没有具体条目，用二参数版默认当前 url 即可。
     - `values/strings.xml` 与 `values-zh/strings.xml` 必须同步，中文包漏改会显示旧文案「脚本管理 / 导入脚本」。
+
+32. **版本目录别把 library 写进 `[bundles]`（CI 42727547812 实证）**：
+    `gradle/libs.versions.toml` 的 `[bundles]` 只接受「alias 数组」；把
+    `rhino = { group = "org.mozilla", name = "rhino", version = "1.7.15" }`
+    放在该段会让 Gradle 在配置阶段（约 18 秒）就失败，`build.gradle` 里的 `implementation libs.rhino`
+    拿不到 library provider，且错误文本不含 `What went wrong` 之后的关键词，CI 的
+    `Report Gradle failure details` 抓不到具体行。新增依赖必须放 `[libraries]`（版本放 `[versions]`
+    并用 `version.ref`），`[bundles]` 只放 `xxx = ["a","b"]`。
