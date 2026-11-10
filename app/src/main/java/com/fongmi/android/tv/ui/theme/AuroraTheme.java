@@ -2,7 +2,7 @@ package com.fongmi.android.tv.ui.theme;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.ContextThemeWrapper;
+import android.view.ContextThemeWrapper;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
@@ -182,6 +182,24 @@ public final class AuroraTheme {
                 && tv.type >= TypedValue.TYPE_FIRST_COLOR_INT
                 && tv.type <= TypedValue.TYPE_LAST_COLOR_INT) return tv.data;
         return fallback;
+    }
+
+    /**
+     * 按背景色亮度返回可读前景色（浅底配深字、深底配浅字）。
+     * 用于强调色按钮上的文字，保证四套预设与任意强调色 overlay 下都有足够对比度，
+     * 且不依赖任何库声明的 attr（AGP 非传递 R 类下 R.attr 只包含本模块属性）。
+     */
+    public static int onAccent(int background) {
+        double r = linear(Color.red(background));
+        double g = linear(Color.green(background));
+        double b = linear(Color.blue(background));
+        double luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        return luminance > 0.35 ? 0xFF10231B : 0xFFF4F8F6;
+    }
+
+    private static double linear(int channel) {
+        double c = channel / 255.0;
+        return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
     }
 
     /** 返回像素值。 */

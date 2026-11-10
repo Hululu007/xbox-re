@@ -1,78 +1,82 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- 运行时用 Activity.getTheme().applyStyle() 叠加，零布局改动即可全局生效 -->
-    <style name="ThemeOverlay.Aurora.Accent.Jade">
+    <!-- 运行时用 Activity.getTheme().applyStyle() 叠加，零布局改动即可全局生效。
+         必须显式 parent=""：AAPT 会把含点号且未声明 parent 的 style 名解释为隐式继承，
+         去查找逐级截短的同名前缀样式（如 ThemeOverlay.Aurora.Accent），找不到即链接失败。
+         overlay 本身不需要继承任何父样式，此写法与项目既有
+         ShapeAppearance.WebHTV.AudioCover 保持一致。 -->
+    <style name="ThemeOverlay.Aurora.Accent.Jade" parent="">
         <item name="auroraAccent">#FF5FC79A</item>
         <item name="auroraAccentSoft">#FF1E3A30</item>
         <item name="colorPrimary">#FF5FC79A</item>
         <item name="colorSecondary">#FF5FC79A</item>
         <item name="colorControlActivated">#FF5FC79A</item>
     </style>
-    <style name="ThemeOverlay.Aurora.Accent.Azure">
+    <style name="ThemeOverlay.Aurora.Accent.Azure" parent="">
         <item name="auroraAccent">#FF64B5F6</item>
         <item name="auroraAccentSoft">#FF172B3B</item>
         <item name="colorPrimary">#FF64B5F6</item>
         <item name="colorSecondary">#FF64B5F6</item>
         <item name="colorControlActivated">#FF64B5F6</item>
     </style>
-    <style name="ThemeOverlay.Aurora.Accent.Amber">
+    <style name="ThemeOverlay.Aurora.Accent.Amber" parent="">
         <item name="auroraAccent">#FFFFB74D</item>
         <item name="auroraAccentSoft">#FF3A2A12</item>
         <item name="colorPrimary">#FFFFB74D</item>
         <item name="colorSecondary">#FFFFB74D</item>
         <item name="colorControlActivated">#FFFFB74D</item>
     </style>
-    <style name="ThemeOverlay.Aurora.Accent.Rose">
+    <style name="ThemeOverlay.Aurora.Accent.Rose" parent="">
         <item name="auroraAccent">#FFF48FB1</item>
         <item name="auroraAccentSoft">#FF3A1F2A</item>
         <item name="colorPrimary">#FFF48FB1</item>
         <item name="colorSecondary">#FFF48FB1</item>
         <item name="colorControlActivated">#FFF48FB1</item>
     </style>
-    <style name="ThemeOverlay.Aurora.Accent.Violet">
+    <style name="ThemeOverlay.Aurora.Accent.Violet" parent="">
         <item name="auroraAccent">#FFB39DDB</item>
         <item name="auroraAccentSoft">#FF2A2240</item>
         <item name="colorPrimary">#FFB39DDB</item>
         <item name="colorSecondary">#FFB39DDB</item>
         <item name="colorControlActivated">#FFB39DDB</item>
     </style>
-    <style name="ThemeOverlay.Aurora.Accent.Cyan">
+    <style name="ThemeOverlay.Aurora.Accent.Cyan" parent="">
         <item name="auroraAccent">#FF4DD0E1</item>
         <item name="auroraAccentSoft">#FF123038</item>
         <item name="colorPrimary">#FF4DD0E1</item>
         <item name="colorSecondary">#FF4DD0E1</item>
         <item name="colorControlActivated">#FF4DD0E1</item>
     </style>
-    <style name="ThemeOverlay.Aurora.Accent.Lime">
+    <style name="ThemeOverlay.Aurora.Accent.Lime" parent="">
         <item name="auroraAccent">#FFAED581</item>
         <item name="auroraAccentSoft">#FF243312</item>
         <item name="colorPrimary">#FFAED581</item>
         <item name="colorSecondary">#FFAED581</item>
         <item name="colorControlActivated">#FFAED581</item>
     </style>
-    <style name="ThemeOverlay.Aurora.Accent.Slate">
+    <style name="ThemeOverlay.Aurora.Accent.Slate" parent="">
         <item name="auroraAccent">#FFB0BEC5</item>
         <item name="auroraAccentSoft">#FF263038</item>
         <item name="colorPrimary">#FFB0BEC5</item>
         <item name="colorSecondary">#FFB0BEC5</item>
         <item name="colorControlActivated">#FFB0BEC5</item>
     </style>
-    <style name="ThemeOverlay.Aurora.Corner.Small">
+    <style name="ThemeOverlay.Aurora.Corner.Small" parent="">
         <item name="auroraCorner">4dp</item>
         <item name="auroraCornerLarge">8dp</item>
     </style>
-    <style name="ThemeOverlay.Aurora.Corner.Large">
+    <style name="ThemeOverlay.Aurora.Corner.Large" parent="">
         <item name="auroraCorner">20dp</item>
         <item name="auroraCornerLarge">28dp</item>
     </style>
-    <style name="ThemeOverlay.Aurora.Corner.Pill">
+    <style name="ThemeOverlay.Aurora.Corner.Pill" parent="">
         <item name="auroraCorner">28dp</item>
         <item name="auroraCornerLarge">36dp</item>
     </style>
-    <style name="ThemeOverlay.Aurora.Text.Small">
+    <style name="ThemeOverlay.Aurora.Text.Small" parent="">
         <item name="auroraTextSize">13sp</item>
     </style>
-    <style name="ThemeOverlay.Aurora.Text.Large">
+    <style name="ThemeOverlay.Aurora.Text.Large" parent="">
         <item name="auroraTextSize">17sp</item>
     </style>
 </resources>

@@ -123,7 +123,8 @@ public class AuroraThemeDialog extends DialogFragment {
         float text = AuroraTheme.dimension(c, R.attr.auroraTextSize, 14);
         int onSurface = AuroraTheme.color(c, R.attr.auroraOnSurface, 0xFFE8EEEB);
         int onVariant = AuroraTheme.color(c, R.attr.auroraOnSurfaceVariant, 0xFFA8B5B0);
-        int onAccent = AuroraTheme.color(c, R.attr.colorOnPrimary, 0xFF10231B);
+        int onAccent = AuroraTheme.onAccent(
+                AuroraTheme.color(c, R.attr.auroraAccent, 0xFF5FC79A));
 
         LinearLayout card = new LinearLayout(c);
         card.setOrientation(LinearLayout.VERTICAL);
