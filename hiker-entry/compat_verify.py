@@ -424,6 +424,10 @@ def main():
         pg3.evaluate("(new Function(%s))()" % json.dumps(shim))
         pg3.evaluate("(new Function(%s))()" % json.dumps(compat))
         ev = pg3.evaluate(r"""({variants, page}) => {
+          // E 组也装配 shim，让 runnable 样本真正能 setResult（否则只验了分类、没验执行）
+          HikerCompat.install({isolation:'compat', page:page,
+            offlineHtml: window.__HK_HTML__ || '<html><body><a class="item" href="/v/1.html">影片A</a></body></html>',
+            onResult: function(){}});
           var out=[];
           for(var i=0;i<variants.length;i++){
             var v=variants[i];

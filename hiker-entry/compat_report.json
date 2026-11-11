@@ -265,9 +265,9 @@
                 "need": "runtime"
               }
             ],
-            "ok": false,
-            "out": null,
-            "err": "TypeError: setResult is not a function"
+            "ok": true,
+            "out": "[{\"title\":\"影片A\",\"url\":\"https://e.com/1\"}]",
+            "err": null
           }
         },
         {
@@ -445,9 +445,9 @@
                 "need": "runtime"
               }
             ],
-            "ok": false,
-            "out": null,
-            "err": "TypeError: setResult is not a function"
+            "ok": true,
+            "out": "[\"影片A\",\"影片B\",\"影片C\"]",
+            "err": null
           }
         }
       ],
