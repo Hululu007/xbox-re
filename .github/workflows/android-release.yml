@@ -521,6 +521,8 @@ jobs:
               echo "zip entries: $(unzip -Z1 "$apk" | wc -l)"
               echo "unzip -t: $(unzip -t "$apk" 2>&1 | tail -1)"
               echo "META-INF entries: $(unzip -Z1 "$apk" | grep -icE '^META-INF/' || true)"
+              echo "lib/ entries (node runtime shim + libc++_shared):"
+              unzip -Z1 "$apk" | grep -E '^lib/' | sed 's/^/  /' || true
               echo "aapt2 dump badging (first 14 lines):"
               "$AAPT2" dump badging "$apk" 2>&1 | head -14 | sed 's/^/  /'
               echo ""
@@ -558,6 +560,7 @@ jobs:
               res = [n for n in names if n.startswith("res/") and not n.endswith("/")]
               lib = [n for n in names if n.startswith("lib/") and not n.endswith("/")]
               assets = [n for n in names if n.startswith("assets/") and not n.endswith("/")]
+              node_libs = [n for n in lib if ("cnode" in n or "libc++_shared" in n or "libnode" in n)]
               checks = {
                   "ZIP integrity": bad is None,
                   "AndroidManifest.xml": "AndroidManifest.xml" in names,
@@ -574,6 +577,7 @@ jobs:
               record("  entries=%d dex=%s res=%d lib=%d assets=%d META-INF=%d(payload=%d sig=%d)" %
                      (len(names), ",".join(dex) or "none", len(res), len(lib), len(assets),
                       len(meta_files), len(payload), len(sigleft)))
+              record("  Node runtime libs in APK: %s" % (", ".join(sorted(node_libs)) or "none"))
               record("  META-INF payload sample: %s" % ", ".join(sorted(payload)[:12]))
               record("  v1 signature files: %s" % ", ".join(sorted(sigleft)))
               record("  resources.arsc: stored=%s header_offset=%s header_offset%%4=%s (diagnostic; zipalign -c 4 is authoritative)" %
