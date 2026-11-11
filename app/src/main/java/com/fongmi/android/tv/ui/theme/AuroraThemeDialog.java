@@ -89,7 +89,7 @@ public class AuroraThemeDialog extends DialogFragment {
         return new MaterialAlertDialogBuilder(ctx)
                 .setTitle(R.string.aurora_theme_title)
                 .setView(scroll)
-                .setPositiveButton(R.string.aurora_apply, (dialog, which) -> AuroraTheme.relaunch(requireActivity()))
+                .setPositiveButton(R.string.aurora_apply, (dialog, which) -> requireActivity().recreate())
                 .setNegativeButton(R.string.aurora_close, null)
                 .create();
     }
@@ -121,13 +121,10 @@ public class AuroraThemeDialog extends DialogFragment {
     private void buildPreview() {
         Context c = themed();
         float text = AuroraTheme.dimension(c, R.attr.auroraTextSize, 14);
-        int cardBg = AuroraTheme.color(c, R.attr.auroraSurfaceHigh, 0xFF232C28);
-        int onSurface = AuroraTheme.readableOn(cardBg,
-                AuroraTheme.color(c, R.attr.auroraOnSurface, 0xFFE8EEEB));
-        int onVariant = AuroraTheme.readableOn(cardBg,
-                AuroraTheme.color(c, R.attr.auroraOnSurfaceVariant, 0xFFA8B5B0));
-        String buttonShape = AuroraTheme.get(c, AuroraTheme.KEY_BUTTON, "solid");
-        int onAccent = AuroraTheme.buttonTextColor(c, buttonShape);
+        int onSurface = AuroraTheme.color(c, R.attr.auroraOnSurface, 0xFFE8EEEB);
+        int onVariant = AuroraTheme.color(c, R.attr.auroraOnSurfaceVariant, 0xFFA8B5B0);
+        int onAccent = AuroraTheme.onAccent(
+                AuroraTheme.color(c, R.attr.auroraAccent, 0xFF5FC79A));
 
         LinearLayout card = new LinearLayout(c);
         card.setOrientation(LinearLayout.VERTICAL);
@@ -175,7 +172,7 @@ public class AuroraThemeDialog extends DialogFragment {
         actions.setGravity(Gravity.CENTER_VERTICAL);
         TextView button = new TextView(c);
         button.setText(R.string.aurora_preview_button);
-        button.setBackground(AuroraTheme.button(c, buttonShape));
+        button.setBackground(AuroraTheme.button(c, AuroraTheme.get(c, AuroraTheme.KEY_BUTTON, "solid")));
         button.setTextColor(onAccent);
         button.setGravity(Gravity.CENTER);
         button.setPadding(dp(c, 18), dp(c, 9), dp(c, 18), dp(c, 9));
@@ -230,12 +227,9 @@ public class AuroraThemeDialog extends DialogFragment {
             option.setPadding(dp(c, 8), dp(c, 9), dp(c, 8), dp(c, 9));
             option.setTextSize(TypedValue.COMPLEX_UNIT_PX, text * 0.88f);
             option.setBackground(chip(c, selected));
-            int chipBg = selected
-                    ? AuroraTheme.color(c, R.attr.auroraAccentSoft, 0xFF1E3A30)
-                    : AuroraTheme.color(c, R.attr.auroraSurfaceHigh, 0xFF232C28);
-            option.setTextColor(AuroraTheme.readableOn(chipBg, selected
+            option.setTextColor(selected
                     ? AuroraTheme.color(c, R.attr.auroraAccent, 0xFF5FC79A)
-                    : AuroraTheme.color(c, R.attr.auroraOnSurfaceVariant, 0xFFA8B5B0)));
+                    : AuroraTheme.color(c, R.attr.auroraOnSurfaceVariant, 0xFFA8B5B0));
             option.setOnClickListener(view -> {
                 AuroraTheme.put(ctx, prefKey, key);
                 rebuild();
