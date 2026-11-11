@@ -1,0 +1,9 @@
+{
+  "key": "koul_onestop",
+  "name": "口令一条龙",
+  "type": 3,
+  "api": "csp_KoulOnestop",
+  "homePage": "https://your-host.example.com/koul-onestop/index.html",
+  "searchable": 0,
+  "changeable": 0
+}

@@ -1,0 +1,35 @@
+{
+  "spider": "https://demo.example.com/spider.jar",
+  "sites": [
+    {
+      "key": "koul_demo_web",
+      "name": "演示·WebHome",
+      "type": 3,
+      "api": "csp_KoulDemo",
+      "homePage": "https://demo.example.com/home.html",
+      "searchable": 1
+    },
+    {
+      "key": "koul_demo_csp",
+      "name": "演示·CSP点播",
+      "type": 1,
+      "api": "csp_DemoVod",
+      "searchable": 1
+    },
+    {
+      "key": "koul_demo_rule",
+      "name": "演示·规则站点",
+      "type": 3,
+      "api": "https://demo.example.com/rule.js",
+      "ext": "https://demo.example.com/rule.json",
+      "searchable": 1
+    },
+    {
+      "key": "koul_demo_pan",
+      "name": "演示·网盘",
+      "type": 3,
+      "api": "csp_Pan",
+      "searchable": 0
+    }
+  ]
+}

@@ -1,0 +1,1184 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e1218">
+<title>口令一条龙 · WebHome</title>
+<style>
+:root{
+  --bg:#0e1218; --panel:#151c26; --panel2:#1c2634; --line:#2b3949;
+  --txt:#e6edf5; --dim:#8ea0b5; --accent:#4ea1ff; --ok:#38c793; --warn:#f0b458; --bad:#f07178;
+  --fm-web-height:100vh;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--txt)}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans CJK SC","Microsoft YaHei",sans-serif;font-size:14px;line-height:1.55}
+button,input,select,textarea{font-family:inherit;font-size:14px;color:var(--txt)}
+button{cursor:pointer;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin:0}
+button:hover{border-color:var(--accent)}
+button:focus,input:focus,select:focus,textarea:focus,a:focus{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:#1c4d80;border-color:#2f6fb5}
+button.danger{background:#4a2229;border-color:#7a3540}
+button.mini{padding:4px 8px;font-size:12px;border-radius:6px}
+input,select,textarea{background:#0b1017;border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+textarea{min-height:90px;resize:vertical;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+label{display:block;color:var(--dim);font-size:12px;margin:0 0 4px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 14px 18px;
+  padding-bottom:calc(18px + max(var(--fm-safe-bottom,0px), env(safe-area-inset-bottom,0px)))}
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;padding:14px 0 10px}
+.brand{font-size:19px;font-weight:700;letter-spacing:.5px}
+.brand .ver{font-size:11px;color:var(--dim);font-weight:400;margin-left:6px}
+.status{color:var(--dim);font-size:12px;display:flex;align-items:center}
+.status .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--warn);margin-right:7px}
+.status.native .dot{background:var(--ok)}
+.tabs{display:flex;flex-wrap:wrap;margin:0 0 14px}
+.tab{margin:0 8px 8px 0;border-radius:20px;padding:7px 15px;color:var(--dim)}
+.tab.on{background:#1c4d80;border-color:#2f6fb5;color:#fff}
+.view{display:none}
+.view.on{display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;margin:0 0 12px}
+.card h2{margin:0 0 10px;font-size:16px}
+.card h3{margin:14px 0 8px;font-size:14px;color:var(--accent)}
+.hint{color:var(--dim);font-size:12px;margin:0 0 10px}
+.row{display:flex;flex-wrap:wrap;margin:0 -6px}
+.col{padding:0 6px;min-width:0}
+.col.w2{width:16.66%}.col.w3{width:25%}.col.w4{width:33.33%}.col.w6{width:50%}.col.w12{width:100%}
+@media (max-width:720px){.col.w2,.col.w3,.col.w4,.col.w6{width:100%}}
+.field{margin:0 0 10px}
+.btnbar{margin:10px 0 0}
+.btnbar button{margin:0 8px 8px 0}
+.steps{display:flex;flex-wrap:wrap;margin:0 -6px}
+.step{width:33.33%;padding:0 6px}
+@media (max-width:720px){.step{width:100%}}
+.step .box{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px;margin:0 0 12px;min-height:112px}
+.step .n{color:var(--accent);font-size:12px;font-weight:700}
+.step .t{font-size:15px;font-weight:600;margin:4px 0}
+.step .v{font-size:22px;font-weight:700;color:var(--ok)}
+.step .d{color:var(--dim);font-size:12px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:8px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{color:var(--dim);font-weight:500;font-size:12px}
+td.act{white-space:nowrap}
+td.act button{margin:0 4px 4px 0}
+.tag{display:inline-block;padding:1px 7px;border-radius:10px;font-size:11px;border:1px solid var(--line);color:var(--dim)}
+.tag.on{color:var(--ok);border-color:#2c6b52}
+.tag.off{color:var(--bad);border-color:#6b3038}
+.empty{color:var(--dim);text-align:center;padding:22px;font-size:13px}
+.vods{display:flex;flex-wrap:wrap;margin:0 -6px}
+.vod{width:33.33%;padding:0 6px}
+@media (max-width:720px){.vod{width:100%}}
+.vod .box{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px;margin:0 0 12px}
+.vod .t{font-weight:600;margin:0 0 4px}
+.vod .u{color:var(--dim);font-size:11px;word-break:break-all;margin:0 0 10px}
+.logbox{background:#0a0e14;border:1px solid var(--line);border-radius:12px;margin:14px 0 0}
+.loghead{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;color:var(--dim);font-size:12px;border-bottom:1px solid var(--line)}
+.loglist{max-height:190px;overflow:auto;padding:8px 12px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#9fb3c9}
+.loglist div{padding:1px 0}
+.code{background:#0b1017;border:1px solid var(--line);border-radius:8px;padding:10px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#9fb3c9;max-height:220px;overflow:auto;white-space:pre-wrap;word-break:break-all}
+.warnbox{border-left:3px solid var(--warn);background:#2a2317;padding:10px 12px;color:#e8cf9f;font-size:12px;margin:0 0 12px;border-radius:0 8px 8px 0}
+.okbox{border-left:3px solid var(--ok);background:#16291f;padding:10px 12px;color:#a9e0c6;font-size:12px;margin:0 0 12px;border-radius:0 8px 8px 0}
+.kv{color:var(--dim);font-size:12px}
+.kv b{color:var(--txt);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <div class="brand">口令一条龙<span class="ver">v1.0 · WebHome</span></div>
+    <div id="status" class="status"><span class="dot"></span>初始化…</div>
+  </div>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab on" data-view="home">① 入口</button>
+    <button class="tab" data-view="tokens">② 口令管理</button>
+    <button class="tab" data-view="datasets">③ 口令数据</button>
+    <button class="tab" data-view="sites">④ 生成站点</button>
+    <button class="tab" data-view="run">⑤ 站点运行</button>
+    <button class="tab" data-view="play">⑥ 桥接播放</button>
+  </nav>
+
+  <main>
+    <!-- ① 入口 -->
+    <section id="v-home" class="view on">
+      <div class="card">
+        <h2>一条龙总览</h2>
+        <p class="hint">入口 → 口令管理 → 获取口令数据 → 生成站点 → 站点运行 → 桥接 App 播放器播放。全部状态保存在 App 的 <b>fm.cache</b>，换设备可用「一键同步 → WebHome」带走。</p>
+        <div class="steps" id="homeSteps"></div>
+      </div>
+      <div class="card">
+        <h2>运行环境</h2>
+        <div id="envBox" class="kv">读取中…</div>
+        <div class="btnbar">
+          <button id="btnDemoAll" class="primary">一键跑通演示链路</button>
+          <button id="btnReset">清空全部本地数据</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>六段链路说明</h2>
+        <div class="code" id="chainDoc"></div>
+      </div>
+    </section>
+
+    <!-- ② 口令管理 -->
+    <section id="v-tokens" class="view">
+      <div class="card">
+        <h2>新增 / 编辑口令</h2>
+        <p class="hint">「口令」= 一条可复用的取数凭据。<b>端点模板</b>里的 <b>{code}</b> 会被替换成口令码；也支持直接填完整 URL。请求统一走 <b>fm.req</b>（Native OkHttp，无 CORS）。</p>
+        <div class="row">
+          <div class="col w3"><div class="field"><label>名称</label><input id="tkName" placeholder="例如：我的订阅"></div></div>
+          <div class="col w3"><div class="field"><label>口令码</label><input id="tkCode" placeholder="例如：8888"></div></div>
+          <div class="col w6"><div class="field"><label>端点模板</label><input id="tkEndpoint" placeholder="https://api.example.com/koul?code={code}"></div></div>
+          <div class="col w2"><div class="field"><label>方法</label><select id="tkMethod"><option>GET</option><option>POST</option></select></div></div>
+          <div class="col w4"><div class="field"><label>请求头（JSON，可空）</label><input id="tkHeaders" placeholder='{"X-Token":""}'></div></div>
+          <div class="col w6"><div class="field"><label>备注</label><input id="tkNote" placeholder="选填"></div></div>
+        </div>
+        <div class="btnbar">
+          <button id="tkSave" class="primary">保存口令</button>
+          <button id="btnDemoToken">填入演示口令</button>
+          <button id="tkClear">清空表单</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>口令库 <span id="tkCount" class="kv"></span></h2>
+        <div id="tkList"></div>
+      </div>
+    </section>
+
+    <!-- ③ 口令数据 -->
+    <section id="v-datasets" class="view">
+      <div class="card">
+        <h2>获取口令数据</h2>
+        <p class="hint">选中口令后点「拉取」；离线演示请用「拉取演示样本」。原始响应会存成一条<b>数据集</b>，可反复解析、重新生成站点。</p>
+        <div class="row">
+          <div class="col w6"><div class="field"><label>选择口令</label><select id="dsToken"></select></div></div>
+          <div class="col w6"><div class="field"><label>关键词（可选，附加到 URL 的 kw 参数）</label><input id="dsKw" placeholder="选填"></div></div>
+        </div>
+        <div class="btnbar">
+          <button id="btnFetch" class="primary">拉取所选口令</button>
+          <button id="btnFetchDemo">拉取演示样本（离线）</button>
+        </div>
+        <h3>离线导入 / 粘贴原始数据</h3>
+        <textarea id="dsImport" placeholder="粘贴 TVBox 配置 JSON、站点数组、或「名称,地址」逐行文本"></textarea>
+        <div class="btnbar"><button id="btnImport">导入为数据集</button></div>
+      </div>
+      <div class="card">
+        <h2>数据集 <span id="dsCount" class="kv"></span></h2>
+        <div id="dsList"></div>
+      </div>
+    </section>
+
+    <!-- ④ 生成站点 -->
+    <section id="v-sites" class="view">
+      <div class="card">
+        <h2>站点管理</h2>
+        <p class="hint">从数据集归一化出的统一站点记录。启用后可<b>注入到 App</b>（<b>/manage/csp</b> 站点注入）成为真正可点播的站点；也可复制配置自行粘贴。</p>
+        <div class="btnbar">
+          <button id="btnEnableAll">全部启用</button>
+          <button id="btnDisableAll">全部停用</button>
+          <button id="btnDedup">按 key 去重</button>
+          <button id="btnExport" class="primary">导出 / 预览配置</button>
+          <button id="btnCopy">复制配置</button>
+          <button id="btnInject" class="primary">注入到 App</button>
+        </div>
+        <div id="injectBox" class="warnbox" style="display:none"></div>
+        <div id="exportBox" class="code" style="display:none"></div>
+      </div>
+      <div class="card">
+        <h2>站点列表 <span id="siteCount" class="kv"></span></h2>
+        <div id="siteList"></div>
+      </div>
+    </section>
+
+    <!-- ⑤ 站点运行 -->
+    <section id="v-run" class="view">
+      <div class="card">
+        <h2>运行站点</h2>
+        <p class="hint">两条运行路径：<b>原生运行</b> 交给 App 的 Spider 引擎（fm.search / fm.vod）；<b>页内运行</b> 用 fm.req 取回页面并解析出可播放条目，作为兜底与预览。</p>
+        <div class="row">
+          <div class="col w6"><div class="field"><label>选择已启用站点</label><select id="runSite"></select></div></div>
+          <div class="col w6"><div class="field"><label>关键词</label><input id="runKeyword" placeholder="例如：影片"></div></div>
+        </div>
+        <div class="btnbar">
+          <button id="btnRun" class="primary">运行站点（页内）</button>
+          <button id="btnNativeSearch">交给 App 原生搜索</button>
+          <button id="btnNativeVod">打开 App 原生详情</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>运行结果 <span id="vodCount" class="kv"></span></h2>
+        <div id="vodList"></div>
+      </div>
+    </section>
+
+    <!-- ⑥ 桥接播放 -->
+    <section id="v-play" class="view">
+      <div class="card">
+        <h2>桥接 App 播放器</h2>
+        <p class="hint">按 URL 类型自动路由：直链 → <b>fm.play</b>；网盘 / 磁力 → <b>fm.pan.play</b>；多集 → <b>fm.vodInline</b>。播放前会把海报映射写进 fm.cache，便于最近观看恢复。</p>
+        <div class="row">
+          <div class="col w6"><div class="field"><label>播放地址</label><input id="mpUrl" placeholder="https://…/a.m3u8 或 magnet: 或网盘分享"></div></div>
+          <div class="col w3"><div class="field"><label>标题</label><input id="mpTitle" placeholder="影片名"></div></div>
+          <div class="col w3"><div class="field"><label>海报（选填）</label><input id="mpPic" placeholder="https://…/p.jpg"></div></div>
+        </div>
+        <div class="btnbar"><button id="btnManualPlay" class="primary">桥接播放</button></div>
+      </div>
+      <div class="card">
+        <h2>播放记录 <span id="playCount" class="kv"></span></h2>
+        <div id="playList"></div>
+      </div>
+      <div class="card">
+        <h2>App 最近观看（fm.history）</h2>
+        <div id="nativeHistory" class="kv">读取中…</div>
+        <div class="btnbar"><button id="btnHistory">刷新</button></div>
+      </div>
+    </section>
+  </main>
+
+  <div class="logbox">
+    <div class="loghead"><span>运行日志（最近 300 条）</span><button id="logClear" class="mini">清空</button></div>
+    <div id="logList" class="loglist"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var VERSION = '1.0.0';
+  var NS = 'koul1';
+  var STATE_KEY = 'state';
+  var logs = [];
+  var dev = null;
+  var cfg = null;
+  var curSite = null;
+  var fm = null;
+  var nativeSdk = false;
+  var editTokenId = '';
+  var state = {
+    tokens: [], datasets: [], sites: [], playLog: [],
+    settings: { inject: true, runInPage: true }
+  };
+
+  /* ---------------- 演示样本（与 sample-data.json 一致） ---------------- */
+  var SAMPLE = {
+    spider: 'https://demo.example.com/spider.jar',
+    sites: [
+      { key: 'koul_demo_web',  name: '演示·WebHome',   type: 3, api: 'csp_KoulDemo',  homePage: 'https://demo.example.com/home.html', searchable: 1 },
+      { key: 'koul_demo_csp',  name: '演示·CSP点播',   type: 1, api: 'csp_DemoVod',  searchable: 1 },
+      { key: 'koul_demo_rule', name: '演示·规则站点',   type: 3, api: 'https://demo.example.com/rule.js', ext: 'https://demo.example.com/rule.json', searchable: 1 },
+      { key: 'koul_demo_pan',  name: '演示·网盘',       type: 3, api: 'csp_Pan',      searchable: 0 }
+    ]
+  };
+
+  var DEMO_HTML = '<!doctype html><html><body><ul class="list">'
+    + '<li><a class="vod" href="https://demo.example.com/a.m3u8" data-pic="https://demo.example.com/a.jpg">影片A·直链播放</a></li>'
+    + '<li><a class="vod" href="https://pan.quark.cn/s/demo123" data-title="影片B·网盘分享">影片B·网盘分享</a></li>'
+    + '<li><a class="vod" href="https://demo.example.com/series.json" data-multi="1" data-title="影片C·多集剧">影片C·多集剧</a></li>'
+    + '</ul></body></html>';
+
+  var CHAIN_DOC = [
+    '① 入口     : 本页即 WebHome 首页；站点配置 homePage 指向它，App WebView 加载并注入 fm SDK。',
+    '② 口令管理 : fm.cache 持久化 {name, code, endpoint, method, headers}；支持增删改、启停、批量。',
+    '③ 口令数据 : fm.req(endpoint.replace("{code}", code), options) 无 CORS 取数；原始响应存为数据集。',
+    '④ 生成站点 : 归一化 {sites:[]} / {urls:[]} / 数组 / 纯文本 → 统一站点记录；',
+    '             POST http://127.0.0.1:{port}/manage/csp?registry=<JSON> 注入 App（失败则复制手动粘贴）。',
+    '⑤ 站点运行 : 原生路径 fm.search(keyword,{direct:true}) / fm.vod(siteKey,vodId,title,pic)；',
+    '             页内路径 fm.req(homePage) + DOMParser 解析出可播放条目（兜底 / 预览）。',
+    '⑥ 桥接播放 : 直链 → fm.play(url,title,{pic,wallPic})；网盘磁力 → fm.pan.play({...})；',
+    '             多集 → fm.vodInline(payload)；入口即 App 原生播放器，壳内不弹外部 App。'
+  ].join('\n');
+
+  /* ---------------- 工具 ---------------- */
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s === null || s === undefined ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function uid(p) {
+    return (p || 'id') + '_' + Date.now().toString(36) + '_' + Math.floor(Math.random() * 100000).toString(36);
+  }
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+  function nowStr() {
+    var d = new Date();
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' '
+      + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+  }
+  function log(tag, msg) {
+    logs.push('[' + nowStr() + '] [' + tag + '] ' + msg);
+    if (logs.length > 300) logs.shift();
+    renderLog();
+  }
+  function toast(msg) {
+    log('UI', msg);
+    if (fm && fm.ext && typeof fm.ext.toast === 'function') {
+      try { fm.ext.toast(msg); } catch (e) {}
+    }
+  }
+  function P(v) { return (v && typeof v.then === 'function') ? v : Promise.resolve(v); }
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+  function preview(s, n) {
+    s = String(s === null || s === undefined ? '' : s);
+    return s.length > (n || 60) ? s.slice(0, n) + '…' : s;
+  }
+
+  /* ---------------- 离线演示桥（无 App 时自动挂载） ---------------- */
+  function createMockFm() {
+    var cache = {}, calls = [];
+    function rec(m, data) { calls.push({ m: m, data: data, at: Date.now() }); }
+    var mock = {
+      __isMock: true,
+      __calls: calls,
+      req: function (url, options) {
+        rec('req', { url: url, options: options || {} });
+        var body;
+        if (url && url.indexOf('/device') >= 0) {
+          body = JSON.stringify({ uuid: 'mock', name: '浏览器预览', ip: 'http://127.0.0.1:9978', type: 1, time: Date.now() });
+        } else if (url && url.indexOf('/manage/csp') >= 0) {
+          body = JSON.stringify({ enabled: true, itemsCount: state.sites.length, active: state.sites.length, enabledCount: state.sites.length });
+        } else if (url && (url.indexOf('koul') >= 0 || url.indexOf('config') >= 0)) {
+          body = JSON.stringify(SAMPLE);
+        } else {
+          body = DEMO_HTML;
+        }
+        return Promise.resolve({ ok: true, status: 200, url: url, headers: {}, cookies: {}, body: body, error: '' });
+      },
+      cache: {
+        set: function (k, v, rule) { rec('cache.set', { key: k }); cache[String(rule) + '_' + k] = String(v); return Promise.resolve(true); },
+        get: function (k, rule) { var v = cache[String(rule) + '_' + k]; return Promise.resolve(v === undefined ? '' : v); },
+        del: function (k, rule) { delete cache[String(rule) + '_' + k]; return Promise.resolve(true); }
+      },
+      play: function (url, title, options) { rec('play', { url: url, title: title, options: options || {} }); return Promise.resolve({ ok: true }); },
+      vod: function (a, b, c, d, e) { rec('vod', { siteKey: a, vodId: b, title: c }); return Promise.resolve({ ok: true }); },
+      vodInline: function (p) { rec('vodInline', { payload: p }); return Promise.resolve({ ok: true }); },
+      pan: {
+        play: function (p) { rec('pan.play', { payload: p }); return Promise.resolve({ ok: true }); },
+        check: function () { return Promise.resolve({ results: [] }); }
+      },
+      search: function (kw, o) { rec('search', { keyword: kw, options: o || {} }); return Promise.resolve({ ok: true }); },
+      history: function () { return Promise.resolve([]); },
+      device: function () { return Promise.resolve({ uuid: 'mock', name: '浏览器预览', ip: 'http://127.0.0.1:9978', type: 1, serial: '', time: Date.now() }); },
+      site: function () { return Promise.resolve({ key: 'koul_onestop', name: '口令一条龙', homePage: '', type: 3, header: {} }); },
+      config: function () { return Promise.resolve({ id: 0, url: '', desc: '离线演示', driveCheck: false }); },
+      ui: {
+        setChrome: function () { return Promise.resolve({}); },
+        restoreChrome: function () { return Promise.resolve({}); },
+        getViewport: function () { return Promise.resolve({ chromeMode: 'edge' }); },
+        setToolbar: function () { return Promise.resolve({}); }
+      },
+      ext: { toast: function () {}, log: function () {}, info: function () { return Promise.resolve({ enabled: true, ready: 0, matched: 0 }); } },
+      back: function () { return Promise.resolve({}); },
+      reload: function () { return Promise.resolve({}); },
+      ctrl: function () { return Promise.resolve({}); },
+      stat: function () { return Promise.resolve({}); },
+      openKeep: function () { return Promise.resolve({}); },
+      openLive: function () { return Promise.resolve({}); },
+      openSetting: function () { return Promise.resolve({}); },
+      res: function (u) { return u; }
+    };
+    return mock;
+  }
+
+  /* ---------------- Bridge 统一封装 ---------------- */
+  var Bridge = {
+    req: function (url, options) {
+      if (!fm) return Promise.reject(new Error('fm 未就绪'));
+      if (typeof fm.req !== 'function') return Promise.reject(new Error('fm.req 不可用'));
+      return P(fm.req(url, options || {}));
+    },
+    play: function (url, title, options) {
+      if (!fm || typeof fm.play !== 'function') return Promise.reject(new Error('fm.play 不可用'));
+      return P(fm.play(url, title, options || {}));
+    },
+    vod: function (siteKey, vodId, title, pic) {
+      if (!fm || typeof fm.vod !== 'function') return Promise.reject(new Error('fm.vod 不可用'));
+      return P(fm.vod(siteKey, vodId, title, pic, {}));
+    },
+    vodInline: function (payload) {
+      if (!fm || typeof fm.vodInline !== 'function') return Promise.reject(new Error('fm.vodInline 不可用'));
+      return P(fm.vodInline(payload));
+    },
+    panPlay: function (payload) {
+      if (!fm || !fm.pan || typeof fm.pan.play !== 'function') return Promise.reject(new Error('fm.pan.play 不可用'));
+      return P(fm.pan.play(payload));
+    },
+    search: function (kw, options) {
+      if (!fm || typeof fm.search !== 'function') return Promise.reject(new Error('fm.search 不可用'));
+      return P(fm.search(kw, options || {}));
+    },
+    cacheGet: function (k) {
+      if (fm && fm.cache && typeof fm.cache.get === 'function') return P(fm.cache.get(k, NS));
+      return P('');
+    },
+    cacheSet: function (k, v) {
+      if (fm && fm.cache && typeof fm.cache.set === 'function') return P(fm.cache.set(k, String(v), NS));
+      return P(true);
+    },
+    device: function () { return (fm && typeof fm.device === 'function') ? P(fm.device()) : P(null); },
+    config: function () { return (fm && typeof fm.config === 'function') ? P(fm.config()) : P(null); },
+    site: function () { return (fm && typeof fm.site === 'function') ? P(fm.site()) : P(null); },
+    history: function () { return (fm && typeof fm.history === 'function') ? P(fm.history()) : P([]); }
+  };
+
+  /* ---------------- 持久化 ---------------- */
+  function load() {
+    return Bridge.cacheGet(STATE_KEY).then(function (raw) {
+      if (!raw) { try { raw = window.localStorage.getItem('koul1_state') || ''; } catch (e) { raw = ''; } }
+      if (raw) {
+        try {
+          var s = JSON.parse(raw);
+          if (s && typeof s === 'object') {
+            state.tokens = s.tokens || [];
+            state.datasets = s.datasets || [];
+            state.sites = s.sites || [];
+            state.playLog = s.playLog || [];
+            if (s.settings) state.settings = s.settings;
+          }
+        } catch (e) { log('存储', '本地数据解析失败，已忽略：' + e.message); }
+      }
+      return true;
+    });
+  }
+  function save() {
+    var raw = JSON.stringify(state);
+    try { window.localStorage.setItem('koul1_state', raw); } catch (e) {}
+    return Bridge.cacheSet(STATE_KEY, raw);
+  }
+
+  /* ---------------- 口令 → 数据 ---------------- */
+  function buildUrl(token, kw) {
+    var url = String(token.endpoint || '').trim();
+    var code = encodeURIComponent(String(token.code || ''));
+    if (url.indexOf('{code}') >= 0) url = url.split('{code}').join(code);
+    if (kw) url += (url.indexOf('?') >= 0 ? '&' : '?') + 'kw=' + encodeURIComponent(kw);
+    return url;
+  }
+  function parseHeaders(text) {
+    if (!text) return {};
+    try { var o = JSON.parse(text); return (o && typeof o === 'object') ? o : {}; }
+    catch (e) { log('口令', '请求头不是合法 JSON，已忽略'); return {}; }
+  }
+  function fetchToken(tokenId, kw, useDemo) {
+    var token = null, i;
+    for (i = 0; i < state.tokens.length; i++) if (state.tokens[i].id === tokenId) token = state.tokens[i];
+    if (!token && !useDemo) { toast('请先选择或新增口令'); return Promise.resolve(false); }
+
+    if (useDemo) {
+      var raw = JSON.stringify(SAMPLE);
+      return addDataset(raw, '离线演示样本', token ? token.id : '', token ? token.name : '演示').then(function () {
+        log('取数', '离线演示样本已载入（' + raw.length + ' 字节）');
+        return true;
+      });
+    }
+
+    var url = buildUrl(token, kw);
+    if (!url) { toast('端点模板为空'); return Promise.resolve(false); }
+    log('取数', 'fm.req → ' + preview(url, 110));
+    var options = { method: String(token.method || 'GET').toUpperCase(), headers: parseHeaders(token.headers), timeout: 30 };
+    return Bridge.req(url, options).then(function (res) {
+      if (!res) throw new Error('空响应');
+      if (res.ok === false) throw new Error(res.error || ('HTTP ' + res.status));
+      var body = res.body;
+      var raw = (typeof body === 'string') ? body : JSON.stringify(body);
+      return addDataset(raw, url, token.id, token.name).then(function () {
+        log('取数', '成功，' + raw.length + ' 字节');
+        return true;
+      });
+    }).catch(function (e) {
+      log('取数', '失败：' + e.message + '；可改用「拉取演示样本」');
+      toast('取数失败：' + e.message);
+      return false;
+    });
+  }
+  function addDataset(raw, source, tokenId, tokenName) {
+    var ds = {
+      id: uid('ds'), source: source, tokenId: tokenId || '', tokenName: tokenName || '',
+      raw: String(raw), fetchedAt: nowStr(), siteCount: normalizeSites(String(raw), 'tmp').length
+    };
+    state.datasets.unshift(ds);
+    if (state.datasets.length > 30) state.datasets.pop();
+    return save().then(function () { renderAll(); return ds; });
+  }
+
+  /* ---------------- 归一化解析 ---------------- */
+  function normalizeSites(raw, sourceId) {
+    var out = [], parsed = null;
+    try { parsed = JSON.parse(raw); } catch (e) { parsed = null; }
+
+    if (parsed && typeof parsed === 'object') {
+      var list = null;
+      if (Object.prototype.toString.call(parsed) === '[object Array]') list = parsed;
+      else if (parsed.sites && Object.prototype.toString.call(parsed.sites) === '[object Array]') list = parsed.sites;
+      else if (parsed.data && Object.prototype.toString.call(parsed.data) === '[object Array]') list = parsed.data;
+      else if (parsed.list && Object.prototype.toString.call(parsed.list) === '[object Array]') list = parsed.list;
+      else if (parsed.items && Object.prototype.toString.call(parsed.items) === '[object Array]') list = parsed.items;
+      else if (parsed.urls && Object.prototype.toString.call(parsed.urls) === '[object Array]') {
+        /* depot 形态：把每条 url 作为一条「待展开配置」站点 */
+        for (var u = 0; u < parsed.urls.length; u++) {
+          var d = parsed.urls[u] || {};
+          var du = (typeof d === 'string') ? d : (d.url || '');
+          if (du) out.push(makeSite({ key: 'depot_' + (u + 1), name: d.name || ('配置源' + (u + 1)), api: du, type: 0 }, sourceId));
+        }
+      } else if (parsed.key || parsed.api || parsed.name) {
+        list = [parsed];
+      }
+      if (list) {
+        for (var i = 0; i < list.length; i++) {
+          var it = list[i];
+          if (!it || typeof it !== 'object') continue;
+          out.push(makeSite(it, sourceId));
+        }
+      }
+    } else {
+      /* 纯文本：每行「名称,地址」或「名称 地址」或单独 URL */
+      var lines = String(raw).split(/\r?\n/), k;
+      for (k = 0; k < lines.length; k++) {
+        var line = lines[k].trim();
+        if (!line || line.charAt(0) === '#') continue;
+        var parts = line.split(/[,\t]+|\s{2,}/);
+        var name = parts[0] || ('站点' + (k + 1));
+        var url = parts.slice(1).join('').trim() || (parts[0].indexOf('http') === 0 ? parts[0] : '');
+        if (!url) continue;
+        out.push(makeSite({ key: 'line_' + (k + 1), name: name, api: url, type: 3 }, sourceId));
+      }
+    }
+    return out;
+  }
+  function makeSite(it, sourceId) {
+    var api = String(it.api || it.jar || it.spider || it.url || '').trim();
+    var key = String(it.key || it.siteKey || '').trim();
+    if (!key) key = 'koul_' + simpleHash(api || String(it.name || ''));
+    var homePage = String(it.homePage || it.home || '').trim();
+    var type = (it.type === undefined || it.type === null) ? (homePage ? 3 : 1) : Number(it.type);
+    return {
+      id: uid('site'),
+      key: key,
+      name: String(it.name || it.title || key).trim(),
+      type: type,
+      api: api,
+      homePage: homePage,
+      ext: String(it.ext || '').trim(),
+      searchable: Number(it.searchable === undefined ? 1 : it.searchable),
+      enabled: true,
+      sourceId: sourceId || '',
+      createdAt: nowStr()
+    };
+  }
+  function simpleHash(s) {
+    var h = 0, i;
+    for (i = 0; i < s.length; i++) { h = ((h << 5) - h + s.charCodeAt(i)) | 0; }
+    return Math.abs(h).toString(36);
+  }
+  function generateFromDataset(dsId) {
+    var ds = null, i;
+    for (i = 0; i < state.datasets.length; i++) if (state.datasets[i].id === dsId) ds = state.datasets[i];
+    if (!ds) { toast('数据集不存在'); return Promise.resolve(0); }
+    var sites = normalizeSites(ds.raw, ds.id);
+    /* 按 key 合并：同源重生不重复堆叠 */
+    var index = {}, j;
+    for (j = 0; j < state.sites.length; j++) index[state.sites[j].key] = j;
+    var added = 0;
+    for (j = 0; j < sites.length; j++) {
+      var s = sites[j];
+      if (index[s.key] !== undefined) {
+        var old = state.sites[index[s.key]];
+        old.name = s.name; old.api = s.api; old.homePage = s.homePage;
+        old.ext = s.ext; old.type = s.type; old.sourceId = s.sourceId;
+      } else {
+        state.sites.push(s); index[s.key] = state.sites.length - 1; added++;
+      }
+    }
+    ds.siteCount = sites.length;
+    log('生成', '数据集「' + preview(ds.tokenName || ds.source, 24) + '」→ ' + sites.length + ' 条站点（新增 ' + added + '）');
+    return save().then(function () { renderAll(); return sites.length; });
+  }
+
+  /* ---------------- 站点注入 / 配置导出 ---------------- */
+  function toCspSite(s) {
+    var o = { key: s.key, name: s.name, type: s.type };
+    if (s.api) o.api = s.api;
+    if (s.homePage) o.homePage = s.homePage;
+    if (s.ext) o.ext = s.ext;
+    if (s.searchable !== undefined) o.searchable = s.searchable;
+    return o;
+  }
+  function buildConfig() {
+    var sites = [], i;
+    for (i = 0; i < state.sites.length; i++) if (state.sites[i].enabled) sites.push(toCspSite(state.sites[i]));
+    return { spider: '', sites: sites };
+  }
+  function buildRegistry() {
+    return { enabled: true, insertIndex: 0, sites: buildConfig().sites };
+  }
+  function localPort() {
+    if (dev && dev.ip) {
+      var m = String(dev.ip).match(/:(\d+)\/?$/);
+      if (m) return m[1];
+    }
+    return '9978';
+  }
+  function injectSites() {
+    var registry = buildRegistry();
+    if (!registry.sites.length) { toast('没有已启用的站点'); return Promise.resolve(false); }
+    var payload = 'registry=' + encodeURIComponent(JSON.stringify(registry));
+    var url = 'http://127.0.0.1:' + localPort() + '/manage/csp';
+    log('注入', 'POST ' + url + '（' + registry.sites.length + ' 条站点）');
+    return Bridge.req(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: payload,
+      timeout: 15
+    }).then(function (res) {
+      if (!res || res.ok === false) throw new Error((res && res.error) || '无响应');
+      log('注入', '成功：' + preview(res.body || '', 160));
+      showInjectBox(true, '站点注入成功（' + registry.sites.length + ' 条）。App 会重载点播配置；若首页未出现，请下拉刷新或重启 App。');
+      toast('站点注入成功');
+      return true;
+    }).catch(function (e) {
+      log('注入', '失败：' + e.message);
+      showInjectBox(false, '自动注入失败：' + e.message +
+        '。请确认「设置 → 增强功能 → 管理页面」已开启，或点「复制配置」到管理页 → 站点注入手动粘贴。');
+      toast('自动注入失败，请手动粘贴配置');
+      return false;
+    });
+  }
+  function showInjectBox(ok, msg) {
+    var box = $('injectBox');
+    box.style.display = 'block';
+    box.className = ok ? 'okbox' : 'warnbox';
+    box.textContent = msg;
+    $('exportBox').style.display = 'block';
+    $('exportBox').textContent = JSON.stringify(buildRegistry(), null, 2);
+  }
+
+  /* ---------------- 站点运行 ---------------- */
+  function parseVods(html, site, kw) {
+    var out = [];
+    try {
+      var doc = new DOMParser().parseFromString(String(html), 'text/html');
+      var as = doc.getElementsByTagName('a'), i;
+      for (i = 0; i < as.length; i++) {
+        var a = as[i], cls = a.getAttribute('class') || '';
+        if (cls.indexOf('vod') < 0 && cls.indexOf('item') < 0) continue;
+        var href = a.getAttribute('href') || '';
+        if (!href || href.indexOf('javascript:') === 0) continue;
+        var title = a.getAttribute('data-title') || (a.textContent || '').trim() || ('条目' + (i + 1));
+        out.push({
+          title: title, url: href, pic: a.getAttribute('data-pic') || '',
+          siteKey: site ? site.key : '', multi: a.getAttribute('data-multi') === '1'
+        });
+      }
+    } catch (e) { log('运行', 'DOM 解析异常：' + e.message); }
+    if (!out.length) {
+      /* 兜底：站点自身作为一条结果，保证链路不断 */
+      out.push({
+        title: (site ? site.name : '站点') + ' · 原生搜索入口',
+        url: (site && (site.homePage || site.api)) ? (site.homePage || site.api) : '',
+        pic: '', siteKey: site ? site.key : '', multi: false
+      });
+    }
+    if (kw) log('运行', '关键词「' + kw + '」已记录（页内运行不参与过滤）');
+    return out;
+  }
+  var lastVods = [];
+  function runInPage(siteId, kw) {
+    var site = null, i;
+    for (i = 0; i < state.sites.length; i++) if (state.sites[i].id === siteId && state.sites[i].enabled) site = state.sites[i];
+    if (!site) { toast('请先选择已启用站点'); return Promise.resolve([]); }
+    var url = site.homePage || site.api;
+    if (!url) { toast('该站点没有可运行地址'); return Promise.resolve([]); }
+    log('运行', '页内运行 ' + site.name + ' → fm.req(' + preview(url, 90) + ')');
+    return Bridge.req(url, { method: 'GET', timeout: 20 }).then(function (res) {
+      var body = (res && res.body) || '';
+      var vods = parseVods(body, site, kw);
+      lastVods = vods;
+      log('运行', '产出 ' + vods.length + ' 条可播放条目');
+      renderRun();
+      return vods;
+    }).catch(function (e) {
+      log('运行', '失败：' + e.message);
+      toast('页内运行失败：' + e.message);
+      return [];
+    });
+  }
+  function nativeSearch(kw) {
+    log('运行', '交给 App 原生搜索：fm.search(' + (kw || '') + ', {direct:true})');
+    return Bridge.search(kw || '', { direct: true }).then(function () {
+      toast('已交由 App 原生搜索');
+      return true;
+    }).catch(function (e) { toast('fm.search 失败：' + e.message); return false; });
+  }
+
+  /* ---------------- 桥接播放 ---------------- */
+  function isPanUrl(u) {
+    return /^(magnet|ed2k|thunder|jianpian):/i.test(u) ||
+      /(pan\.(quark|aliyun|baidu|uc|xunlei|115|123|tianyi)|cloud\.189|alipan|drive\.uc)/i.test(u);
+  }
+  function panType(u) {
+    if (/^magnet:/i.test(u)) return 'magnet';
+    if (/^ed2k:/i.test(u)) return 'ed2k';
+    if (/^thunder:/i.test(u)) return 'thunder';
+    if (/quark/i.test(u)) return 'quark';
+    if (/(aliyun|alipan)/i.test(u)) return 'aliyun';
+    if (/baidu/i.test(u)) return 'baidu';
+    if (/115/i.test(u)) return '115';
+    if (/123/i.test(u)) return '123';
+    return 'http';
+  }
+  function cachePic(url, pic, wallPic) {
+    if (!pic && !wallPic) return P(true);
+    return Bridge.cacheSet('pic_' + simpleHash(url), JSON.stringify({ pic: pic || '', wallPic: wallPic || '' }));
+  }
+  function playVod(v) {
+    var url = String(v.url || '').trim();
+    var title = String(v.title || '未命名').trim();
+    var pic = String(v.pic || '').trim();
+    if (!url) { toast('播放地址为空'); return Promise.resolve(false); }
+    var rec = { title: title, url: url, pic: pic, at: nowStr(), bridge: '' };
+
+    return cachePic(url, pic, '').then(function () {
+      if (v.multi || /series\.json|episodes/i.test(url)) {
+        rec.bridge = 'fm.vodInline';
+        log('播放', '多集 → fm.vodInline(' + title + ')');
+        return Bridge.vodInline({
+          title: title, pic: pic, siteKey: v.siteKey || '',
+          list: [{ name: '第1集', url: url }, { name: '第2集', url: url }]
+        });
+      }
+      if (isPanUrl(url)) {
+        rec.bridge = 'fm.pan.play';
+        log('播放', '网盘/磁力 → fm.pan.play(' + title + ', type=' + panType(url) + ')');
+        return Bridge.panPlay({ type: panType(url), url: url, title: title, pic: pic, password: '' });
+      }
+      rec.bridge = 'fm.play';
+      log('播放', '直链 → fm.play(' + preview(url, 80) + ')');
+      return Bridge.play(url, title, { pic: pic, wallPic: '' });
+    }).then(function () {
+      state.playLog.unshift(rec);
+      if (state.playLog.length > 60) state.playLog.pop();
+      toast('已桥接 App 播放器：' + rec.bridge);
+      return save().then(function () { renderAll(); return true; });
+    }).catch(function (e) {
+      log('播放', '失败：' + e.message);
+      toast('播放桥接失败：' + e.message);
+      return false;
+    });
+  }
+
+  /* ---------------- 渲染 ---------------- */
+  function renderLog() {
+    var el = $('logList');
+    if (!el) return;
+    var h = '', i;
+    for (i = logs.length - 1; i >= 0; i--) h += '<div>' + esc(logs[i]) + '</div>';
+    el.innerHTML = h || '<div>（暂无日志）</div>';
+  }
+  function renderStatus() {
+    var el = $('status');
+    el.className = 'status' + (nativeSdk ? ' native' : '');
+    el.innerHTML = '<span class="dot"></span>' + (nativeSdk ? 'App 原生 fm SDK' : '离线演示桥（浏览器预览）')
+      + ' · 设备 ' + esc(dev && dev.name ? dev.name : '—')
+      + ' · 口令 ' + state.tokens.length + ' / 数据 ' + state.datasets.length
+      + ' / 站点 ' + state.sites.length + ' / 播放 ' + state.playLog.length;
+  }
+  function renderEnv() {
+    var rows = [
+      'SDK：<b>' + (nativeSdk ? 'window.fm（App Native 注入）' : '内置离线演示桥（无 App 时自动挂载）') + '</b>',
+      '设备：<b>' + esc(dev ? (dev.name || dev.uuid || '—') : '—') + '</b>　本地服务：<b>http://127.0.0.1:' + esc(localPort()) + '</b>',
+      '当前站点：<b>' + esc(curSite ? (curSite.name || curSite.key || '—') : '—') + '</b>',
+      '当前点播配置：<b>' + esc(cfg ? (cfg.url || cfg.desc || '—') : '—') + '</b>',
+      '页面版本：<b>' + VERSION + '</b>　存储：<b>fm.cache(rule=' + NS + ')</b>'
+    ];
+    $('envBox').innerHTML = rows.join('<br>');
+    $('chainDoc').textContent = CHAIN_DOC;
+  }
+  function renderHome() {
+    var steps = [
+      ['①', '入口', 'WebHome 首页', '已加载', ''],
+      ['②', '口令管理', state.tokens.length + ' 条', state.tokens.length ? '已配置' : '待添加', 'tokens'],
+      ['③', '口令数据', state.datasets.length + ' 组', state.datasets.length ? '已取数' : '待获取', 'datasets'],
+      ['④', '生成站点', state.sites.length + ' 个', state.sites.length ? '已生成' : '待生成', 'sites'],
+      ['⑤', '站点运行', lastVods.length + ' 条', lastVods.length ? '已运行' : '待运行', 'run'],
+      ['⑥', '桥接播放', state.playLog.length + ' 次', state.playLog.length ? '已播放' : '待播放', 'play']
+    ];
+    var h = '', i;
+    for (i = 0; i < steps.length; i++) {
+      var s = steps[i];
+      h += '<div class="step"><div class="box"><div class="n">' + s[0] + ' ' + s[1] + '</div>'
+        + '<div class="t">' + esc(s[2]) + '</div>'
+        + '<div class="v">' + esc(s[3]) + '</div>'
+        + '<div class="d">' + (s[4] ? '<button class="mini" data-go="' + s[4] + '">前往 →</button>' : '当前所在页') + '</div>'
+        + '</div></div>';
+    }
+    $('homeSteps').innerHTML = h;
+  }
+  function renderTokens() {
+    $('tkCount').textContent = '共 ' + state.tokens.length + ' 条';
+    if (!state.tokens.length) { $('tkList').innerHTML = '<div class="empty">还没有口令，点「填入演示口令」快速开始。</div>'; return; }
+    var h = '<table><tr><th>名称</th><th>口令码</th><th>端点模板</th><th>状态</th><th>更新时间</th><th>操作</th></tr>', i;
+    for (i = 0; i < state.tokens.length; i++) {
+      var t = state.tokens[i];
+      h += '<tr><td>' + esc(t.name) + '</td><td><span class="tag">' + esc(t.code) + '</span></td>'
+        + '<td>' + esc(preview(t.endpoint, 46)) + '</td>'
+        + '<td><span class="tag ' + (t.enabled ? 'on' : 'off') + '">' + (t.enabled ? '启用' : '停用') + '</span></td>'
+        + '<td>' + esc(t.updatedAt) + '</td>'
+        + '<td class="act">'
+        + '<button class="mini" data-tk-fetch="' + t.id + '">拉取</button>'
+        + '<button class="mini" data-tk-edit="' + t.id + '">编辑</button>'
+        + '<button class="mini" data-tk-toggle="' + t.id + '">启停</button>'
+        + '<button class="mini danger" data-tk-del="' + t.id + '">删除</button>'
+        + '</td></tr>';
+    }
+    $('tkList').innerHTML = h + '</table>';
+  }
+  function renderDatasets() {
+    var sel = $('dsToken'), i, h = '<option value="">（不选，用演示样本）</option>';
+    for (i = 0; i < state.tokens.length; i++) {
+      h += '<option value="' + esc(state.tokens[i].id) + '">' + esc(state.tokens[i].name) + ' · ' + esc(state.tokens[i].code) + '</option>';
+    }
+    sel.innerHTML = h;
+    $('dsCount').textContent = '共 ' + state.datasets.length + ' 组';
+    if (!state.datasets.length) { $('dsList').innerHTML = '<div class="empty">还没有数据集，点「拉取演示样本（离线）」。</div>'; return; }
+    var t = '<table><tr><th>来源</th><th>字节</th><th>可解析站点</th><th>时间</th><th>操作</th></tr>';
+    for (i = 0; i < state.datasets.length; i++) {
+      var d = state.datasets[i];
+      t += '<tr><td>' + esc(preview(d.tokenName || d.source, 34)) + '</td><td>' + d.raw.length + '</td>'
+        + '<td><b>' + d.siteCount + '</b></td><td>' + esc(d.fetchedAt) + '</td>'
+        + '<td class="act">'
+        + '<button class="mini primary" data-ds-gen="' + d.id + '">生成站点</button>'
+        + '<button class="mini" data-ds-view="' + d.id + '">查看原始</button>'
+        + '<button class="mini danger" data-ds-del="' + d.id + '">删除</button>'
+        + '</td></tr>';
+    }
+    $('dsList').innerHTML = t + '</table>';
+  }
+  function renderSites() {
+    $('siteCount').textContent = '共 ' + state.sites.length + ' 个，启用 ' + countEnabled() + ' 个';
+    var sel = $('runSite'), i, oh = '';
+    for (i = 0; i < state.sites.length; i++) {
+      if (state.sites[i].enabled) oh += '<option value="' + esc(state.sites[i].id) + '">' + esc(state.sites[i].name) + '</option>';
+    }
+    sel.innerHTML = oh || '<option value="">（无已启用站点）</option>';
+    if (!state.sites.length) { $('siteList').innerHTML = '<div class="empty">还没有站点，请先在「③ 口令数据」生成。</div>'; return; }
+    var h = '<table><tr><th>名称</th><th>key</th><th>type</th><th>api / homePage</th><th>状态</th><th>操作</th></tr>';
+    for (i = 0; i < state.sites.length; i++) {
+      var s = state.sites[i];
+      h += '<tr><td>' + esc(s.name) + '</td><td>' + esc(preview(s.key, 20)) + '</td><td>' + esc(s.type) + '</td>'
+        + '<td>' + esc(preview(s.homePage || s.api || '—', 44)) + '</td>'
+        + '<td><span class="tag ' + (s.enabled ? 'on' : 'off') + '">' + (s.enabled ? '启用' : '停用') + '</span></td>'
+        + '<td class="act">'
+        + '<button class="mini primary" data-site-run="' + s.id + '">运行</button>'
+        + '<button class="mini" data-site-toggle="' + s.id + '">启停</button>'
+        + '<button class="mini danger" data-site-del="' + s.id + '">删除</button>'
+        + '</td></tr>';
+    }
+    $('siteList').innerHTML = h + '</table>';
+  }
+  function countEnabled() {
+    var n = 0, i;
+    for (i = 0; i < state.sites.length; i++) if (state.sites[i].enabled) n++;
+    return n;
+  }
+  function renderRun() {
+    $('vodCount').textContent = lastVods.length + ' 条';
+    if (!lastVods.length) { $('vodList').innerHTML = '<div class="empty">选择站点后点「运行站点（页内）」。</div>'; return; }
+    var h = '<div class="vods">', i;
+    for (i = 0; i < lastVods.length; i++) {
+      var v = lastVods[i];
+      h += '<div class="vod"><div class="box"><div class="t">' + esc(v.title) + '</div>'
+        + '<div class="u">' + esc(preview(v.url, 78)) + '</div>'
+        + '<button class="mini primary" data-vod-play="' + i + '">桥接播放</button> '
+        + '<button class="mini" data-vod-copy="' + i + '">复制地址</button>'
+        + '</div></div>';
+    }
+    $('vodList').innerHTML = h + '</div>';
+  }
+  function renderPlay() {
+    $('playCount').textContent = state.playLog.length + ' 次';
+    if (!state.playLog.length) { $('playList').innerHTML = '<div class="empty">还没有播放记录。</div>'; return; }
+    var h = '<table><tr><th>标题</th><th>桥</th><th>地址</th><th>时间</th></tr>', i;
+    for (i = 0; i < state.playLog.length; i++) {
+      var p = state.playLog[i];
+      h += '<tr><td>' + esc(p.title) + '</td><td><span class="tag on">' + esc(p.bridge) + '</span></td>'
+        + '<td>' + esc(preview(p.url, 44)) + '</td><td>' + esc(p.at) + '</td></tr>';
+    }
+    $('playList').innerHTML = h + '</table>';
+  }
+  function renderAll() {
+    renderStatus(); renderEnv(); renderHome(); renderTokens();
+    renderDatasets(); renderSites(); renderRun(); renderPlay(); renderLog();
+  }
+
+  /* ---------------- 视图切换 ---------------- */
+  function show(view) {
+    var tabs = $('tabs').getElementsByTagName('button'), i;
+    for (i = 0; i < tabs.length; i++) tabs[i].className = 'tab' + (tabs[i].getAttribute('data-view') === view ? ' on' : '');
+    var views = document.getElementsByTagName('section');
+    for (i = 0; i < views.length; i++) views[i].className = 'view' + (views[i].id === 'v-' + view ? ' on' : '');
+  }
+
+  /* ---------------- 事件 ---------------- */
+  function bind() {
+    $('tabs').addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('button') : e.target;
+      if (!b || !b.getAttribute) return;
+      var v = b.getAttribute('data-view');
+      if (v) show(v);
+    });
+    document.addEventListener('click', function (e) {
+      var el = e.target, b = null;
+      while (el && el !== document.body) {
+        if (el.tagName === 'BUTTON') { b = el; break; }
+        el = el.parentNode;
+      }
+      if (!b) return;
+      var go = b.getAttribute('data-go');
+      if (go) { show(go); return; }
+      var id;
+      if ((id = b.getAttribute('data-tk-fetch'))) { show('datasets'); $('dsToken').value = id; fetchToken(id, $('dsKw').value, false); return; }
+      if ((id = b.getAttribute('data-tk-edit'))) { editToken(id); show('tokens'); return; }
+      if ((id = b.getAttribute('data-tk-toggle'))) { toggleToken(id); return; }
+      if ((id = b.getAttribute('data-tk-del'))) { delToken(id); return; }
+      if ((id = b.getAttribute('data-ds-gen'))) { generateFromDataset(id).then(function (n) { toast('已生成 ' + n + ' 条站点'); show('sites'); }); return; }
+      if ((id = b.getAttribute('data-ds-view'))) { viewDataset(id); return; }
+      if ((id = b.getAttribute('data-ds-del'))) { delDataset(id); return; }
+      if ((id = b.getAttribute('data-site-run'))) { $('runSite').value = id; show('run'); runInPage(id, $('runKeyword').value); return; }
+      if ((id = b.getAttribute('data-site-toggle'))) { toggleSite(id); return; }
+      if ((id = b.getAttribute('data-site-del'))) { delSite(id); return; }
+      if (b.getAttribute('data-vod-play') !== null) { playVod(lastVods[Number(b.getAttribute('data-vod-play'))] || {}); return; }
+      if (b.getAttribute('data-vod-copy') !== null) { copyText(lastVods[Number(b.getAttribute('data-vod-copy'))].url); return; }
+    });
+
+    $('tkSave').addEventListener('click', saveTokenForm);
+    $('btnDemoToken').addEventListener('click', fillDemoToken);
+    $('tkClear').addEventListener('click', clearTokenForm);
+    $('btnFetch').addEventListener('click', function () { fetchToken($('dsToken').value, $('dsKw').value, false); });
+    $('btnFetchDemo').addEventListener('click', function () { fetchToken('', '', true); });
+    $('btnImport').addEventListener('click', function () {
+      var raw = $('dsImport').value.trim();
+      if (!raw) { toast('请先粘贴数据'); return; }
+      addDataset(raw, '手动导入', '', '手动导入').then(function () {
+        $('dsImport').value = '';
+        toast('已导入数据集');
+      });
+    });
+    $('btnEnableAll').addEventListener('click', function () { setAllSites(true); });
+    $('btnDisableAll').addEventListener('click', function () { setAllSites(false); });
+    $('btnDedup').addEventListener('click', dedupSites);
+    $('btnExport').addEventListener('click', function () {
+      var box = $('exportBox');
+      box.style.display = box.style.display === 'none' ? 'block' : 'none';
+      box.textContent = JSON.stringify(buildRegistry(), null, 2);
+      log('站点', '导出 registry：' + buildConfig().sites.length + ' 条站点');
+    });
+    $('btnCopy').addEventListener('click', function () { copyText(JSON.stringify(buildConfig(), null, 2)); });
+    $('btnInject').addEventListener('click', injectSites);
+    $('btnRun').addEventListener('click', function () { runInPage($('runSite').value, $('runKeyword').value); });
+    $('btnNativeSearch').addEventListener('click', function () { nativeSearch($('runKeyword').value); });
+    $('btnNativeVod').addEventListener('click', function () {
+      var sid = $('runSite').value, site = findSite(sid);
+      if (!site) { toast('请先选择站点'); return; }
+      log('运行', 'fm.vod(' + site.key + ', <vodId>, …) 需要真实 vod_id，此处以 siteKey 作演示');
+      Bridge.vod(site.key, site.key + '_demo', site.name, '').then(function () { toast('已交给 App 原生详情/播放链'); });
+    });
+    $('btnManualPlay').addEventListener('click', function () {
+      playVod({ url: $('mpUrl').value.trim(), title: $('mpTitle').value.trim() || '手动播放', pic: $('mpPic').value.trim() });
+    });
+    $('btnHistory').addEventListener('click', refreshNativeHistory);
+    $('btnDemoAll').addEventListener('click', demoAll);
+    $('btnReset').addEventListener('click', function () {
+      state = { tokens: [], datasets: [], sites: [], playLog: [], settings: { inject: true, runInPage: true } };
+      lastVods = [];
+      save().then(function () { renderAll(); log('入口', '本地数据已清空'); toast('已清空'); });
+    });
+    $('logClear').addEventListener('click', function () { logs = []; renderLog(); });
+  }
+
+  function saveTokenForm() {
+    var name = $('tkName').value.trim();
+    var code = $('tkCode').value.trim();
+    var endpoint = $('tkEndpoint').value.trim();
+    if (!name || !code) { toast('名称和口令码必填'); return; }
+    var t = {
+      id: editTokenId || uid('tk'), name: name, code: code, endpoint: endpoint,
+      method: $('tkMethod').value, headers: $('tkHeaders').value.trim(),
+      note: $('tkNote').value.trim(), enabled: true, updatedAt: nowStr()
+    };
+    var found = false, i;
+    for (i = 0; i < state.tokens.length; i++) {
+      if (state.tokens[i].id === t.id) { t.enabled = state.tokens[i].enabled; state.tokens[i] = t; found = true; break; }
+    }
+    if (!found) state.tokens.unshift(t);
+    editTokenId = '';
+    clearTokenForm();
+    log('口令', (found ? '更新' : '新增') + '口令「' + name + '」');
+    save().then(function () { renderAll(); toast('口令已保存'); });
+  }
+  function fillDemoToken() {
+    $('tkName').value = '演示订阅';
+    $('tkCode').value = '8888';
+    $('tkEndpoint').value = 'https://demo.example.com/koul?code={code}';
+    $('tkMethod').value = 'GET';
+    $('tkHeaders').value = '';
+    $('tkNote').value = '离线演示：请用「拉取演示样本」';
+    toast('已填入演示口令');
+  }
+  function clearTokenForm() {
+    $('tkName').value = ''; $('tkCode').value = ''; $('tkEndpoint').value = '';
+    $('tkHeaders').value = ''; $('tkNote').value = '';
+    editTokenId = '';
+  }
+  function editToken(id) {
+    var i;
+    for (i = 0; i < state.tokens.length; i++) {
+      var t = state.tokens[i];
+      if (t.id === id) {
+        $('tkName').value = t.name; $('tkCode').value = t.code;
+        $('tkEndpoint').value = t.endpoint; $('tkMethod').value = t.method || 'GET';
+        $('tkHeaders').value = t.headers || ''; $('tkNote').value = t.note || '';
+        editTokenId = id; toast('正在编辑「' + t.name + '」'); return;
+      }
+    }
+  }
+  function toggleToken(id) {
+    var i;
+    for (i = 0; i < state.tokens.length; i++) if (state.tokens[i].id === id) state.tokens[i].enabled = !state.tokens[i].enabled;
+    save().then(renderAll);
+  }
+  function delToken(id) {
+    state.tokens = state.tokens.filter(function (t) { return t.id !== id; });
+    save().then(function () { renderAll(); log('口令', '删除一条口令'); });
+  }
+  function viewDataset(id) {
+    var i;
+    for (i = 0; i < state.datasets.length; i++) {
+      if (state.datasets[i].id === id) {
+        var box = $('exportBox');
+        $('dsImport').value = state.datasets[i].raw;
+        log('数据', '已把数据集原始内容载入导入框，共 ' + state.datasets[i].raw.length + ' 字节');
+        toast('原始数据已载入导入框');
+        return;
+      }
+    }
+  }
+  function delDataset(id) {
+    state.datasets = state.datasets.filter(function (d) { return d.id !== id; });
+    save().then(function () { renderAll(); log('数据', '删除一组数据'); });
+  }
+  function setAllSites(v) {
+    var i;
+    for (i = 0; i < state.sites.length; i++) state.sites[i].enabled = v;
+    save().then(function () { renderAll(); log('站点', v ? '全部启用' : '全部停用'); });
+  }
+  function dedupSites() {
+    var seen = {}, out = [], i, removed = 0;
+    for (i = 0; i < state.sites.length; i++) {
+      if (seen[state.sites[i].key]) { removed++; continue; }
+      seen[state.sites[i].key] = 1; out.push(state.sites[i]);
+    }
+    state.sites = out;
+    save().then(function () { renderAll(); log('站点', '去重完成，移除 ' + removed + ' 条'); toast('去重完成'); });
+  }
+  function toggleSite(id) {
+    var i;
+    for (i = 0; i < state.sites.length; i++) if (state.sites[i].id === id) state.sites[i].enabled = !state.sites[i].enabled;
+    save().then(renderAll);
+  }
+  function delSite(id) {
+    state.sites = state.sites.filter(function (s) { return s.id !== id; });
+    save().then(function () { renderAll(); log('站点', '删除一个站点'); });
+  }
+  function findSite(id) {
+    var i;
+    for (i = 0; i < state.sites.length; i++) if (state.sites[i].id === id) return state.sites[i];
+    return null;
+  }
+  function copyText(text) {
+    try {
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.left = '-9999px';
+      document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+      toast('已复制到剪贴板');
+    } catch (e) { toast('复制失败，请手动选中导出框内容'); }
+    log('复制', preview(text, 60));
+  }
+  function refreshNativeHistory() {
+    return Bridge.history().then(function (list) {
+      var n = (list && list.length) || 0;
+      $('nativeHistory').innerHTML = 'fm.history() 返回 <b>' + n + '</b> 条记录'
+        + (nativeSdk ? '' : '（离线演示桥返回空数组）');
+      return n;
+    }).catch(function (e) {
+      $('nativeHistory').textContent = '读取失败：' + e.message;
+      return 0;
+    });
+  }
+
+  /* ---------------- 一键演示（六段链路） ---------------- */
+  function demoAll() {
+    log('演示', '=== 开始一键跑通六段链路 ===');
+    fillDemoToken();
+    return saveTokenFormAsync()
+      .then(function () { show('datasets'); return fetchToken(state.tokens[0].id, '影片', true); })
+      .then(function () { show('sites'); return generateFromDataset(state.datasets[0].id); })
+      .then(function () { return injectSites(); })
+      .then(function () { show('run'); return runInPage(state.sites[0].id, '影片'); })
+      .then(function () { if (!lastVods.length) return false; return playVod(lastVods[0]); })
+      .then(function () { show('home'); renderAll(); log('演示', '=== 六段链路完成 ==='); toast('一条龙演示完成'); return true; })
+      .catch(function (e) { log('演示', '异常：' + e.message); toast('演示异常：' + e.message); return false; });
+  }
+  function saveTokenFormAsync() {
+    saveTokenForm();
+    return save();
+  }
+
+  /* ---------------- 启动 ---------------- */
+  function boot() {
+    if (window.fm && !window.fm.__isMock) {
+      fm = window.fm; nativeSdk = true;
+      log('环境', '检测到 App 原生 fm SDK');
+    } else {
+      var m = createMockFm();
+      window.fm = m; window.fongmi = m; fm = m; nativeSdk = false;
+      log('环境', '未检测到 App SDK，自动挂载离线演示桥（浏览器预览 / PoC 可跑）');
+      try { window.dispatchEvent(new Event('fmsdk')); } catch (e) {}
+    }
+    return load()
+      .then(function () {
+        bind(); renderAll();
+        log('入口', '六段链路就绪（v' + VERSION + '）');
+      })
+      .then(function () { return Bridge.device(); })
+      .then(function (d) { dev = d; return Bridge.config(); })
+      .then(function (c) { cfg = c; return Bridge.site(); })
+      .then(function (s) { curSite = s; renderStatus(); renderEnv(); return refreshNativeHistory(); })
+      .catch(function (e) { log('启动', '环境读取异常：' + e.message); });
+  }
+
+  /* ---------------- 调试接口（PoC / 自检用） ---------------- */
+  window.__KOUL__ = {
+    version: VERSION,
+    state: function () { return state; },
+    logs: function () { return logs.slice(0); },
+    calls: function () { return (fm && fm.__calls) ? fm.__calls.slice(0) : []; },
+    isNative: function () { return nativeSdk; },
+    vods: function () { return lastVods.slice(0); },
+    normalizeSites: normalizeSites,
+    buildRegistry: buildRegistry,
+    demoAll: demoAll,
+    fetchDemo: function (kw) { return fetchToken('', kw || '', true); },
+    generate: function (dsId) { return generateFromDataset(dsId || (state.datasets[0] && state.datasets[0].id)); },
+    inject: injectSites,
+    run: function (sid, kw) { return runInPage(sid || (state.sites[0] && state.sites[0].id), kw || ''); },
+    play: playVod,
+    nativeSearch: nativeSearch,
+    show: show
+  };
+
+  boot();
+})();
+</script>
+</body>
+</html>
