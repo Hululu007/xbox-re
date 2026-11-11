@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 完整 parent 链；只覆盖控件背景，不覆盖任何 android:textColor*。
+         文字色仍由四套预设里已成对定义的 colorOnSurface / colorOnPrimary 提供。 -->
+    <style name="Aurora.Widget.Button.Light" parent="Widget.Material3.Button">
+        <item name="android:background">@drawable/aurora_btn_outline_light</item>
+        <item name="backgroundTint">@null</item>
+    </style>
+    <style name="Aurora.Widget.Button.Dark" parent="Widget.Material3.Button">
+        <item name="android:background">@drawable/aurora_btn_outline_dark</item>
+        <item name="backgroundTint">@null</item>
+    </style>
+    <style name="Aurora.Widget.Chip.Light" parent="Widget.MaterialComponents.Chip.Choice">
+        <item name="android:background">@drawable/aurora_chip_light</item>
+        <item name="chipBackgroundColor">@null</item>
+    </style>
+    <style name="Aurora.Widget.Chip.Dark" parent="Widget.MaterialComponents.Chip.Choice">
+        <item name="android:background">@drawable/aurora_chip_dark</item>
+        <item name="chipBackgroundColor">@null</item>
+    </style>
+    <style name="Aurora.Widget.BottomNav.Light" parent="Widget.Material3.BottomNavigationView">
+        <item name="android:background">@drawable/aurora_nav_bg_light</item>
+    </style>
+    <style name="Aurora.Widget.BottomNav.Dark" parent="Widget.Material3.BottomNavigationView">
+        <item name="android:background">@drawable/aurora_nav_bg_dark</item>
+    </style>
+    <!-- 白卡片大圆角弹窗，与参考截图一致；浅色链自带深字，白底深字不靠运行时注入。 -->
+    <style name="Aurora.Dialog" parent="Theme.Material3.Light.Dialog.Alert">
+        <item name="android:windowBackground">@drawable/aurora_dialog</item>
+        <item name="android:backgroundDimAmount">0.32</item>
+        <item name="buttonBarPositiveButtonStyle">@style/Aurora.Widget.Button.Light</item>
+        <item name="buttonBarNegativeButtonStyle">@style/Aurora.Widget.Button.Light</item>
+        <item name="buttonBarNeutralButtonStyle">@style/Aurora.Widget.Button.Light</item>
+    </style>
+</resources>

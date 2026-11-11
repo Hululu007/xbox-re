@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="aurora_shape_card_radius">14dp</dimen>
+    <dimen name="aurora_shape_dialog_radius">20dp</dimen>
+    <dimen name="aurora_shape_pill_radius">999dp</dimen>
+    <dimen name="aurora_shape_outline">1dp</dimen>
+    <dimen name="aurora_shape_row_height">52dp</dimen>
+    <dimen name="aurora_shape_handle_width">36dp</dimen>
+    <dimen name="aurora_shape_handle_height">4dp</dimen>
+</resources>

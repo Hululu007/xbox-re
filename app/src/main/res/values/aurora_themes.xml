@@ -4,6 +4,11 @@
          不再用 applyStyle 叠加 parent="" 的裸 style；色板按 WCAG 对比度重排，
          背景/卡片/文字/强调色同色相阶梯，避免发灰与低对比。 -->
     <style name="Theme.App.Aurora" parent="Theme.App">
+        <!-- 形状层（第三步）：仅主题级 widget 引用，全部指向编译期 style/drawable -->
+        <item name="materialButtonStyle">@style/Aurora.Widget.Button.Dark</item>
+        <item name="chipStyle">@style/Aurora.Widget.Chip.Dark</item>
+        <item name="bottomNavigationStyle">@style/Aurora.Widget.BottomNav.Dark</item>
+        <item name="alertDialogTheme">@style/Aurora.Dialog</item>
         <item name="auroraBackdrop">#FF0E1512</item>
         <item name="auroraSurface">#FF17211D</item>
         <item name="auroraSurfaceHigh">#FF22302A</item>
@@ -37,6 +42,11 @@
     </style>
 
     <style name="Theme.App.Paper" parent="Theme.App">
+        <!-- 形状层（第三步）：仅主题级 widget 引用，全部指向编译期 style/drawable -->
+        <item name="materialButtonStyle">@style/Aurora.Widget.Button.Light</item>
+        <item name="chipStyle">@style/Aurora.Widget.Chip.Light</item>
+        <item name="bottomNavigationStyle">@style/Aurora.Widget.BottomNav.Light</item>
+        <item name="alertDialogTheme">@style/Aurora.Dialog</item>
         <item name="auroraBackdrop">#FFF7F9F8</item>
         <item name="auroraSurface">#FFFFFFFF</item>
         <item name="auroraSurfaceHigh">#FFE9EFEC</item>
@@ -70,6 +80,11 @@
     </style>
 
     <style name="Theme.App.Ink" parent="Theme.App">
+        <!-- 形状层（第三步）：仅主题级 widget 引用，全部指向编译期 style/drawable -->
+        <item name="materialButtonStyle">@style/Aurora.Widget.Button.Dark</item>
+        <item name="chipStyle">@style/Aurora.Widget.Chip.Dark</item>
+        <item name="bottomNavigationStyle">@style/Aurora.Widget.BottomNav.Dark</item>
+        <item name="alertDialogTheme">@style/Aurora.Dialog</item>
         <item name="auroraBackdrop">#FF0B0E12</item>
         <item name="auroraSurface">#FF141920</item>
         <item name="auroraSurfaceHigh">#FF1E252F</item>
@@ -103,6 +118,11 @@
     </style>
 
     <style name="Theme.App.Glass" parent="Theme.App">
+        <!-- 形状层（第三步）：仅主题级 widget 引用，全部指向编译期 style/drawable -->
+        <item name="materialButtonStyle">@style/Aurora.Widget.Button.Dark</item>
+        <item name="chipStyle">@style/Aurora.Widget.Chip.Dark</item>
+        <item name="bottomNavigationStyle">@style/Aurora.Widget.BottomNav.Dark</item>
+        <item name="alertDialogTheme">@style/Aurora.Dialog</item>
         <item name="auroraBackdrop">#FF100F1F</item>
         <item name="auroraSurface">#FF1D1C33</item>
         <item name="auroraSurfaceHigh">#FF2A2944</item>
