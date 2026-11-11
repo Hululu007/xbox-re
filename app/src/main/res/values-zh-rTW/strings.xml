@@ -1060,6 +1060,8 @@
     <string name="crash_details">錯誤訊息</string>
     <string name="crash_details_title">錯誤訊息</string>
     <string name="crash_details_close">關閉</string>
+    <string name="crash_details_copy">复制</string>
+    <string name="crash_details_copied">已复制到剪贴板</string>
 
     <!-- Hint -->
     <string name="copied">已複製</string>

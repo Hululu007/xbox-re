@@ -1077,6 +1077,8 @@
     <string name="crash_details">Error details</string>
     <string name="crash_details_title">Error details</string>
     <string name="crash_details_close">Close</string>
+    <string name="crash_details_copy">Copy</string>
+    <string name="crash_details_copied">Copied to clipboard</string>
 
     <!-- Hint -->
     <string name="copied">Copied</string>
