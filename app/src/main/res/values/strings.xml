@@ -1501,4 +1501,21 @@
     <string name="home_buttons_reset">Reset</string>
     <string name="lab_env_source">环境包源（可选）</string>
     <string name="lab_env_source_hint">php / python / nodejs 没有官方 Android 构建。填一个可直连的目录基址后，安装时会从该地址下载同名压缩包；留空则只从手机 EnvFiles 目录读取。</string>
+
+    <!-- 猫源 Node 运行时（移植自 webhtv/main） -->
+    <string name="dialog_config_choose_dir">Choose folder (cat source local package)</string>
+    <string name="node_title">Preparing cat source</string>
+    <string name="node_prepare">Preparing…</string>
+    <string name="node_hint">First run only: the Node runtime is downloaded once and reused afterwards.</string>
+    <string name="node_downloading">Downloading Node runtime</string>
+    <string name="node_extracting">Extracting…</string>
+    <string name="node_bundle">Checking cat source bundle…</string>
+    <string name="node_starting">Starting service…</string>
+    <string name="node_waiting">Waiting for service to be ready…</string>
+    <string name="node_ready">Cat source ready</string>
+    <string name="node_stopping">Stopping previous cat source…</string>
+    <string name="node_switch_restart">Switching cat source…</string>
+    <string name="node_background">Run in background</string>
+    <string name="node_speed">%1$s/s</string>
+    <string name="node_size_pair">%1$s / %2$s</string>
 </resources>

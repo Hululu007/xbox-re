@@ -1259,4 +1259,21 @@
 
     <string name="player_audio_badge_queue">队列</string>
     <string name="player_audio_repeat">循环</string>
+
+    <!-- 猫源 Node 运行时（移植自 webhtv/main） -->
+    <string name="dialog_config_choose_dir">选择文件夹（猫源本地包）</string>
+    <string name="node_title">正在准备猫源</string>
+    <string name="node_prepare">准备中…</string>
+    <string name="node_hint">仅首次需要：Node 运行时下载一次后即可复用。</string>
+    <string name="node_downloading">下载 Node 运行时</string>
+    <string name="node_extracting">解压中…</string>
+    <string name="node_bundle">检查猫源 bundle…</string>
+    <string name="node_starting">启动服务…</string>
+    <string name="node_waiting">等待服务就绪…</string>
+    <string name="node_ready">猫源已就绪</string>
+    <string name="node_stopping">正在关闭旧猫源服务…</string>
+    <string name="node_switch_restart">正在切换猫源…</string>
+    <string name="node_background">后台继续</string>
+    <string name="node_speed">%1$s/s</string>
+    <string name="node_size_pair">%1$s / %2$s</string>
 </resources>

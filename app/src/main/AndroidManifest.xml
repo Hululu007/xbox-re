@@ -193,5 +193,12 @@
         <activity
             android:name=".ui.activity.SettingPersonalActivity"
             android:exported="false" />
+
+        <service
+            android:name=".node.NodeService"
+            android:exported="false"
+            android:process=":node"
+            android:foregroundServiceType="dataSync"
+            android:stopWithTask="false" />
 </application>
 </manifest>

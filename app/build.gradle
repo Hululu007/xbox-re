@@ -170,6 +170,7 @@ dependencies {
     implementation project(':catvod')
     implementation project(':chaquo')
     implementation project(':quickjs')
+    implementation project(':nodejs')
     implementation libs.jgit
     implementation libs.commons.compress
     implementation libs.tukaani.xz

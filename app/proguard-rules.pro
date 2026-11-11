@@ -105,3 +105,9 @@
 
 # Zxing
 -keep class com.google.zxing.** { *; }
+
+# 猫源 Node 运行时：JNI 静态注册要求类名/方法名不被混淆
+-keep class com.fongmi.android.tv.nodejs.NodeBridge { *; }
+-keep class com.fongmi.android.tv.node.** { *; }
+-keep class com.fongmi.android.tv.api.CatSource { *; }
+-keep class com.fongmi.android.tv.api.loader.CatSpider { *; }

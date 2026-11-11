@@ -3,6 +3,7 @@ package com.fongmi.android.tv.api.config;
 import android.text.TextUtils;
 
 import com.fongmi.android.tv.App;
+import com.fongmi.android.tv.api.CatSource;
 import com.fongmi.android.tv.api.CspWarmup;
 import com.fongmi.android.tv.api.Decoder;
 import com.fongmi.android.tv.api.loader.BaseLoader;
@@ -118,6 +119,14 @@ public class VodConfig extends BaseConfig {
     @Override
     protected void load(Config config) throws Throwable {
         String url = config.getUrl();
+        // 猫源地址是 Node bundle（*.js.md5）：先在本机把 Node 服务跑起来，
+        // 再读它的 /config，并做 normalize，原配置加载逻辑完全不变。
+        if (CatSource.isBundle(url)) {
+            String serveUrl = CatSource.serve(url);
+            String json = Decoder.getJson(serveUrl, TAG);
+            checkJson(config, CatSource.normalize(serveUrl, Json.parse(json)));
+            return;
+        }
         String dir = "";
         try {
             dir = LocalScriptSource.dirOfUrl(url);

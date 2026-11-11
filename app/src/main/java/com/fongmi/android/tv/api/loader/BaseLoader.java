@@ -16,6 +16,7 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import dalvik.system.DexClassLoader;
 
@@ -24,11 +25,13 @@ public class BaseLoader {
     private final JarLoader jarLoader;
     private final PyLoader pyLoader;
     private final JsLoader jsLoader;
+    private final ConcurrentHashMap<String, Spider> catSpiders;
 
     private BaseLoader() {
         jarLoader = new JarLoader();
         pyLoader = new PyLoader();
         jsLoader = new JsLoader();
+        catSpiders = new ConcurrentHashMap<>();
     }
 
     public static BaseLoader get() {
@@ -52,10 +55,13 @@ public class BaseLoader {
             jarLoader.clear();
             pyLoader.clear();
             jsLoader.clear();
+            catSpiders.clear();
         });
     }
 
     public Spider getSpider(String key, String api, String ext, String jar) {
+        // 猫源站点 type 也是 3，但 api 指向本机 bundle 的 HTTP 路由，走协议适配而非本地引擎
+        if (CatSpider.matches(api)) return catSpiders.computeIfAbsent(key, k -> new CatSpider(api));
         if (isPy(api)) return pyLoader.getSpider(key, api, ext);
         else if (isJs(api)) return jsLoader.getSpider(key, api, ext, jar);
         else if (isCsp(api)) return jarLoader.getSpider(key, api, ext, jar);

@@ -87,6 +87,13 @@ jobs:
         run: |
           sdkmanager "platform-tools" "platforms;android-37.0" "build-tools;37.0.0"
 
+      - name: Ensure NDK and CMake for Node runtime module
+        # nodejs/ 模块用 externalNativeBuild + CMake 3.22.1 编 cnode.so 桥接层。
+        # best-effort：runner 若已预装或 AGP 能自动下载，装不上也不阻断构建。
+        # 签名方案保持本分支的 v2-only 不变。
+        run: |
+          sdkmanager "ndk;28.2.13676358" "cmake;3.22.1" || echo "NDK/CMake already available or AGP will download"
+
       - name: Verify mobile search scope feature is present
         run: |
           set -euo pipefail
