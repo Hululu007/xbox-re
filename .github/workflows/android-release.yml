@@ -130,6 +130,13 @@ jobs:
           test "$(grep -c '窗口参数必须在 show 之前定好' app/src/main/java/com/fongmi/android/tv/ui/dialog/RemoteTrustDialog.java)" -eq 6
           echo "Remote trust dialog windows applied before show"
 
+      - name: Verify theme startup chain against oktv-cat baseline
+        # 真正执行的硬断言：与能启动的 oktv-cat @ f7f9a031 逐字节比对主题启动链。
+        # 之前 theme_overlay_check.py 只躺在仓库里从未被 CI 调用，这是「查不出」的总根子。
+        run: |
+          set -euo pipefail
+          python3 tools/theme_baseline_check.py
+
       - name: Run WebSocket danmaku tests
         id: unit_tests
         run: |
@@ -596,6 +603,18 @@ jobs:
               raise SystemExit(1)
           print("APK completeness and installability checks passed for all APKs")
           PY
+
+      - name: Verify compiled theme resources in signed APK
+        # 对最终签名包跑编译后资源表诊断；硬判据仍是主题启动链基线比对。
+        # 只读，不碰 v2 签名块，不会退回「安装包已损坏 / 签名不通过」。
+        run: |
+          set -euo pipefail
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          BT_DIR="$(find "$SDK_ROOT/build-tools" -mindepth 1 -maxdepth 1 -type d | sort | tail -1)"
+          AAPT2="$BT_DIR/aapt2"
+          for apk in dist/*.apk; do
+            python3 tools/theme_baseline_check.py "$apk" "$AAPT2"
+          done
 
       - name: Set up ORAS
         id: oras
