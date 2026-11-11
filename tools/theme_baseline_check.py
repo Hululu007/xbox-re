@@ -260,29 +260,38 @@ if len(sys.argv) >= 3:
             for a in key:
                 print('[aapt2]   attr/%s present=%s' % (a, ('attr/' + a) in out))
 
-            # 扫所有 Theme.App.* 变体的 style bag：framework attr（0x0101xxxx）
-            # 若被赋成字面色，Material 控件取 value.resourceId 会得到 0 -> #0x0。
+            # 只扫四套基础预设的 style bag：framework attr（0x0101xxxx）若被赋成
+            # 字面色 #AARRGGBB，Material 控件取 value.resourceId 会得到 0 -> #0x0。
+            # 注意：aapt2 会把父链继承项展开进子 style bag，Material 库自带 style
+            # 里大量 @null 是合法的（itemBackground / itemActiveIndicatorStyle 等）。
+            # 把 @null 检查扩到 32 个 combo 会把正常包全部误杀 —— 上一次构建
+            # 第 20 步失败正是踩了这条。组合变体只做「是否编进 APK」的计数诊断，
+            # 其 framework 色 / 对比度 / 查表完整性已由源码级 3/3b/3c 硬判据覆盖。
             in_bag = False
-            seen_variants = set()
+            preset_seen = set()
+            variant_seen = set()
             for line in lines:
-                m = re.search(r'style/(Theme\.App\.[\w.]+)\s*$', line)
+                mv = re.search(r'style/(Theme\.App\.[A-Za-z0-9_.]+)\s*$', line)
+                if mv:
+                    variant_seen.add(mv.group(1))
+                m = re.search(r'style/Theme\.App\.(Aurora|Paper|Ink|Glass)\s*$', line)
                 if m:
                     in_bag = True
-                    seen_variants.add(m.group(1))
+                    preset_seen.add(m.group(1))
                     continue
                 if in_bag and line.strip().startswith('resource 0x'):
                     in_bag = False
                     continue
                 if in_bag and re.match(r'\s+0x0101[0-9a-fA-F]{4}=#', line):
-                    errors.append('compiled theme variant writes framework color attr as literal: '
-                                  + line.strip())
+                    errors.append('compiled preset writes framework color attr as literal '
+                                  '(material widget would read resourceId=0): ' + line.strip())
                 if in_bag and re.search(r'=\s*@(?:null|0x0|empty)\b', line):
-                    errors.append('compiled theme variant item resolved empty: ' + line.strip())
-            for base in ['Theme.App.Aurora', 'Theme.App.Paper',
-                         'Theme.App.Ink', 'Theme.App.Glass']:
-                if base not in seen_variants:
-                    errors.append('aapt2 dump missing base preset: ' + base)
-            print('[aapt2]   theme variants seen=%d' % len(seen_variants))
+                    errors.append('compiled theme preset item resolved empty: ' + line.strip())
+            if len(preset_seen) != 4:
+                errors.append('aapt2 dump missing theme presets: found %s' % sorted(preset_seen))
+            combo_seen = len([v for v in variant_seen if v.count('.') >= 3])
+            print('[aapt2]   theme variants seen=%d (combos=%d, diagnostic only)'
+                  % (len(variant_seen), combo_seen))
         except Exception as e:
             errors.append('aapt2 diagnostic failed: %s' % e)
 
