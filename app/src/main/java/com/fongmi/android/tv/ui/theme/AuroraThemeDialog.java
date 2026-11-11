@@ -11,6 +11,7 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -25,8 +26,8 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
  * 原生「外观与主题」统一设置面板（mobile / leanback 共用同一份配置与同一份 UI）。
  *
  * <p>全部控件用代码构建，不新增 layout 资源，避免 viewBinding 生成与跨变体资源冲突。
- * 上半部是按当前配置即时渲染的预览卡片，下半部是分组选项；点「应用并刷新界面」
- * 由 {@link #apply(Activity)} 全局生效。
+ * 上半部是按当前配置即时渲染的预览卡片，下半部是分组选项；点「应用并刷新」
+ * 立即关闭本弹窗并重建 Activity，同时在进程内广播配置版本让其它页面恢复时重建。
  */
 public class AuroraThemeDialog extends DialogFragment {
 
@@ -74,6 +75,14 @@ public class AuroraThemeDialog extends DialogFragment {
         new AuroraThemeDialog().show(fragment.getChildFragmentManager(), TAG);
     }
 
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        // Activity.recreate() 会保存并恢复 Fragment 状态。若不主动退出，重建后本弹窗
+        // 会自动重新弹出，用户看到的就是「点应用并刷新后窗口没关、像是没保存」。
+        if (savedInstanceState != null) dismissAllowingStateLoss();
+    }
+
     @NonNull
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
@@ -89,9 +98,37 @@ public class AuroraThemeDialog extends DialogFragment {
         return new MaterialAlertDialogBuilder(ctx)
                 .setTitle(R.string.aurora_theme_title)
                 .setView(scroll)
-                .setPositiveButton(R.string.aurora_apply, (dialog, which) -> requireActivity().recreate())
+                .setPositiveButton(R.string.aurora_apply, (dialog, which) -> applyAndRefresh())
+                .setNeutralButton(R.string.aurora_reset, (dialog, which) -> {
+                    AuroraTheme.reset(ctx);
+                    applyAndRefresh();
+                })
                 .setNegativeButton(R.string.aurora_close, null)
                 .create();
+    }
+
+    /**
+     * 关闭窗口 + 刷新界面。不销毁任务栈、不清栈、不销毁弹窗宿主之外的任何 Activity。
+     * put() 已同步 commit 落盘，这里只负责让所有页面用新配置重建。
+     */
+    private void applyAndRefresh() {
+        AuroraTheme.markChanged();
+        FragmentActivity activity = getActivity();
+        if (activity == null) return;
+        // recreate() 会保存并恢复 Fragment 状态。先把自己从 FragmentManager 移除且立即
+        // 提交事务，否则重建后弹窗会被恢复出来，用户会以为「没保存 / 窗口没关」。
+        try {
+            dismissAllowingStateLoss();
+            activity.getSupportFragmentManager().executePendingTransactions();
+        } catch (Throwable ignored) {
+            // 即使这里失败，onCreate() 里的 savedInstanceState 兜底仍会让重建后的弹窗自行退出。
+        }
+        try {
+            Toast.makeText(activity, R.string.aurora_applied, Toast.LENGTH_SHORT).show();
+        } catch (Throwable ignored) {
+            // Toast 失败与配置保存无关。
+        }
+        activity.recreate();
     }
 
     @Override
@@ -187,6 +224,14 @@ public class AuroraThemeDialog extends DialogFragment {
         card.addView(actions);
 
         root.addView(card, cardParams);
+
+        // 真实生效状态（已保存配置 + 实际 setTheme + 探针结论），避免「改了但看不出有没有生效」。
+        TextView status = new TextView(c);
+        status.setText(AuroraTheme.status(c));
+        status.setTextColor(onVariant);
+        status.setTextSize(TypedValue.COMPLEX_UNIT_PX, text * 0.78f);
+        status.setPadding(0, dp(c, 4), 0, dp(c, 4));
+        root.addView(status);
 
         TextView note = new TextView(c);
         note.setText(R.string.aurora_note);

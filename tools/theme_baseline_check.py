@@ -227,6 +227,33 @@ if os.path.isfile(engine):
     if '.commit()' not in t:
         errors.append('AuroraTheme.put() must commit synchronously before recreate()')
 
+# ---- 4b) 配置真正生效 / 应用按钮关窗（2026-11-12 回归防线）----------------
+# 历史教训 4)「点应用并刷新后窗口没关、配置看似没生效」：
+#   a) themeUsable 把 framework attr「解析不到」当失败 -> 每次静默回落 Theme.App；
+#   b) recreate() 会恢复 DialogFragment -> 弹窗重新弹出，用户以为没保存；
+#   c) 细项只在预览面板生效 -> 业务界面永远不变。
+APP = os.path.join(ROOT, 'app', 'src', 'main', 'java', 'com', 'fongmi',
+                   'android', 'tv', 'App.java')
+if os.path.isfile(engine):
+    t = strip_java_comments(open(engine, encoding='utf-8').read())
+    if re.search(r'resolveAttribute\(id,\s*raw,\s*false\)\s*\)\s*return false', t):
+        errors.append('themeUsable still treats unresolvable framework attr as failure '
+                      '(would silently fall back and never apply user config)')
+    for token in ['markChanged', 'onActivityCreated', 'onActivityResumed', 'decorateTree']:
+        if token not in t:
+            errors.append('AuroraTheme missing global refresh/decoration entrypoint: ' + token)
+if os.path.isfile(DIALOG):
+    t = strip_java_comments(open(DIALOG, encoding='utf-8').read())
+    for token in ['applyAndRefresh()', 'dismissAllowingStateLoss()', 'recreate()']:
+        if token not in t:
+            errors.append('apply button missing ' + token + ' (must close dialog and refresh)')
+    if 'savedInstanceState != null' not in t:
+        errors.append('dialog must self-dismiss after Activity recreation')
+if os.path.isfile(APP):
+    t = strip_java_comments(open(APP, encoding='utf-8').read())
+    if 'AuroraTheme.onActivityCreated' not in t or 'AuroraTheme.onActivityResumed' not in t:
+        errors.append('App must wire AuroraTheme lifecycle so detail options apply globally')
+
 # ---- 5) ?attr/aurora* 必须全部声明 -----------------------------------------
 attrs, refs = set(), set()
 for p in glob.glob(os.path.join(ROOT, 'app', 'src', '*', 'res', 'values*', '*.xml')):

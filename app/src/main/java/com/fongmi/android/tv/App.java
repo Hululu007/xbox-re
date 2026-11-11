@@ -22,6 +22,7 @@ import com.fongmi.android.tv.setting.ProxySetting;
 import com.fongmi.android.tv.setting.SiteFeature;
 import com.fongmi.android.tv.lab.LabAutoStart;
 import com.fongmi.android.tv.setting.Setting;
+import com.fongmi.android.tv.ui.theme.AuroraTheme;
 import com.fongmi.android.tv.utils.DanmakuSearchListFocusFixer;
 import com.fongmi.android.tv.utils.NsdDeviceDiscovery;
 import com.fongmi.android.tv.utils.Notify;
@@ -157,6 +158,8 @@ public class App extends Application implements Application.ActivityLifecycleCal
     @Override
     public void onActivityResumed(@NonNull Activity activity) {
         if (activity != activity()) this.activity = activity;
+        // 外观配置变更后，让任务栈中仍存活的旧页面用新主题重建（不清栈、不销毁宿主）。
+        AuroraTheme.onActivityResumed(activity);
     }
 
     @Override
@@ -166,6 +169,9 @@ public class App extends Application implements Application.ActivityLifecycleCal
 
     @Override
     public void onActivityCreated(@NonNull Activity activity, @Nullable Bundle savedInstanceState) {
+        // 统一挂上外观装饰层：所有 Activity（含不继承 BaseActivity 的）都能让
+        // 文字大小 / 圆角 / 按钮形态 / 宫格形状 / 弹窗风格与位置全局生效。
+        AuroraTheme.onActivityCreated(activity);
     }
 
     @Override

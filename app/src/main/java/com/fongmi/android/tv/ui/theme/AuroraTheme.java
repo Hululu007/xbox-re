@@ -1,42 +1,63 @@
 package com.fongmi.android.tv.ui.theme;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.Context;
-import android.view.ContextThemeWrapper;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.Outline;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
+import android.util.Log;
 import android.util.TypedValue;
+import android.view.ContextThemeWrapper;
 import android.view.Gravity;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewOutlineProvider;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.annotation.AttrRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.StyleRes;
+import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.fongmi.android.tv.R;
+
+import java.util.WeakHashMap;
 
 /**
  * xbox-re 原生 UI 主题引擎。
  *
- * <p>启动期唯一动作：在 setContentView 之前用 {@link Activity#setTheme(int)} 切换到
- * parent="Theme.App" 的完整预设链（与 oktv-cat 基线同源）。不再用
- * {@code Theme.applyStyle} 叠加 parent="" 的裸 style —— 那会改写 inflate 期的 theme
- * 并把 framework attr 覆盖成字面色，导致 BottomNavigationView 构造时
- * Resources.getValue(0) -> Resources$NotFoundException #0x0。
+ * <p>启动期唯一动作：在 setContentView 之前用 Activity.setTheme 切换到
+ * parent="Theme.App" 的完整预设链（与 oktv-cat 基线同源）。不再叠加裸 style ——
+ * 那会改写 inflate 期的 theme 并把 framework attr 覆盖成字面色，导致
+ * BottomNavigationView 构造时 Resources.getValue(0) -> Resources$NotFoundException #0x0。
  *
- * <p>切换后跑 themeUsable() 探针；任一关键 attr 解析不出就回落 Theme.App。
- * 预设 × 强调色由编译期 32 组 Theme.App.* 变体提供（aurora_combos.xml），
- * 预览与实际主题同源，不在运行时另算一套色值；圆角 / 字号细项仍由代码直读偏好，
- * 目前只作用于预览与本设置面板，不铺进业务布局。
- *
- * <p>严禁在此引入 FLAG_ACTIVITY_CLEAR_TASK / finishAffinity() / relaunch()：
- * 那会在「应用」按钮回调里销毁弹窗宿主，表现为点确定弹窗直接消失。
+ * <p>2026-11-12 修复「配置不生效 / 应用后窗口不关」：
+ * <ol>
+ *   <li>旧 themeUsable 把 framework 颜色 attr「解析不到」也当成失败，
+ *       于是每次都静默回落 Theme.App，用户怎么改配置界面都不变。
+ *       现在只拦截真实的崩溃源（framework 颜色 attr 被写成字面色）。</li>
+ *   <li>配置变更用进程内 epoch 广播，所有 Activity 恢复时按需重建，
+ *       不销毁任务栈、不清栈、不销毁弹窗宿主。</li>
+ *   <li>细项（文字大小 / 圆角 / 按钮形态 / 宫格形状 / 弹窗风格与位置）通过
+ *       App 的 ActivityLifecycleCallbacks 全局装饰，不再只作用于预览面板；
+ *       默认配置下零侵入，任何异常都被吞掉，绝不影响业务界面。</li>
+ * </ol>
  */
 public final class AuroraTheme {
+
+    private static final String TAG = "AuroraTheme";
 
     public static final String PREFS = "xboxre.aurora.theme";
 
@@ -58,6 +79,13 @@ public final class AuroraTheme {
     public static final String[] DIALOG_STYLE_KEYS = {"solid", "outline", "soft", "glass"};
     public static final String[] DIALOG_POS_KEYS = {"center", "bottom", "top", "side"};
 
+    /** 进程内配置版本号；改任一配置即 ++，让任务栈里的其它页面恢复时按需重建。 */
+    private static volatile long sEpoch = 0L;
+    private static final WeakHashMap<Activity, Long> EPOCHS = new WeakHashMap<>();
+    /** 最近一次 apply() 的真实结果，供设置面板显示，避免「不知道有没有生效」。 */
+    private static volatile String sApplied = "Theme.App (manifest baseline)";
+    private static volatile String sProbe = "not-run";
+
     private AuroraTheme() {
     }
 
@@ -73,14 +101,31 @@ public final class AuroraTheme {
     public static void put(Context context, String key, String value) {
         // 同步落盘：选项点击后可能立刻 recreate()，apply() 的异步写会读到旧值。
         prefs(context).edit().putString(key, value).commit();
+        sEpoch++;
     }
 
     public static void reset(Context context) {
-        prefs(context).edit().clear().apply();
+        prefs(context).edit().clear().commit();
+        sEpoch++;
+    }
+
+    /** 「应用并刷新」按钮显式标记一次全量刷新（put 已逐项 ++，这里再兜底一次）。 */
+    public static void markChanged() {
+        sEpoch++;
+    }
+
+    public static long epoch() {
+        return sEpoch;
     }
 
     public static boolean isSystem(Context context) {
         return "system".equals(get(context, KEY_PRESET, "aurora"));
+    }
+
+    /** 给设置面板看的真实生效状态：已保存配置 + 实际 setTheme 结果 + 探针结论。 */
+    public static String status(Context context) {
+        return "已保存：" + get(context, KEY_PRESET, "aurora") + " / " + get(context, KEY_ACCENT, "default")
+                + "　实际生效：" + sApplied + "（" + sProbe + "）";
     }
 
     @StyleRes
@@ -101,92 +146,83 @@ public final class AuroraTheme {
         }
         // 32 个组合 style 全是 Theme.App.* 完整链，编译期显式引用，R8 不会裁掉。
         switch (p + "_" + accent) {
-            case "Aurora_jade":
-                return R.style.Theme_App_Aurora_Jade;
-            case "Aurora_azure":
-                return R.style.Theme_App_Aurora_Azure;
-            case "Aurora_amber":
-                return R.style.Theme_App_Aurora_Amber;
-            case "Aurora_rose":
-                return R.style.Theme_App_Aurora_Rose;
-            case "Aurora_violet":
-                return R.style.Theme_App_Aurora_Violet;
-            case "Aurora_cyan":
-                return R.style.Theme_App_Aurora_Cyan;
-            case "Aurora_lime":
-                return R.style.Theme_App_Aurora_Lime;
-            case "Aurora_slate":
-                return R.style.Theme_App_Aurora_Slate;
-            case "Paper_jade":
-                return R.style.Theme_App_Paper_Jade;
-            case "Paper_azure":
-                return R.style.Theme_App_Paper_Azure;
-            case "Paper_amber":
-                return R.style.Theme_App_Paper_Amber;
-            case "Paper_rose":
-                return R.style.Theme_App_Paper_Rose;
-            case "Paper_violet":
-                return R.style.Theme_App_Paper_Violet;
-            case "Paper_cyan":
-                return R.style.Theme_App_Paper_Cyan;
-            case "Paper_lime":
-                return R.style.Theme_App_Paper_Lime;
-            case "Paper_slate":
-                return R.style.Theme_App_Paper_Slate;
-            case "Ink_jade":
-                return R.style.Theme_App_Ink_Jade;
-            case "Ink_azure":
-                return R.style.Theme_App_Ink_Azure;
-            case "Ink_amber":
-                return R.style.Theme_App_Ink_Amber;
-            case "Ink_rose":
-                return R.style.Theme_App_Ink_Rose;
-            case "Ink_violet":
-                return R.style.Theme_App_Ink_Violet;
-            case "Ink_cyan":
-                return R.style.Theme_App_Ink_Cyan;
-            case "Ink_lime":
-                return R.style.Theme_App_Ink_Lime;
-            case "Ink_slate":
-                return R.style.Theme_App_Ink_Slate;
-            case "Glass_jade":
-                return R.style.Theme_App_Glass_Jade;
-            case "Glass_azure":
-                return R.style.Theme_App_Glass_Azure;
-            case "Glass_amber":
-                return R.style.Theme_App_Glass_Amber;
-            case "Glass_rose":
-                return R.style.Theme_App_Glass_Rose;
-            case "Glass_violet":
-                return R.style.Theme_App_Glass_Violet;
-            case "Glass_cyan":
-                return R.style.Theme_App_Glass_Cyan;
-            case "Glass_lime":
-                return R.style.Theme_App_Glass_Lime;
-            case "Glass_slate":
-                return R.style.Theme_App_Glass_Slate;
+            case "Aurora_jade": return R.style.Theme_App_Aurora_Jade;
+            case "Aurora_azure": return R.style.Theme_App_Aurora_Azure;
+            case "Aurora_amber": return R.style.Theme_App_Aurora_Amber;
+            case "Aurora_rose": return R.style.Theme_App_Aurora_Rose;
+            case "Aurora_violet": return R.style.Theme_App_Aurora_Violet;
+            case "Aurora_cyan": return R.style.Theme_App_Aurora_Cyan;
+            case "Aurora_lime": return R.style.Theme_App_Aurora_Lime;
+            case "Aurora_slate": return R.style.Theme_App_Aurora_Slate;
+            case "Paper_jade": return R.style.Theme_App_Paper_Jade;
+            case "Paper_azure": return R.style.Theme_App_Paper_Azure;
+            case "Paper_amber": return R.style.Theme_App_Paper_Amber;
+            case "Paper_rose": return R.style.Theme_App_Paper_Rose;
+            case "Paper_violet": return R.style.Theme_App_Paper_Violet;
+            case "Paper_cyan": return R.style.Theme_App_Paper_Cyan;
+            case "Paper_lime": return R.style.Theme_App_Paper_Lime;
+            case "Paper_slate": return R.style.Theme_App_Paper_Slate;
+            case "Ink_jade": return R.style.Theme_App_Ink_Jade;
+            case "Ink_azure": return R.style.Theme_App_Ink_Azure;
+            case "Ink_amber": return R.style.Theme_App_Ink_Amber;
+            case "Ink_rose": return R.style.Theme_App_Ink_Rose;
+            case "Ink_violet": return R.style.Theme_App_Ink_Violet;
+            case "Ink_cyan": return R.style.Theme_App_Ink_Cyan;
+            case "Ink_lime": return R.style.Theme_App_Ink_Lime;
+            case "Ink_slate": return R.style.Theme_App_Ink_Slate;
+            case "Glass_jade": return R.style.Theme_App_Glass_Jade;
+            case "Glass_azure": return R.style.Theme_App_Glass_Azure;
+            case "Glass_amber": return R.style.Theme_App_Glass_Amber;
+            case "Glass_rose": return R.style.Theme_App_Glass_Rose;
+            case "Glass_violet": return R.style.Theme_App_Glass_Violet;
+            case "Glass_cyan": return R.style.Theme_App_Glass_Cyan;
+            case "Glass_lime": return R.style.Theme_App_Glass_Lime;
+            case "Glass_slate": return R.style.Theme_App_Glass_Slate;
             default: return R.style.Theme_App_Aurora;
+        }
+    }
+
+    private static String styleName(Context context, @StyleRes int id) {
+        try {
+            return context.getResources().getResourceEntryName(id).replace('_', '.');
+        } catch (Throwable ignored) {
+            return "style#0x" + Integer.toHexString(id);
         }
     }
 
     /**
      * 在 super.onCreate 之后、setContentView 之前调用。
-     * 用完整 parent 链的 setTheme，不再 applyStyle；失败一律回落基线主题。
+     * 用完整 parent 链的 setTheme；失败一律回落基线主题，并留下可查的日志。
      */
     public static void apply(@NonNull Activity activity) {
+        sApplied = "Theme.App (manifest baseline)";
+        sProbe = "not-run";
         try {
-            if (isSystem(activity)) return;
+            if (isSystem(activity)) {
+                sApplied = "跟随系统（原主题）";
+                sProbe = "system";
+                return;
+            }
             int preset = presetTheme(get(activity, KEY_PRESET, "aurora"),
                     get(activity, KEY_ACCENT, "default"));
             if (preset == 0) return;
             activity.setTheme(preset);
+            String name = styleName(activity, preset);
             if (!themeUsable(activity)) {
                 activity.setTheme(R.style.Theme_App);
+                sApplied = "Theme.App (probe fallback)";
+                sProbe = "probe FAILED -> fallback";
+                Log.w(TAG, "theme probe failed for " + name + ", fallback to Theme.App");
                 return;
             }
+            sApplied = name;
+            sProbe = "probe OK";
             activity.getWindow().setBackgroundDrawable(
                     new ColorDrawable(color(activity, R.attr.auroraBackdrop, 0xFF0E1512)));
-        } catch (Throwable ignored) {
+            Log.i(TAG, "applied " + name + " on " + activity.getClass().getSimpleName());
+        } catch (Throwable t) {
+            sProbe = "exception: " + t.getClass().getSimpleName();
+            Log.w(TAG, "apply failed, fallback", t);
             try {
                 activity.setTheme(R.style.Theme_App);
             } catch (Throwable ignoredToo) {
@@ -198,23 +234,27 @@ public final class AuroraTheme {
     /**
      * 切换后检查关键 attr 能否解析；任一为 0/NULL 就不允许用这套 theme 去 inflate。
      *
-     * <p>额外精确拦截 #0x0 的回归：Material 的 NavigationBarView / MaterialTextView 会取
-     * {@code android:textColorSecondary} 等 framework 颜色 attr 的 {@code value.resourceId}
-     * 去 {@code AppCompatResources.getColorStateList()}。一旦这些 attr 被写成字面色
-     * （{@code #AARRGGBB}），resourceId 就是 0，构造 BottomNavigationView 时抛
-     * {@code Resources$NotFoundException: Resource ID #0x0}。
+     * <p>精确拦截 #0x0 的唯一真实成因：Material 的 NavigationBarView / MaterialTextView
+     * 会取 android:textColorSecondary 等 framework 颜色 attr 的 value.resourceId 去
+     * AppCompatResources.getColorStateList()。一旦这些 attr 被显式写成字面色，
+     * resourceId 就是 0。
      *
-     * <p>用 {@code resolveRefs=false} 读原始类型即可识别字面色，且不会把正常的
-     * {@code @color/} 引用误判为失败（误判会导致主题静默回退、界面回到原生观感）。
+     * <p>注意：resolveAttribute(resolveRefs=false) 返回 false 只说明「该 framework attr
+     * 没有在当前主题里显式声明」，framework 会回落到自己的默认值，完全安全。旧实现把它
+     * 当成失败，导致每次启动都静默 setTheme(Theme.App) —— 用户看到的就是「配置保存了，
+     * 但界面永远不变」。这里改为 continue。
      */
     private static boolean themeUsable(@NonNull Activity activity) {
         int[] required = {
+                // 基础主题链必须完整（resolveRefs=true，framework 一定给得出值）。
                 android.R.attr.textColorPrimary,
                 android.R.attr.selectableItemBackground,
                 android.R.attr.windowBackground,
+                // 预设 style 的自定义 attr 必须解析得到。
                 R.attr.auroraBackdrop,
                 R.attr.auroraSurface,
                 R.attr.auroraAccent,
+                R.attr.auroraOnSurface,
         };
         for (int id : required) {
             TypedValue tv = new TypedValue();
@@ -231,8 +271,7 @@ public final class AuroraTheme {
         };
         for (int id : frameworkColorRefs) {
             TypedValue raw = new TypedValue();
-            if (!activity.getTheme().resolveAttribute(id, raw, false)) return false;
-            if (raw.type == TypedValue.TYPE_NULL) return false;
+            if (!activity.getTheme().resolveAttribute(id, raw, false)) continue;
             if (raw.type >= TypedValue.TYPE_FIRST_COLOR_INT
                     && raw.type <= TypedValue.TYPE_LAST_COLOR_INT) return false;
         }
@@ -401,5 +440,169 @@ public final class AuroraTheme {
                 // 低版本或厂商 ROM 不支持时保持半透明底色，不崩。
             }
         }
+    }
+
+    // ============ 全局生效层（由 App.ActivityLifecycleCallbacks 驱动，默认零侵入） ============
+
+    private static boolean dialogCustomized(Context context) {
+        return !"solid".equals(get(context, KEY_DIALOG_STYLE, "solid"))
+                || !"center".equals(get(context, KEY_DIALOG_POS, "center"));
+    }
+
+    private static boolean detailCustomized(Context context) {
+        return !"default".equals(get(context, KEY_CORNER, "default"))
+                || !"default".equals(get(context, KEY_TEXT, "default"))
+                || !"solid".equals(get(context, KEY_BUTTON, "solid"))
+                || !"soft".equals(get(context, KEY_TILE, "soft"));
+    }
+
+    /** App.onActivityCreated 调用：登记 epoch、自动装饰弹窗、布局后装饰业务 View 树。 */
+    public static void onActivityCreated(@NonNull Activity activity) {
+        synchronized (EPOCHS) {
+            EPOCHS.put(activity, sEpoch);
+        }
+        try {
+            if (dialogCustomized(activity) && activity instanceof FragmentActivity) {
+                ((FragmentActivity) activity).getSupportFragmentManager()
+                        .registerFragmentLifecycleCallbacks(new DialogWatcher(), false);
+            }
+        } catch (Throwable ignored) {
+            // 生命周期回调注册失败不能影响 Activity 启动。
+        }
+        if (!detailCustomized(activity)) return;
+        try {
+            View decor = activity.getWindow().getDecorView();
+            decor.post(() -> decorateTree(activity));
+        } catch (Throwable ignored) {
+            // 装饰是锦上添花，任何异常都不允许影响业务界面。
+        }
+    }
+
+    /** App.onActivityResumed 调用：配置变更后，让任务栈里仍活着的旧页面重建。 */
+    public static void onActivityResumed(@NonNull Activity activity) {
+        Long applied;
+        synchronized (EPOCHS) {
+            applied = EPOCHS.get(activity);
+        }
+        if (applied == null || applied == sEpoch) return;
+        try {
+            activity.recreate();
+        } catch (Throwable ignored) {
+            // 个别系统 Activity 不支持 recreate 时保持原样，不再重试，避免循环。
+        }
+    }
+
+    private static final class DialogWatcher extends FragmentManager.FragmentLifecycleCallbacks {
+        @Override
+        public void onFragmentStarted(@NonNull FragmentManager fm, @NonNull Fragment f) {
+            if (!(f instanceof DialogFragment)) return;
+            try {
+                Dialog dialog = ((DialogFragment) f).getDialog();
+                if (dialog == null || dialog.getWindow() == null) return;
+                Context c = f.getContext();
+                if (c != null && dialogCustomized(c)) decorateWindow(dialog.getWindow(), c);
+            } catch (Throwable ignored) {
+                // 弹窗装饰失败不影响弹窗本身。
+            }
+        }
+    }
+
+    private static void decorateTree(@NonNull Activity activity) {
+        try {
+            View content = activity.findViewById(android.R.id.content);
+            if (content != null) applyToView(content, activity);
+        } catch (Throwable ignored) {
+            // 同上：装饰层绝不能抛到业务代码。
+        }
+    }
+
+    private static void applyToView(@NonNull View view, @NonNull Context context) {
+        try {
+            if (view instanceof TextView) scaleText((TextView) view, context);
+            if (view instanceof Button) shapeButton((Button) view, context);
+            else if (view instanceof ImageView) clipView(view, tileRadius(context));
+            else if (!(view instanceof ViewGroup) && !(view instanceof TextView)
+                    && view.getBackground() != null) clipView(view, cornerRadius(context));
+            if (view instanceof RecyclerView) {
+                ((RecyclerView) view).addOnChildAttachStateChangeListener(
+                        new RecyclerView.OnChildAttachStateChangeListener() {
+                            @Override
+                            public void onChildViewAttachedToWindow(@NonNull View child) {
+                                applyToView(child, context);
+                            }
+
+                            @Override
+                            public void onChildViewDetachedFromWindow(@NonNull View child) {
+                            }
+                        });
+            }
+            if (view instanceof ViewGroup) {
+                ViewGroup group = (ViewGroup) view;
+                for (int i = 0; i < group.getChildCount(); i++) applyToView(group.getChildAt(i), context);
+            }
+        } catch (Throwable ignored) {
+            // 单个 View 装饰失败直接跳过。
+        }
+    }
+
+    /** 用 tag 记住原始字号，RecyclerView 复用 / 多次装饰都不会把字越放越大。 */
+    private static void scaleText(@NonNull TextView view, @NonNull Context context) {
+        float factor = textFactor(context);
+        if (factor == 1f) return;
+        float base;
+        Object tag = view.getTag(R.id.aurora_text_size_orig);
+        if (tag instanceof Float) base = (Float) tag;
+        else {
+            base = view.getTextSize();
+            if (base <= 0f) return;
+            view.setTag(R.id.aurora_text_size_orig, base);
+        }
+        view.setTextSize(TypedValue.COMPLEX_UNIT_PX, base * factor);
+    }
+
+    private static float textFactor(Context context) {
+        String key = get(context, KEY_TEXT, "default");
+        if ("small".equals(key)) return 0.86f;
+        if ("large".equals(key)) return 1.18f;
+        return 1f;
+    }
+
+    private static void shapeButton(@NonNull Button view, @NonNull Context context) {
+        String shape = get(context, KEY_BUTTON, "solid");
+        if ("solid".equals(shape)) return;
+        view.setBackground(button(context, shape));
+        view.setTextColor(onAccent(color(context, R.attr.auroraAccent, 0xFF5FC79A)));
+    }
+
+    private static float cornerRadius(Context context) {
+        String key = get(context, KEY_CORNER, "default");
+        float dp;
+        if ("small".equals(key)) dp = 4f;
+        else if ("large".equals(key)) dp = 20f;
+        else if ("pill".equals(key)) dp = 999f;
+        else dp = 12f;
+        return dp * context.getResources().getDisplayMetrics().density;
+    }
+
+    private static float tileRadius(Context context) {
+        String key = get(context, KEY_TILE, "soft");
+        if ("square".equals(key)) return 0f;
+        if ("large".equals(key)) return 26f * context.getResources().getDisplayMetrics().density;
+        if ("circle".equals(key) || "poster".equals(key)) return 999f;
+        if ("wide".equals(key)) return 8f * context.getResources().getDisplayMetrics().density;
+        return cornerRadius(context);
+    }
+
+    /** 只裁剪轮廓、不替换背景 drawable：不破坏原有 selector / ripple / 图片内容。 */
+    private static void clipView(@NonNull View view, float radius) {
+        if (radius <= 0f) return;
+        final float r = radius;
+        view.setOutlineProvider(new ViewOutlineProvider() {
+            @Override
+            public void getOutline(View v, Outline outline) {
+                outline.setRoundRect(0, 0, v.getWidth(), v.getHeight(), r);
+            }
+        });
+        view.setClipToOutline(true);
     }
 }

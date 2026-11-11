@@ -369,3 +369,26 @@ resource id 0。此前 `theme_baseline_check.py` 把「必须 parent=\"\"、禁�
    失败回落 `Theme.App`。
 4. 强调色/圆角/字号由代码直读偏好提供，不再叠加 style。
 5. 签名链（v2-only、零 ZIP 重写）与 workflow 签名步骤不得因主题改动而调整。
+
+## 2026-11-12「配置不生效 / 应用后窗口不关」复盘（在上述约束之上补充）
+
+用户实测：外观与主题里改配置、按「应用并刷新」后窗口没有关闭，界面也没有变化，怀疑没保存。
+三条真因与修复，均已写进 `tools/theme_baseline_check.py` 的 4b 硬判据，禁止回退：
+
+1. **主题静默回落**：`themeUsable()` 把 framework 颜色 attr「`resolveAttribute(..., false)`
+   返回 false」也当成失败。framework attr 没在当前主题里显式声明是正常情况，framework 会用
+   自己的默认值，不会触发 `#0x0`；旧实现导致每次启动都 `setTheme(Theme.App)`，用户怎么改
+   界面都不变。现在只拦截真正的崩溃源（framework 颜色 attr 被写成字面色），解析不到就
+   `continue`，并在 `apply()` 里记录 `sApplied / sProbe`，面板上直接显示实际生效主题。
+2. **弹窗被 recreate 恢复**：`recreate()` 会保存 Fragment 状态，`DialogFragment` 重建后
+   自动重新弹出，看起来就是「窗口没关」。现在按钮回调先 `dismissAllowingStateLoss()` +
+   `executePendingTransactions()` 再 `recreate()`，`onCreate()` 里 `savedInstanceState != null`
+   再兜底自退；不使用清栈 / 销毁宿主之类的做法（历史教训 2 仍有效）。
+3. **细项只在预览生效**：圆角、文字大小、按钮形态、宫格形状、弹窗风格与位置此前只渲染
+   预览卡片。现在由 `App` 已有的 `ActivityLifecycleCallbacks` 统一驱动
+   `AuroraTheme.onActivityCreated / onActivityResumed`：epoch 变化时让任务栈里的旧页面
+   按需重建，业务 View 树用「只裁剪轮廓、不替换背景」的方式装饰，所有装饰全程
+   try/catch 且在默认配置下零侵入。
+
+约束依旧：唯一合法主题入口仍是 `Activity.setTheme()`，禁止叠加裸 style，四套预设
+`parent="Theme.App"`，8 个启动关键文件与 `oktv-cat @ f7f9a031` 逐字节一致，签名链不动。

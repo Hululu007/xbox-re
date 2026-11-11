@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 全局文字大小装饰用：记住 TextView 的原始字号，保证 RecyclerView 复用
+         和多次装饰都不会把文字越缩越小 / 越放越大。只作为 tag key，不是主题 attr。 -->
+    <item name="aurora_text_size_orig" type="id" />
+</resources>
