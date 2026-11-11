@@ -28,9 +28,13 @@ import com.fongmi.android.tv.R;
  * 并把 framework attr 覆盖成字面色，导致 BottomNavigationView 构造时
  * Resources.getValue(0) -> Resources$NotFoundException #0x0。
  *
- * <p>切换后跑 themeUsable() 探针；任一关键 attr 解析不出就回落 Theme.App，
- * 保证 Activity 一定能起来。强调色 / 圆角 / 字号细项由代码直读偏好提供，
- * 不再叠加任何 style。
+ * <p>切换后跑 themeUsable() 探针；任一关键 attr 解析不出就回落 Theme.App。
+ * 预设 × 强调色由编译期 32 组 Theme.App.* 变体提供（aurora_combos.xml），
+ * 预览与实际主题同源，不在运行时另算一套色值；圆角 / 字号细项仍由代码直读偏好，
+ * 目前只作用于预览与本设置面板，不铺进业务布局。
+ *
+ * <p>严禁在此引入 FLAG_ACTIVITY_CLEAR_TASK / finishAffinity() / relaunch()：
+ * 那会在「应用」按钮回调里销毁弹窗宿主，表现为点确定弹窗直接消失。
  */
 public final class AuroraTheme {
 
@@ -67,7 +71,8 @@ public final class AuroraTheme {
     }
 
     public static void put(Context context, String key, String value) {
-        prefs(context).edit().putString(key, value).apply();
+        // 同步落盘：选项点击后可能立刻 recreate()，apply() 的异步写会读到旧值。
+        prefs(context).edit().putString(key, value).commit();
     }
 
     public static void reset(Context context) {
@@ -79,18 +84,88 @@ public final class AuroraTheme {
     }
 
     @StyleRes
-    private static int presetTheme(String key) {
-        switch (key) {
-            case "paper":
-                return R.style.Theme_App_Paper;
-            case "ink":
-                return R.style.Theme_App_Ink;
-            case "glass":
-                return R.style.Theme_App_Glass;
-            case "system":
-                return 0;
-            default:
-                return R.style.Theme_App_Aurora;
+    private static int presetTheme(String preset, String accent) {
+        if ("system".equals(preset)) return 0;
+        String p;
+        if ("paper".equals(preset)) p = "Paper";
+        else if ("ink".equals(preset)) p = "Ink";
+        else if ("glass".equals(preset)) p = "Glass";
+        else p = "Aurora";
+        if (accent == null || "default".equals(accent)) {
+            switch (p) {
+                case "Paper": return R.style.Theme_App_Paper;
+                case "Ink": return R.style.Theme_App_Ink;
+                case "Glass": return R.style.Theme_App_Glass;
+                default: return R.style.Theme_App_Aurora;
+            }
+        }
+        // 32 个组合 style 全是 Theme.App.* 完整链，编译期显式引用，R8 不会裁掉。
+        switch (p + "_" + accent) {
+            case "Aurora_jade":
+                return R.style.Theme_App_Aurora_Jade;
+            case "Aurora_azure":
+                return R.style.Theme_App_Aurora_Azure;
+            case "Aurora_amber":
+                return R.style.Theme_App_Aurora_Amber;
+            case "Aurora_rose":
+                return R.style.Theme_App_Aurora_Rose;
+            case "Aurora_violet":
+                return R.style.Theme_App_Aurora_Violet;
+            case "Aurora_cyan":
+                return R.style.Theme_App_Aurora_Cyan;
+            case "Aurora_lime":
+                return R.style.Theme_App_Aurora_Lime;
+            case "Aurora_slate":
+                return R.style.Theme_App_Aurora_Slate;
+            case "Paper_jade":
+                return R.style.Theme_App_Paper_Jade;
+            case "Paper_azure":
+                return R.style.Theme_App_Paper_Azure;
+            case "Paper_amber":
+                return R.style.Theme_App_Paper_Amber;
+            case "Paper_rose":
+                return R.style.Theme_App_Paper_Rose;
+            case "Paper_violet":
+                return R.style.Theme_App_Paper_Violet;
+            case "Paper_cyan":
+                return R.style.Theme_App_Paper_Cyan;
+            case "Paper_lime":
+                return R.style.Theme_App_Paper_Lime;
+            case "Paper_slate":
+                return R.style.Theme_App_Paper_Slate;
+            case "Ink_jade":
+                return R.style.Theme_App_Ink_Jade;
+            case "Ink_azure":
+                return R.style.Theme_App_Ink_Azure;
+            case "Ink_amber":
+                return R.style.Theme_App_Ink_Amber;
+            case "Ink_rose":
+                return R.style.Theme_App_Ink_Rose;
+            case "Ink_violet":
+                return R.style.Theme_App_Ink_Violet;
+            case "Ink_cyan":
+                return R.style.Theme_App_Ink_Cyan;
+            case "Ink_lime":
+                return R.style.Theme_App_Ink_Lime;
+            case "Ink_slate":
+                return R.style.Theme_App_Ink_Slate;
+            case "Glass_jade":
+                return R.style.Theme_App_Glass_Jade;
+            case "Glass_azure":
+                return R.style.Theme_App_Glass_Azure;
+            case "Glass_amber":
+                return R.style.Theme_App_Glass_Amber;
+            case "Glass_rose":
+                return R.style.Theme_App_Glass_Rose;
+            case "Glass_violet":
+                return R.style.Theme_App_Glass_Violet;
+            case "Glass_cyan":
+                return R.style.Theme_App_Glass_Cyan;
+            case "Glass_lime":
+                return R.style.Theme_App_Glass_Lime;
+            case "Glass_slate":
+                return R.style.Theme_App_Glass_Slate;
+            default: return R.style.Theme_App_Aurora;
         }
     }
 
@@ -101,7 +176,8 @@ public final class AuroraTheme {
     public static void apply(@NonNull Activity activity) {
         try {
             if (isSystem(activity)) return;
-            int preset = presetTheme(get(activity, KEY_PRESET, "aurora"));
+            int preset = presetTheme(get(activity, KEY_PRESET, "aurora"),
+                    get(activity, KEY_ACCENT, "default"));
             if (preset == 0) return;
             activity.setTheme(preset);
             if (!themeUsable(activity)) {
@@ -165,24 +241,10 @@ public final class AuroraTheme {
 
     /** 预览用 Context：完整链 style + 代码直读细项，与 apply() 行为一致。 */
     public static Context previewContext(Context base) {
-        int res = presetTheme(get(base, KEY_PRESET, "aurora"));
+        int res = presetTheme(get(base, KEY_PRESET, "aurora"),
+                get(base, KEY_ACCENT, "default"));
         if (res == 0) res = R.style.Theme_App_Aurora;
         return new ContextThemeWrapper(base, res);
-    }
-
-    /** 强调色：不再叠加 overlay，直接按偏好返回色值。 */
-    private static int accentColor(String key, boolean soft) {
-        switch (key) {
-            case "jade": return soft ? 0xFF173A2C : 0xFF7FE0B4;
-            case "azure": return soft ? 0xFF14293D : 0xFF7CC4FF;
-            case "amber": return soft ? 0xFF3B2A0E : 0xFFFFC46B;
-            case "rose": return soft ? 0xFF3D1B2A : 0xFFFFA8C8;
-            case "violet": return soft ? 0xFF2C2547 : 0xFFC9B6FF;
-            case "cyan": return soft ? 0xFF0F3038 : 0xFF6EE7F5;
-            case "lime": return soft ? 0xFF263713 : 0xFFC6E88F;
-            case "slate": return soft ? 0xFF28343A : 0xFFCFD8DC;
-            default: return 0;
-        }
     }
 
     private static float cornerDp(String key, boolean large) {
@@ -203,11 +265,6 @@ public final class AuroraTheme {
     }
 
     public static int color(Context context, @AttrRes int attr, int fallback) {
-        if (attr == R.attr.auroraAccent || attr == R.attr.auroraAccentSoft) {
-            int override = accentColor(get(context, KEY_ACCENT, "default"),
-                    attr == R.attr.auroraAccentSoft);
-            if (override != 0) return override;
-        }
         TypedValue tv = new TypedValue();
         if (context.getTheme().resolveAttribute(attr, tv, true)
                 && tv.type >= TypedValue.TYPE_FIRST_COLOR_INT

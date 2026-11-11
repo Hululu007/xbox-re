@@ -3,8 +3,8 @@
     <!-- 新增字符串统一放 main 默认资源：中文用户直接显示中文，其它语言回退到此，不改动既有大文件 -->
     <string name="aurora_theme_title">外观与主题</string>
     <string name="aurora_theme_entry">外观与主题 · 原生定制</string>
-    <string name="aurora_theme_summary">柔雾青为默认 · 支持高级定制</string>
-    <string name="aurora_apply">应用并刷新界面</string>
+    <string name="aurora_theme_summary">应用默认主题（非网页皮肤）· 预设与强调色全局生效</string>
+    <string name="aurora_apply">应用并刷新</string>
     <string name="aurora_close">关闭</string>
     <string name="aurora_preset">主题预设</string>
     <string name="aurora_preset_aurora">柔雾青（默认）</string>
@@ -58,5 +58,5 @@
     <string name="aurora_preview_sub">背景、文字、底色与描边随主题联动</string>
     <string name="aurora_preview_button">立即播放</string>
     <string name="aurora_preview_tag">已同步</string>
-    <string name="aurora_note">选择后即时预览；点「应用并刷新界面」让所有原生控件全局生效。弹窗位置与风格立即生效。</string>
+    <string name="aurora_note">预设与强调色会写入应用默认主题：点「应用并刷新」后当前页立即更新，完全退出并重新打开后所有页面统一。圆角、文字大小、按钮形态、宫格形状、弹窗风格与位置目前只作用于本面板预览，不改变业务页面布局。</string>
 </resources>
