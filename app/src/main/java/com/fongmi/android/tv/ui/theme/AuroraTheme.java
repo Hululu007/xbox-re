@@ -22,14 +22,15 @@ import com.fongmi.android.tv.R;
 /**
  * xbox-re 原生 UI 主题引擎。
  *
- * <p>设计原则：零依赖、零布局改写、不改任何现有方法签名。主题由单一机制组成：
- * <ul>
- *   <li>{@link #apply(Activity)} 在 {@code super.onCreate} 之后、
- *       {@code setContentView} 之前用 {@code Theme.applyStyle} 叠加四套预设与
- *       强调色 / 圆角档位 / 字号档位；从不替换 Activity 的主题链。</li>
- * </ul>
- * 配置保存在独立 SharedPreferences，不触碰项目既有 Setting 键；选择「跟随系统」时
- * 整个引擎不介入，原有 DynamicColors / 深色主题链路完整保留。
+ * <p>启动期唯一动作：在 setContentView 之前用 {@link Activity#setTheme(int)} 切换到
+ * parent="Theme.App" 的完整预设链（与 oktv-cat 基线同源）。不再用
+ * {@code Theme.applyStyle} 叠加 parent="" 的裸 style —— 那会改写 inflate 期的 theme
+ * 并把 framework attr 覆盖成字面色，导致 BottomNavigationView 构造时
+ * Resources.getValue(0) -> Resources$NotFoundException #0x0。
+ *
+ * <p>切换后跑 themeUsable() 探针；任一关键 attr 解析不出就回落 Theme.App，
+ * 保证 Activity 一定能起来。强调色 / 圆角 / 字号细项由代码直读偏好提供，
+ * 不再叠加任何 style。
  */
 public final class AuroraTheme {
 
@@ -95,116 +96,93 @@ public final class AuroraTheme {
 
     /**
      * 在 super.onCreate 之后、setContentView 之前调用。
-     *
-     * <p>关键约束：只用 Theme.applyStyle 叠加，不调用 setTheme、不改 Theme.Base 的
-     * parent 链。这样 LayoutInflater 解析控件默认 style 时看到的主题链与 oktv-cat
-     * 基线逐字节一致，主题代码不可能让 BottomNavigationView 解析出 0x0。
+     * 用完整 parent 链的 setTheme，不再 applyStyle；失败一律回落基线主题。
      */
     public static void apply(@NonNull Activity activity) {
         try {
             if (isSystem(activity)) return;
             int preset = presetTheme(get(activity, KEY_PRESET, "aurora"));
-            if (preset != 0) activity.getTheme().applyStyle(preset, true);
-            int palette = paletteOverlay(get(activity, KEY_PRESET, "aurora"));
-            if (palette != 0) activity.getTheme().applyStyle(palette, true);
-            int accent = accentOverlay(get(activity, KEY_ACCENT, "default"));
-            if (accent != 0) activity.getTheme().applyStyle(accent, true);
-            int corner = cornerOverlay(get(activity, KEY_CORNER, "default"));
-            if (corner != 0) activity.getTheme().applyStyle(corner, true);
-            int text = textOverlay(get(activity, KEY_TEXT, "default"));
-            if (text != 0) activity.getTheme().applyStyle(text, true);
-            // window 已创建，applyStyle 改不了背景，这里显式设置（有兜底色）
+            if (preset == 0) return;
+            activity.setTheme(preset);
+            if (!themeUsable(activity)) {
+                activity.setTheme(R.style.Theme_App);
+                return;
+            }
             activity.getWindow().setBackgroundDrawable(
                     new ColorDrawable(color(activity, R.attr.auroraBackdrop, 0xFF0E1512)));
         } catch (Throwable ignored) {
-            // 叠加失败保持基线外观，绝不阻塞启动。
+            try {
+                activity.setTheme(R.style.Theme_App);
+            } catch (Throwable ignoredToo) {
+                // 保持 Manifest 基线主题，绝不阻塞启动。
+            }
         }
     }
 
-    /** 生成一份按当前配置装饰过的 Context，用于设置面板的即时预览。 */
+    /** 切换后检查关键 attr 能否解析；任一为 0/NULL 就不允许用这套 theme 去 inflate。 */
+    private static boolean themeUsable(@NonNull Activity activity) {
+        int[] required = {
+                android.R.attr.textColorPrimary,
+                android.R.attr.selectableItemBackground,
+                android.R.attr.windowBackground,
+                R.attr.auroraBackdrop,
+                R.attr.auroraSurface,
+                R.attr.auroraAccent,
+        };
+        for (int id : required) {
+            TypedValue tv = new TypedValue();
+            if (!activity.getTheme().resolveAttribute(id, tv, true)) return false;
+            if (tv.type == TypedValue.TYPE_NULL) return false;
+            if (tv.type == TypedValue.TYPE_REFERENCE && tv.data == 0) return false;
+        }
+        return true;
+    }
+
+    /** 预览用 Context：完整链 style + 代码直读细项，与 apply() 行为一致。 */
     public static Context previewContext(Context base) {
         int res = presetTheme(get(base, KEY_PRESET, "aurora"));
         if (res == 0) res = R.style.Theme_App_Aurora;
-        ContextThemeWrapper wrapper = new ContextThemeWrapper(base, res);
-        int palette = paletteOverlay(get(base, KEY_PRESET, "aurora"));
-        if (palette != 0) wrapper.getTheme().applyStyle(palette, true);
-        int accent = accentOverlay(get(base, KEY_ACCENT, "default"));
-        if (accent != 0) wrapper.getTheme().applyStyle(accent, true);
-        int corner = cornerOverlay(get(base, KEY_CORNER, "default"));
-        if (corner != 0) wrapper.getTheme().applyStyle(corner, true);
-        int text = textOverlay(get(base, KEY_TEXT, "default"));
-        if (text != 0) wrapper.getTheme().applyStyle(text, true);
-        return wrapper;
+        return new ContextThemeWrapper(base, res);
     }
 
-    /** 预设调色板：只覆盖颜色与圆角属性，不动 widget style / parent 链。 */
-    @StyleRes
-    private static int paletteOverlay(String key) {
+    /** 强调色：不再叠加 overlay，直接按偏好返回色值。 */
+    private static int accentColor(String key, boolean soft) {
         switch (key) {
-            case "paper":
-                return R.style.ThemeOverlay_Aurora_Palette_Paper;
-            case "ink":
-                return R.style.ThemeOverlay_Aurora_Palette_Ink;
-            case "glass":
-                return R.style.ThemeOverlay_Aurora_Palette_Glass;
-            case "system":
-                return 0;
-            default:
-                return R.style.ThemeOverlay_Aurora_Palette_Aurora;
+            case "jade": return soft ? 0xFF173A2C : 0xFF7FE0B4;
+            case "azure": return soft ? 0xFF14293D : 0xFF7CC4FF;
+            case "amber": return soft ? 0xFF3B2A0E : 0xFFFFC46B;
+            case "rose": return soft ? 0xFF3D1B2A : 0xFFFFA8C8;
+            case "violet": return soft ? 0xFF2C2547 : 0xFFC9B6FF;
+            case "cyan": return soft ? 0xFF0F3038 : 0xFF6EE7F5;
+            case "lime": return soft ? 0xFF263713 : 0xFFC6E88F;
+            case "slate": return soft ? 0xFF28343A : 0xFFCFD8DC;
+            default: return 0;
         }
     }
 
-    @StyleRes
-    private static int accentOverlay(String key) {
+    private static float cornerDp(String key, boolean large) {
         switch (key) {
-            case "jade":
-                return R.style.ThemeOverlay_Aurora_Accent_Jade;
-            case "azure":
-                return R.style.ThemeOverlay_Aurora_Accent_Azure;
-            case "amber":
-                return R.style.ThemeOverlay_Aurora_Accent_Amber;
-            case "rose":
-                return R.style.ThemeOverlay_Aurora_Accent_Rose;
-            case "violet":
-                return R.style.ThemeOverlay_Aurora_Accent_Violet;
-            case "cyan":
-                return R.style.ThemeOverlay_Aurora_Accent_Cyan;
-            case "lime":
-                return R.style.ThemeOverlay_Aurora_Accent_Lime;
-            case "slate":
-                return R.style.ThemeOverlay_Aurora_Accent_Slate;
-            default:
-                return 0;
+            case "small": return large ? 8f : 4f;
+            case "large": return large ? 28f : 20f;
+            case "pill": return large ? 36f : 28f;
+            default: return 0f;
         }
     }
 
-    @StyleRes
-    private static int cornerOverlay(String key) {
+    private static float textSp(String key) {
         switch (key) {
-            case "small":
-                return R.style.ThemeOverlay_Aurora_Corner_Small;
-            case "large":
-                return R.style.ThemeOverlay_Aurora_Corner_Large;
-            case "pill":
-                return R.style.ThemeOverlay_Aurora_Corner_Pill;
-            default:
-                return 0;
-        }
-    }
-
-    @StyleRes
-    private static int textOverlay(String key) {
-        switch (key) {
-            case "small":
-                return R.style.ThemeOverlay_Aurora_Text_Small;
-            case "large":
-                return R.style.ThemeOverlay_Aurora_Text_Large;
-            default:
-                return 0;
+            case "small": return 13f;
+            case "large": return 17f;
+            default: return 0f;
         }
     }
 
     public static int color(Context context, @AttrRes int attr, int fallback) {
+        if (attr == R.attr.auroraAccent || attr == R.attr.auroraAccentSoft) {
+            int override = accentColor(get(context, KEY_ACCENT, "default"),
+                    attr == R.attr.auroraAccentSoft);
+            if (override != 0) return override;
+        }
         TypedValue tv = new TypedValue();
         if (context.getTheme().resolveAttribute(attr, tv, true)
                 && tv.type >= TypedValue.TYPE_FIRST_COLOR_INT
@@ -212,11 +190,7 @@ public final class AuroraTheme {
         return fallback;
     }
 
-    /**
-     * 按背景色亮度返回可读前景色（浅底配深字、深底配浅字）。
-     * 用于强调色按钮上的文字，保证四套预设与任意强调色 overlay 下都有足够对比度，
-     * 且不依赖任何库声明的 attr（AGP 非传递 R 类下 R.attr 只包含本模块属性）。
-     */
+    /** 按背景色亮度返回可读前景色（浅底配深字、深底配浅字）。 */
     public static int onAccent(int background) {
         double r = linear(Color.red(background));
         double g = linear(Color.green(background));
@@ -230,12 +204,20 @@ public final class AuroraTheme {
         return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
     }
 
-    /** 返回像素值。 */
+    /** 返回像素值；圆角/字号细项按偏好覆盖，不再叠加 style。 */
     public static float dimension(Context context, @AttrRes int attr, float fallbackDp) {
+        float density = context.getResources().getDisplayMetrics().density;
+        if (attr == R.attr.auroraCorner || attr == R.attr.auroraCornerLarge) {
+            float dp = cornerDp(get(context, KEY_CORNER, "default"), attr == R.attr.auroraCornerLarge);
+            if (dp > 0f) return dp * density;
+        } else if (attr == R.attr.auroraTextSize) {
+            float sp = textSp(get(context, KEY_TEXT, "default"));
+            if (sp > 0f) return sp * context.getResources().getDisplayMetrics().scaledDensity;
+        }
         TypedValue tv = new TypedValue();
         if (context.getTheme().resolveAttribute(attr, tv, true) && tv.type == TypedValue.TYPE_DIMENSION)
             return tv.getDimension(context.getResources().getDisplayMetrics());
-        return fallbackDp * context.getResources().getDisplayMetrics().density;
+        return fallbackDp * density;
     }
 
     public static int px(Context context, float dp) {

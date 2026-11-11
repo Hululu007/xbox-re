@@ -350,3 +350,19 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
 - 硬判据：三份 `styles.xml`、三份 `AndroidManifest.xml`、两份 `activity_home.xml` 共 8 个文件，sha256 必须与可运行基线 `oktv-cat @ f7f9a031` 逐字节一致；主题引擎禁止 `setTheme`，四套预设必须 `parent=""` 纯 overlay，且不得含 `android:window*` / `isLightTheme`。
 - 理由：`HomeActivity → activity_home.xml:22 → BottomNavigationView.<init> → Resources$NotFoundException #0x0` 的根因是运行时 theme 链被改动，不是签名、下载或重签；与已知可启动基线比对，比自定义规则更不容易「自己出题自己判卷」。
 - 签名后的「Verify compiled theme resources in signed APK」步骤对最终 APK 跑 `aapt2 dump resources --values` 作编译后诊断；该段只读，不碰 v2 签名块、不重写 ZIP。
+
+## 主题启动链（不可变，2026-11-11 崩溃复盘）
+
+`activity_home.xml:22` / `BottomNavigationView.<init>` / `Resources$NotFoundException: Resource ID #0x0`
+的根因：BaseActivity 在 `setContentView` 之前用 `Theme.applyStyle` 叠加 `parent=""` 的裸 style，
+并把 `android:textColor*` 等 framework attr 覆盖成字面色，导致 inflate 期 Material 控件读到
+resource id 0。此前 `theme_baseline_check.py` 把「必须 parent=\"\"、禁止 setTheme」写成硬门禁，
+等于把自己的错误假设锁死 —— CI 全绿只说明代码符合假设，不说明能启动。
+
+不可变约束：
+1. 启动关键 8 文件与 `oktv-cat @ f7f9a031` 逐字节一致（门禁 1）。
+2. 四套预设必须 `parent="Theme.App"`，禁止任何 `android:textColor*` / `android:window*` / `isLightTheme`。
+3. 唯一合法入口是 `Activity.setTheme()`；禁止 `Theme.applyStyle()`；切换后必须跑 `themeUsable()` 探针，
+   失败回落 `Theme.App`。
+4. 强调色/圆角/字号由代码直读偏好提供，不再叠加 style。
+5. 签名链（v2-only、零 ZIP 重写）与 workflow 签名步骤不得因主题改动而调整。

@@ -5,10 +5,12 @@
 
 背景：HomeActivity -> activity_home.xml:22 -> BottomNavigationView.<init>
       -> Resources$NotFoundException: Resource ID #0x0
-真因是运行时 theme 链被改动（Theme.Base parent 被换 / setTheme 到不完整链），
-不是签名、下载、重签或甲壳虫。oktv-cat @ f7f9a031 是能启动的基线：它的
-styles.xml / AndroidManifest / activity_home.xml 必须逐字节保持；主题只能以
-parent="" 的纯 item overlay 经 Theme.applyStyle 叠加。
+真因是 BaseActivity 在 setContentView 之前用 Theme.applyStyle 叠加 parent="" 的裸
+style，并把 framework android:textColor* 覆盖成字面色；inflate 期
+BottomNavigationView 构造读到 resource id 0 -> Resources$NotFoundException #0x0。
+oktv-cat @ f7f9a031 是能启动的基线：它的 styles.xml / AndroidManifest /
+activity_home.xml 必须逐字节保持；主题只允许用 parent="Theme.App" 的完整链
+经 Activity.setTheme 切换，并且切换后必须有探针兜底。
 
 用法：
   python3 tools/theme_baseline_check.py                  # 源码级硬断言（构建前）
@@ -69,25 +71,34 @@ for p in glob.glob(os.path.join(ROOT, 'app', 'src', '*', 'res', 'values', 'style
             if 'DynamicColors' not in s.get('parent'):
                 errors.append('Theme.Base parent changed on mobile: %s -> %s' % (p, s.get('parent')))
 
-# 3) 四套预设必须 parent="" 纯 overlay，禁止 window/daynight item
+# 3) 四套预设必须是 parent="Theme.App" 的完整链，禁止 framework 级覆盖
 for p in glob.glob(os.path.join(ROOT, 'app', 'src', 'main', 'res', 'values', 'aurora_themes.xml')):
     root = ET.parse(p).getroot()
+    found = 0
     for s in root.iter('style'):
         name = s.get('name', '')
         if not name.startswith('Theme.App.'):
             continue
-        if s.get('parent') not in ('', None):
-            errors.append('preset must be pure overlay (parent=""): %s parent=%s' % (name, s.get('parent')))
+        found += 1
+        if s.get('parent') != 'Theme.App':
+            errors.append('preset must inherit full chain (parent="Theme.App"): %s parent=%s' % (name, s.get('parent')))
         for i in s.iter('item'):
             n = i.get('name', '')
-            if n.startswith('android:window') or n == 'isLightTheme':
-                errors.append('preset %s contains forbidden window/daynight item: %s' % (name, n))
+            if n.startswith('android:textColor') or n.startswith('android:window') or n == 'isLightTheme':
+                errors.append('preset %s contains forbidden framework item: %s' % (name, n))
+    if found != 4:
+        errors.append('expected 4 theme presets, found %d' % found)
 
-# 4) 主题引擎禁止 setTheme（唯一合法入口是 Theme.applyStyle）
+# 4) 主题引擎禁止 applyStyle（inflate 前叠加裸 style 是 #0x0 的根因）；
+#    必须 setTheme + 探针兜底
 for p in glob.glob(os.path.join(ROOT, 'app', 'src', 'main', 'java', '**', 'AuroraTheme.java'), recursive=True):
     txt = open(p, encoding='utf-8').read()
-    if re.search(r'\bsetTheme\s*\(', txt):
-        errors.append('AuroraTheme calls setTheme(): ' + p)
+    if re.search(r'\bapplyStyle\s*\(', txt):
+        errors.append('AuroraTheme calls Theme.applyStyle(): ' + p)
+    if not re.search(r'\bsetTheme\s*\(', txt):
+        errors.append('AuroraTheme must use Activity.setTheme(): ' + p)
+    if 'themeUsable' not in txt:
+        errors.append('AuroraTheme missing themeUsable() startup probe: ' + p)
 
 # 5) ?attr/aurora* 必须全部声明
 attrs, refs = set(), set()

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Aurora 四套预设：全部 parent=""（纯 overlay），用 Theme.applyStyle 叠加到 oktv-cat 基线主题上，
-         不改变 Theme.Base / Theme.App 的 parent 链；色板按 WCAG 对比度重排，
+    <!-- Aurora 四套预设：全部 parent="Theme.App"（完整链），用 Activity.setTheme 在 inflate 前切换，
+         不再用 applyStyle 叠加 parent="" 的裸 style；色板按 WCAG 对比度重排，
          背景/卡片/文字/强调色同色相阶梯，避免发灰与低对比。 -->
-    <style name="Theme.App.Aurora" parent="">
+    <style name="Theme.App.Aurora" parent="Theme.App">
         <item name="auroraBackdrop">#FF0E1512</item>
         <item name="auroraSurface">#FF17211D</item>
         <item name="auroraSurfaceHigh">#FF22302A</item>
@@ -20,9 +20,6 @@
         <item name="auroraTileShape">0</item>
         <item name="auroraDialogStyle">0</item>
         <item name="auroraDialogGravity">17</item>
-        <item name="android:textColorPrimary">#FFF2F7F4</item>
-        <item name="android:textColorSecondary">#FFC2D0C9</item>
-        <item name="android:textColorHint">#FFC2D0C9</item>
         <item name="colorPrimary">#FF7FE0B4</item>
         <item name="colorOnPrimary">#FF062018</item>
         <item name="colorSecondary">#FF7FE0B4</item>
@@ -39,7 +36,7 @@
         <item name="colorControlNormal">#FFC2D0C9</item>
     </style>
 
-    <style name="Theme.App.Paper" parent="">
+    <style name="Theme.App.Paper" parent="Theme.App">
         <item name="auroraBackdrop">#FFF7F9F8</item>
         <item name="auroraSurface">#FFFFFFFF</item>
         <item name="auroraSurfaceHigh">#FFE9EFEC</item>
@@ -56,9 +53,6 @@
         <item name="auroraTileShape">1</item>
         <item name="auroraDialogStyle">1</item>
         <item name="auroraDialogGravity">17</item>
-        <item name="android:textColorPrimary">#FF101A16</item>
-        <item name="android:textColorSecondary">#FF47574F</item>
-        <item name="android:textColorHint">#FF47574F</item>
         <item name="colorPrimary">#FF0F6B4B</item>
         <item name="colorOnPrimary">#FFFFFFFF</item>
         <item name="colorSecondary">#FF0F6B4B</item>
@@ -75,7 +69,7 @@
         <item name="colorControlNormal">#FF47574F</item>
     </style>
 
-    <style name="Theme.App.Ink" parent="">
+    <style name="Theme.App.Ink" parent="Theme.App">
         <item name="auroraBackdrop">#FF0B0E12</item>
         <item name="auroraSurface">#FF141920</item>
         <item name="auroraSurfaceHigh">#FF1E252F</item>
@@ -92,9 +86,6 @@
         <item name="auroraTileShape">2</item>
         <item name="auroraDialogStyle">2</item>
         <item name="auroraDialogGravity">81</item>
-        <item name="android:textColorPrimary">#FFF3F6FB</item>
-        <item name="android:textColorSecondary">#FFB4BECC</item>
-        <item name="android:textColorHint">#FFB4BECC</item>
         <item name="colorPrimary">#FF8FC2FF</item>
         <item name="colorOnPrimary">#FF071422</item>
         <item name="colorSecondary">#FF8FC2FF</item>
@@ -111,7 +102,7 @@
         <item name="colorControlNormal">#FFB4BECC</item>
     </style>
 
-    <style name="Theme.App.Glass" parent="">
+    <style name="Theme.App.Glass" parent="Theme.App">
         <item name="auroraBackdrop">#FF100F1F</item>
         <item name="auroraSurface">#FF1D1C33</item>
         <item name="auroraSurfaceHigh">#FF2A2944</item>
@@ -128,9 +119,6 @@
         <item name="auroraTileShape">2</item>
         <item name="auroraDialogStyle">3</item>
         <item name="auroraDialogGravity">17</item>
-        <item name="android:textColorPrimary">#FFF6F5FF</item>
-        <item name="android:textColorSecondary">#FFC6C3E0</item>
-        <item name="android:textColorHint">#FFC6C3E0</item>
         <item name="colorPrimary">#FFB9A9FF</item>
         <item name="colorOnPrimary">#FF100B24</item>
         <item name="colorSecondary">#FFB9A9FF</item>
