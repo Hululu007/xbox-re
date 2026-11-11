@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:color="?attr/colorPrimary" android:state_checked="true" />
-    <item android:color="@color/white" android:state_checked="false" />
+    <!-- 固定色值：不引用主题属性，杜绝动态色表缺失时解析出 0x0 -->
+    <item android:color="#FF7FE0B4" android:state_checked="true" />
+    <item android:color="#FFE4EDE8" android:state_checked="false" />
 </selector>

@@ -5,12 +5,12 @@
     </style>
 
     <style name="Vod.Grid">
-        <item name="cornerSizeTopLeft">?attr/auroraCorner</item>
-        <item name="cornerSizeTopRight">?attr/auroraCorner</item>
+        <item name="cornerSizeTopLeft">12dp</item>
+        <item name="cornerSizeTopRight">12dp</item>
     </style>
 
     <style name="Vod.Grid.Large">
-        <item name="cornerSize">?attr/auroraCorner</item>
+        <item name="cornerSize">12dp</item>
     </style>
 
     <style name="Vod.Circle">
@@ -19,8 +19,8 @@
     </style>
 
     <style name="Vod.List">
-        <item name="cornerSizeTopLeft">?attr/auroraCorner</item>
-        <item name="cornerSizeBottomLeft">?attr/auroraCorner</item>
+        <item name="cornerSizeTopLeft">12dp</item>
+        <item name="cornerSizeBottomLeft">12dp</item>
     </style>
 
     <style name="Player">

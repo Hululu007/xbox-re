@@ -96,20 +96,28 @@ public final class AuroraTheme {
 
     /** 必须在 Activity.onCreate 的 super.onCreate 之前调用。 */
     public static void applyPreset(@NonNull Activity activity) {
-        if (isSystem(activity)) return;
-        int res = presetTheme(get(activity, KEY_PRESET, "aurora"));
-        if (res != 0) activity.setTheme(res);
+        try {
+            if (isSystem(activity)) return;
+            int res = presetTheme(get(activity, KEY_PRESET, "aurora"));
+            if (res != 0) activity.setTheme(res);
+        } catch (Throwable ignored) {
+            // 主题资源异常时保持 Manifest 主题，绝不阻塞 Activity 启动。
+        }
     }
 
     /** 必须在 super.onCreate 之后、setContentView 之前调用。 */
     public static void applyOverlay(@NonNull Activity activity) {
-        if (isSystem(activity)) return;
-        int accent = accentOverlay(get(activity, KEY_ACCENT, "default"));
-        if (accent != 0) activity.getTheme().applyStyle(accent, true);
-        int corner = cornerOverlay(get(activity, KEY_CORNER, "default"));
-        if (corner != 0) activity.getTheme().applyStyle(corner, true);
-        int text = textOverlay(get(activity, KEY_TEXT, "default"));
-        if (text != 0) activity.getTheme().applyStyle(text, true);
+        try {
+            if (isSystem(activity)) return;
+            int accent = accentOverlay(get(activity, KEY_ACCENT, "default"));
+            if (accent != 0) activity.getTheme().applyStyle(accent, true);
+            int corner = cornerOverlay(get(activity, KEY_CORNER, "default"));
+            if (corner != 0) activity.getTheme().applyStyle(corner, true);
+            int text = textOverlay(get(activity, KEY_TEXT, "default"));
+            if (text != 0) activity.getTheme().applyStyle(text, true);
+        } catch (Throwable ignored) {
+            // 叠加失败不阻断启动。
+        }
     }
 
     /** 生成一份按当前配置装饰过的 Context，用于设置面板的即时预览。 */
@@ -194,7 +202,7 @@ public final class AuroraTheme {
         double g = linear(Color.green(background));
         double b = linear(Color.blue(background));
         double luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-        return luminance > 0.35 ? 0xFF10231B : 0xFFF4F8F6;
+        return luminance > 0.30 ? 0xFF07130E : 0xFFF7FBF9;
     }
 
     private static double linear(int channel) {
@@ -256,8 +264,8 @@ public final class AuroraTheme {
             drawable.setColor(high);
             drawable.setStroke(px(context, 1f), outline);
         } else if ("glass".equals(style)) {
-            drawable.setColor(Color.argb(226, 35, 34, 60));
-            drawable.setStroke(px(context, 1f), Color.argb(110, 255, 255, 255));
+            drawable.setColor(Color.argb(242, 26, 25, 48));
+            drawable.setStroke(px(context, 1.5f), Color.argb(170, 255, 255, 255));
         } else {
             drawable.setColor(high);
         }
@@ -301,7 +309,7 @@ public final class AuroraTheme {
             window.setLayout(WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT);
         }
         window.setBackgroundDrawable(surface(context, style));
-        window.setDimAmount("glass".equals(style) ? 0.55f : 0.32f);
+        window.setDimAmount("glass".equals(style) ? 0.62f : 0.48f);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && "glass".equals(style)) {
             try {
                 window.setBackgroundBlurRadius(px(context, 18f));

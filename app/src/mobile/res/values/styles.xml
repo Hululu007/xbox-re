@@ -5,23 +5,50 @@
         <item name="android:navigationBarColor">@color/transparent</item>
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
         <!-- Aurora 原生主题兜底：未应用预设的 Activity 也能解析这些属性，杜绝资源解析崩溃 -->
-        <item name="auroraBackdrop">#FF141A18</item>
-        <item name="auroraSurface">#FF1A221F</item>
-        <item name="auroraSurfaceHigh">#FF232C28</item>
-        <item name="auroraSurfaceLow">#FF111614</item>
-        <item name="auroraOnSurface">#FFE8EEEB</item>
-        <item name="auroraOnSurfaceVariant">#FFA8B5B0</item>
-        <item name="auroraAccent">#FF5FC79A</item>
-        <item name="auroraAccentSoft">#FF1E3A30</item>
-        <item name="auroraOutline">#FF2E3A35</item>
-        <item name="auroraCorner">8dp</item>
-        <item name="auroraCornerLarge">14dp</item>
+                <item name="auroraBackdrop">#FF0E1512</item>
+        <item name="auroraSurface">#FF17211D</item>
+        <item name="auroraSurfaceHigh">#FF22302A</item>
+        <item name="auroraSurfaceLow">#FF0A100D</item>
+        <item name="auroraOnSurface">#FFF2F7F4</item>
+        <item name="auroraOnSurfaceVariant">#FFC2D0C9</item>
+        <item name="auroraAccent">#FF7FE0B4</item>
+        <item name="auroraAccentSoft">#FF173A2C</item>
+        <item name="auroraOutline">#FF33453C</item>
+        <item name="auroraCorner">12dp</item>
+        <item name="auroraCornerLarge">20dp</item>
         <item name="auroraTextSize">14sp</item>
         <item name="auroraButtonShape">0</item>
         <item name="auroraTileShape">0</item>
         <item name="auroraDialogStyle">0</item>
         <item name="auroraDialogGravity">17</item>
     </style>
+
+    <!-- 静态 M3 基础主题：与 DynamicColors 链完全解耦。
+         Aurora 预设在此链上运行时不再依赖 DynamicColors.applyToActivityIfAvailable()，
+         避免动态色表未注入时 Material 控件读到 0x0 资源。 -->
+    <style name="Theme.Base.Static" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:statusBarColor">@color/transparent</item>
+        <item name="android:navigationBarColor">@color/transparent</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="auroraBackdrop">#FF0E1512</item>
+        <item name="auroraSurface">#FF17211D</item>
+        <item name="auroraSurfaceHigh">#FF22302A</item>
+        <item name="auroraSurfaceLow">#FF0A100D</item>
+        <item name="auroraOnSurface">#FFF2F7F4</item>
+        <item name="auroraOnSurfaceVariant">#FFC2D0C9</item>
+        <item name="auroraAccent">#FF7FE0B4</item>
+        <item name="auroraAccentSoft">#FF173A2C</item>
+        <item name="auroraOutline">#FF33453C</item>
+        <item name="auroraCorner">12dp</item>
+        <item name="auroraCornerLarge">20dp</item>
+        <item name="auroraTextSize">14sp</item>
+        <item name="auroraButtonShape">0</item>
+        <item name="auroraTileShape">0</item>
+        <item name="auroraDialogStyle">0</item>
+        <item name="auroraDialogGravity">17</item>
+    </style>
+
+    <style name="Theme.App.Static" parent="Theme.Base.Static" />
 
     <style name="Theme.Splash" parent="Theme.Base">
         <item name="android:windowBackground">@drawable/mobile_startup_window_background</item>
