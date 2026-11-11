@@ -1,6 +1,6 @@
 <resources>
 
-    <style name="Theme.Base" parent="Theme.Base">
+    <style name="Theme.Base" parent="Theme.Material3.Dark.NoActionBar">
         <item name="colorPrimary">@color/white</item>
         <item name="android:windowBackground">@color/black</item>
         <item name="android:windowFullscreen">true</item>
@@ -29,7 +29,7 @@
     <!-- 静态 M3 基础主题：与 DynamicColors 链完全解耦。
          Aurora 预设在此链上运行时不再依赖 DynamicColors.applyToActivityIfAvailable()，
          避免动态色表未注入时 Material 控件读到 0x0 资源。 -->
-    <style name="Theme.Base.Static" parent="Theme.Material3.Dark.NoActionBar">
+    <style name="Theme.Base.Static" parent="Theme.Base">
         <item name="colorPrimary">@color/white</item>
         <item name="android:windowBackground">@color/black</item>
         <item name="android:windowFullscreen">true</item>
