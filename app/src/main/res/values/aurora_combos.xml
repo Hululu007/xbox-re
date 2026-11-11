@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 预设 × 强调色 = 32 个完整 parent 链 style。用 Activity.setTheme 直接切换，
+         不叠加 applyStyle、不改 framework android:* attr，避免 inflate 期 #0x0。
+         浅色预设自动改用深色强调色，保证强调色在白底上可读。 -->
+    <style name="Theme.App.Aurora.Jade" parent="Theme.App.Aurora">
+        <item name="auroraAccent">#FF7FE0B4</item>
+        <item name="auroraAccentSoft">#FF173A2C</item>
+        <item name="colorPrimary">#FF7FE0B4</item>
+        <item name="colorOnPrimary">#FF062018</item>
+        <item name="colorSecondary">#FF7FE0B4</item>
+        <item name="colorOnSecondary">#FF062018</item>
+        <item name="colorControlActivated">#FF7FE0B4</item>
+    </style>
+    <style name="Theme.App.Aurora.Azure" parent="Theme.App.Aurora">
+        <item name="auroraAccent">#FF7CC4FF</item>
+        <item name="auroraAccentSoft">#FF14293D</item>
+        <item name="colorPrimary">#FF7CC4FF</item>
+        <item name="colorOnPrimary">#FF061A2E</item>
+        <item name="colorSecondary">#FF7CC4FF</item>
+        <item name="colorOnSecondary">#FF061A2E</item>
+        <item name="colorControlActivated">#FF7CC4FF</item>
+    </style>
+    <style name="Theme.App.Aurora.Amber" parent="Theme.App.Aurora">
+        <item name="auroraAccent">#FFFFC46B</item>
+        <item name="auroraAccentSoft">#FF3B2A0E</item>
+        <item name="colorPrimary">#FFFFC46B</item>
+        <item name="colorOnPrimary">#FF2A1A00</item>
+        <item name="colorSecondary">#FFFFC46B</item>
+        <item name="colorOnSecondary">#FF2A1A00</item>
+        <item name="colorControlActivated">#FFFFC46B</item>
+    </style>
+    <style name="Theme.App.Aurora.Rose" parent="Theme.App.Aurora">
+        <item name="auroraAccent">#FFFFA8C8</item>
+        <item name="auroraAccentSoft">#FF3D1B2A</item>
+        <item name="colorPrimary">#FFFFA8C8</item>
+        <item name="colorOnPrimary">#FF2A0D1A</item>
+        <item name="colorSecondary">#FFFFA8C8</item>
+        <item name="colorOnSecondary">#FF2A0D1A</item>
+        <item name="colorControlActivated">#FFFFA8C8</item>
+    </style>
+    <style name="Theme.App.Aurora.Violet" parent="Theme.App.Aurora">
+        <item name="auroraAccent">#FFC9B6FF</item>
+        <item name="auroraAccentSoft">#FF2C2547</item>
+        <item name="colorPrimary">#FFC9B6FF</item>
+        <item name="colorOnPrimary">#FF180C2E</item>
+        <item name="colorSecondary">#FFC9B6FF</item>
+        <item name="colorOnSecondary">#FF180C2E</item>
+        <item name="colorControlActivated">#FFC9B6FF</item>
+    </style>
+    <style name="Theme.App.Aurora.Cyan" parent="Theme.App.Aurora">
+        <item name="auroraAccent">#FF6EE7F5</item>
+        <item name="auroraAccentSoft">#FF0F3038</item>
+        <item name="colorPrimary">#FF6EE7F5</item>
+        <item name="colorOnPrimary">#FF002830</item>
+        <item name="colorSecondary">#FF6EE7F5</item>
+        <item name="colorOnSecondary">#FF002830</item>
+        <item name="colorControlActivated">#FF6EE7F5</item>
+    </style>
+    <style name="Theme.App.Aurora.Lime" parent="Theme.App.Aurora">
+        <item name="auroraAccent">#FFC6E88F</item>
+        <item name="auroraAccentSoft">#FF263713</item>
+        <item name="colorPrimary">#FFC6E88F</item>
+        <item name="colorOnPrimary">#FF16220A</item>
+        <item name="colorSecondary">#FFC6E88F</item>
+        <item name="colorOnSecondary">#FF16220A</item>
+        <item name="colorControlActivated">#FFC6E88F</item>
+    </style>
+    <style name="Theme.App.Aurora.Slate" parent="Theme.App.Aurora">
+        <item name="auroraAccent">#FFCFD8DC</item>
+        <item name="auroraAccentSoft">#FF28343A</item>
+        <item name="colorPrimary">#FFCFD8DC</item>
+        <item name="colorOnPrimary">#FF111A1E</item>
+        <item name="colorSecondary">#FFCFD8DC</item>
+        <item name="colorOnSecondary">#FF111A1E</item>
+        <item name="colorControlActivated">#FFCFD8DC</item>
+    </style>
+    <style name="Theme.App.Paper.Jade" parent="Theme.App.Paper">
+        <item name="auroraAccent">#FF173A2C</item>
+        <item name="auroraAccentSoft">#FF7FE0B4</item>
+        <item name="colorPrimary">#FF173A2C</item>
+        <item name="colorOnPrimary">#FFFFFFFF</item>
+        <item name="colorSecondary">#FF173A2C</item>
+        <item name="colorOnSecondary">#FFFFFFFF</item>
+        <item name="colorControlActivated">#FF173A2C</item>
+    </style>
+    <style name="Theme.App.Paper.Azure" parent="Theme.App.Paper">
+        <item name="auroraAccent">#FF14293D</item>
+        <item name="auroraAccentSoft">#FF7CC4FF</item>
+        <item name="colorPrimary">#FF14293D</item>
+        <item name="colorOnPrimary">#FFFFFFFF</item>
+        <item name="colorSecondary">#FF14293D</item>
+        <item name="colorOnSecondary">#FFFFFFFF</item>
+        <item name="colorControlActivated">#FF14293D</item>
+    </style>
+    <style name="Theme.App.Paper.Amber" parent="Theme.App.Paper">
+        <item name="auroraAccent">#FF3B2A0E</item>
+        <item name="auroraAccentSoft">#FFFFC46B</item>
+        <item name="colorPrimary">#FF3B2A0E</item>
+        <item name="colorOnPrimary">#FFFFFFFF</item>
+        <item name="colorSecondary">#FF3B2A0E</item>
+        <item name="colorOnSecondary">#FFFFFFFF</item>
+        <item name="colorControlActivated">#FF3B2A0E</item>
+    </style>
+    <style name="Theme.App.Paper.Rose" parent="Theme.App.Paper">
+        <item name="auroraAccent">#FF3D1B2A</item>
+        <item name="auroraAccentSoft">#FFFFA8C8</item>
+        <item name="colorPrimary">#FF3D1B2A</item>
+        <item name="colorOnPrimary">#FFFFFFFF</item>
+        <item name="colorSecondary">#FF3D1B2A</item>
+        <item name="colorOnSecondary">#FFFFFFFF</item>
+        <item name="colorControlActivated">#FF3D1B2A</item>
+    </style>
+    <style name="Theme.App.Paper.Violet" parent="Theme.App.Paper">
+        <item name="auroraAccent">#FF2C2547</item>
+        <item name="auroraAccentSoft">#FFC9B6FF</item>
+        <item name="colorPrimary">#FF2C2547</item>
+        <item name="colorOnPrimary">#FFFFFFFF</item>
+        <item name="colorSecondary">#FF2C2547</item>
+        <item name="colorOnSecondary">#FFFFFFFF</item>
+        <item name="colorControlActivated">#FF2C2547</item>
+    </style>
+    <style name="Theme.App.Paper.Cyan" parent="Theme.App.Paper">
+        <item name="auroraAccent">#FF0F3038</item>
+        <item name="auroraAccentSoft">#FF6EE7F5</item>
+        <item name="colorPrimary">#FF0F3038</item>
+        <item name="colorOnPrimary">#FFFFFFFF</item>
+        <item name="colorSecondary">#FF0F3038</item>
+        <item name="colorOnSecondary">#FFFFFFFF</item>
+        <item name="colorControlActivated">#FF0F3038</item>
+    </style>
+    <style name="Theme.App.Paper.Lime" parent="Theme.App.Paper">
+        <item name="auroraAccent">#FF263713</item>
+        <item name="auroraAccentSoft">#FFC6E88F</item>
+        <item name="colorPrimary">#FF263713</item>
+        <item name="colorOnPrimary">#FFFFFFFF</item>
+        <item name="colorSecondary">#FF263713</item>
+        <item name="colorOnSecondary">#FFFFFFFF</item>
+        <item name="colorControlActivated">#FF263713</item>
+    </style>
+    <style name="Theme.App.Paper.Slate" parent="Theme.App.Paper">
+        <item name="auroraAccent">#FF28343A</item>
+        <item name="auroraAccentSoft">#FFCFD8DC</item>
+        <item name="colorPrimary">#FF28343A</item>
+        <item name="colorOnPrimary">#FFFFFFFF</item>
+        <item name="colorSecondary">#FF28343A</item>
+        <item name="colorOnSecondary">#FFFFFFFF</item>
+        <item name="colorControlActivated">#FF28343A</item>
+    </style>
+    <style name="Theme.App.Ink.Jade" parent="Theme.App.Ink">
+        <item name="auroraAccent">#FF7FE0B4</item>
+        <item name="auroraAccentSoft">#FF173A2C</item>
+        <item name="colorPrimary">#FF7FE0B4</item>
+        <item name="colorOnPrimary">#FF062018</item>
+        <item name="colorSecondary">#FF7FE0B4</item>
+        <item name="colorOnSecondary">#FF062018</item>
+        <item name="colorControlActivated">#FF7FE0B4</item>
+    </style>
+    <style name="Theme.App.Ink.Azure" parent="Theme.App.Ink">
+        <item name="auroraAccent">#FF7CC4FF</item>
+        <item name="auroraAccentSoft">#FF14293D</item>
+        <item name="colorPrimary">#FF7CC4FF</item>
+        <item name="colorOnPrimary">#FF061A2E</item>
+        <item name="colorSecondary">#FF7CC4FF</item>
+        <item name="colorOnSecondary">#FF061A2E</item>
+        <item name="colorControlActivated">#FF7CC4FF</item>
+    </style>
+    <style name="Theme.App.Ink.Amber" parent="Theme.App.Ink">
+        <item name="auroraAccent">#FFFFC46B</item>
+        <item name="auroraAccentSoft">#FF3B2A0E</item>
+        <item name="colorPrimary">#FFFFC46B</item>
+        <item name="colorOnPrimary">#FF2A1A00</item>
+        <item name="colorSecondary">#FFFFC46B</item>
+        <item name="colorOnSecondary">#FF2A1A00</item>
+        <item name="colorControlActivated">#FFFFC46B</item>
+    </style>
+    <style name="Theme.App.Ink.Rose" parent="Theme.App.Ink">
+        <item name="auroraAccent">#FFFFA8C8</item>
+        <item name="auroraAccentSoft">#FF3D1B2A</item>
+        <item name="colorPrimary">#FFFFA8C8</item>
+        <item name="colorOnPrimary">#FF2A0D1A</item>
+        <item name="colorSecondary">#FFFFA8C8</item>
+        <item name="colorOnSecondary">#FF2A0D1A</item>
+        <item name="colorControlActivated">#FFFFA8C8</item>
+    </style>
+    <style name="Theme.App.Ink.Violet" parent="Theme.App.Ink">
+        <item name="auroraAccent">#FFC9B6FF</item>
+        <item name="auroraAccentSoft">#FF2C2547</item>
+        <item name="colorPrimary">#FFC9B6FF</item>
+        <item name="colorOnPrimary">#FF180C2E</item>
+        <item name="colorSecondary">#FFC9B6FF</item>
+        <item name="colorOnSecondary">#FF180C2E</item>
+        <item name="colorControlActivated">#FFC9B6FF</item>
+    </style>
+    <style name="Theme.App.Ink.Cyan" parent="Theme.App.Ink">
+        <item name="auroraAccent">#FF6EE7F5</item>
+        <item name="auroraAccentSoft">#FF0F3038</item>
+        <item name="colorPrimary">#FF6EE7F5</item>
+        <item name="colorOnPrimary">#FF002830</item>
+        <item name="colorSecondary">#FF6EE7F5</item>
+        <item name="colorOnSecondary">#FF002830</item>
+        <item name="colorControlActivated">#FF6EE7F5</item>
+    </style>
+    <style name="Theme.App.Ink.Lime" parent="Theme.App.Ink">
+        <item name="auroraAccent">#FFC6E88F</item>
+        <item name="auroraAccentSoft">#FF263713</item>
+        <item name="colorPrimary">#FFC6E88F</item>
+        <item name="colorOnPrimary">#FF16220A</item>
+        <item name="colorSecondary">#FFC6E88F</item>
+        <item name="colorOnSecondary">#FF16220A</item>
+        <item name="colorControlActivated">#FFC6E88F</item>
+    </style>
+    <style name="Theme.App.Ink.Slate" parent="Theme.App.Ink">
+        <item name="auroraAccent">#FFCFD8DC</item>
+        <item name="auroraAccentSoft">#FF28343A</item>
+        <item name="colorPrimary">#FFCFD8DC</item>
+        <item name="colorOnPrimary">#FF111A1E</item>
+        <item name="colorSecondary">#FFCFD8DC</item>
+        <item name="colorOnSecondary">#FF111A1E</item>
+        <item name="colorControlActivated">#FFCFD8DC</item>
+    </style>
+    <style name="Theme.App.Glass.Jade" parent="Theme.App.Glass">
+        <item name="auroraAccent">#FF7FE0B4</item>
+        <item name="auroraAccentSoft">#FF173A2C</item>
+        <item name="colorPrimary">#FF7FE0B4</item>
+        <item name="colorOnPrimary">#FF062018</item>
+        <item name="colorSecondary">#FF7FE0B4</item>
+        <item name="colorOnSecondary">#FF062018</item>
+        <item name="colorControlActivated">#FF7FE0B4</item>
+    </style>
+    <style name="Theme.App.Glass.Azure" parent="Theme.App.Glass">
+        <item name="auroraAccent">#FF7CC4FF</item>
+        <item name="auroraAccentSoft">#FF14293D</item>
+        <item name="colorPrimary">#FF7CC4FF</item>
+        <item name="colorOnPrimary">#FF061A2E</item>
+        <item name="colorSecondary">#FF7CC4FF</item>
+        <item name="colorOnSecondary">#FF061A2E</item>
+        <item name="colorControlActivated">#FF7CC4FF</item>
+    </style>
+    <style name="Theme.App.Glass.Amber" parent="Theme.App.Glass">
+        <item name="auroraAccent">#FFFFC46B</item>
+        <item name="auroraAccentSoft">#FF3B2A0E</item>
+        <item name="colorPrimary">#FFFFC46B</item>
+        <item name="colorOnPrimary">#FF2A1A00</item>
+        <item name="colorSecondary">#FFFFC46B</item>
+        <item name="colorOnSecondary">#FF2A1A00</item>
+        <item name="colorControlActivated">#FFFFC46B</item>
+    </style>
+    <style name="Theme.App.Glass.Rose" parent="Theme.App.Glass">
+        <item name="auroraAccent">#FFFFA8C8</item>
+        <item name="auroraAccentSoft">#FF3D1B2A</item>
+        <item name="colorPrimary">#FFFFA8C8</item>
+        <item name="colorOnPrimary">#FF2A0D1A</item>
+        <item name="colorSecondary">#FFFFA8C8</item>
+        <item name="colorOnSecondary">#FF2A0D1A</item>
+        <item name="colorControlActivated">#FFFFA8C8</item>
+    </style>
+    <style name="Theme.App.Glass.Violet" parent="Theme.App.Glass">
+        <item name="auroraAccent">#FFC9B6FF</item>
+        <item name="auroraAccentSoft">#FF2C2547</item>
+        <item name="colorPrimary">#FFC9B6FF</item>
+        <item name="colorOnPrimary">#FF180C2E</item>
+        <item name="colorSecondary">#FFC9B6FF</item>
+        <item name="colorOnSecondary">#FF180C2E</item>
+        <item name="colorControlActivated">#FFC9B6FF</item>
+    </style>
+    <style name="Theme.App.Glass.Cyan" parent="Theme.App.Glass">
+        <item name="auroraAccent">#FF6EE7F5</item>
+        <item name="auroraAccentSoft">#FF0F3038</item>
+        <item name="colorPrimary">#FF6EE7F5</item>
+        <item name="colorOnPrimary">#FF002830</item>
+        <item name="colorSecondary">#FF6EE7F5</item>
+        <item name="colorOnSecondary">#FF002830</item>
+        <item name="colorControlActivated">#FF6EE7F5</item>
+    </style>
+    <style name="Theme.App.Glass.Lime" parent="Theme.App.Glass">
+        <item name="auroraAccent">#FFC6E88F</item>
+        <item name="auroraAccentSoft">#FF263713</item>
+        <item name="colorPrimary">#FFC6E88F</item>
+        <item name="colorOnPrimary">#FF16220A</item>
+        <item name="colorSecondary">#FFC6E88F</item>
+        <item name="colorOnSecondary">#FF16220A</item>
+        <item name="colorControlActivated">#FFC6E88F</item>
+    </style>
+    <style name="Theme.App.Glass.Slate" parent="Theme.App.Glass">
+        <item name="auroraAccent">#FFCFD8DC</item>
+        <item name="auroraAccentSoft">#FF28343A</item>
+        <item name="colorPrimary">#FFCFD8DC</item>
+        <item name="colorOnPrimary">#FF111A1E</item>
+        <item name="colorSecondary">#FFCFD8DC</item>
+        <item name="colorOnSecondary">#FF111A1E</item>
+        <item name="colorControlActivated">#FFCFD8DC</item>
+    </style>
+</resources>

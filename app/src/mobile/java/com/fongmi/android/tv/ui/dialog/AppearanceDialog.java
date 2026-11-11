@@ -19,6 +19,7 @@ import com.fongmi.android.tv.event.RefreshEvent;
 import com.fongmi.android.tv.setting.PlayerSetting;
 import com.fongmi.android.tv.setting.Setting;
 import com.fongmi.android.tv.utils.ResUtil;
+import com.fongmi.android.tv.ui.theme.AuroraTheme;
 import com.fongmi.android.tv.ui.theme.AuroraThemeDialog;
 import com.google.android.material.textview.MaterialTextView;
 
@@ -59,7 +60,9 @@ public final class AppearanceDialog extends DialogFragment implements ThemeDialo
         LinearLayout row = new LinearLayout(requireContext());
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
-        row.setBackgroundResource(R.drawable.selector_git_cloud_card);
+        // 行背景与文字都由主题决定，且按实际背景算可读前景，杜绝深底深字 / 浅底浅字。
+        int cardBg = AuroraTheme.color(requireContext(), R.attr.auroraSurfaceHigh, 0xFF232C28);
+        row.setBackground(AuroraTheme.surface(requireContext(), "soft"));
         row.setClickable(true);
         row.setFocusable(true);
         row.setPadding(dp(16), 0, dp(16), 0);
@@ -67,14 +70,16 @@ public final class AppearanceDialog extends DialogFragment implements ThemeDialo
 
         MaterialTextView title = new MaterialTextView(requireContext());
         title.setText(titleRes);
-        title.setTextColor(Color.parseColor("#202124"));
+        title.setTextColor(AuroraTheme.readableOn(cardBg,
+                AuroraTheme.color(requireContext(), R.attr.auroraOnSurface, 0xFFE8EEEB)));
         title.setTextSize(15);
         title.setSingleLine(true);
         row.addView(title, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
 
         MaterialTextView summary = new MaterialTextView(requireContext());
         summary.setText(value);
-        summary.setTextColor(Color.parseColor("#5F6368"));
+        summary.setTextColor(AuroraTheme.readableOn(cardBg,
+                AuroraTheme.color(requireContext(), R.attr.auroraOnSurfaceVariant, 0xFFA8B5B0)));
         summary.setTextSize(14);
         summary.setGravity(Gravity.END);
         summary.setSingleLine(true);
