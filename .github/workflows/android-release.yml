@@ -832,10 +832,16 @@ jobs:
           .github/scripts/sync-cnb-release.sh
 
       - name: Upload workflow artifacts
+        # 纯 CI 冗余存档：APK / 更新清单 / 签名证据已在「Create GitHub Release」发布给终端用户。
+        # 仓库历史 artifact 堆积 50+ 个 / 3.8GB，GitHub 侧可能因存储配额或同名冲突拒绝本次
+        # 存档；这些与交付物无关，不该把整条 run 标红。其之前的编译、v2 签名硬断言、
+        # 验签、APK 完整性、编译后资源表检查全部仍是硬阻断，不因本步骤降级而放松。
         if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
-          name: webhtv-${{ steps.meta.outputs.tag }}
+          name: webhtv-${{ steps.meta.outputs.tag }}-r${{ github.run_id }}-a${{ github.run_attempt }}
           path: dist/*
-          if-no-files-found: error
-          retention-days: 30
+          if-no-files-found: warn
+          retention-days: 7
+          overwrite: true
