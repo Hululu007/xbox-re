@@ -19,6 +19,7 @@ import com.fongmi.android.tv.event.RefreshEvent;
 import com.fongmi.android.tv.setting.PlayerSetting;
 import com.fongmi.android.tv.setting.Setting;
 import com.fongmi.android.tv.utils.ResUtil;
+import com.fongmi.android.tv.ui.theme.AuroraThemeDialog;
 import com.google.android.material.textview.MaterialTextView;
 
 public final class AppearanceDialog extends DialogFragment implements ThemeDialog.Listener {
@@ -46,6 +47,10 @@ public final class AppearanceDialog extends DialogFragment implements ThemeDialo
         content.setOrientation(LinearLayout.VERTICAL);
         uiScaleValue = addRow(content, R.string.setting_ui_scale, uiScales[Setting.getUiScaleIndex()], this::chooseUiScale);
         themeValue = addRow(content, R.string.setting_theme_color, getThemeText(), view -> ThemeDialog.show(this));
+        addRow(content, R.string.aurora_theme_title, getString(R.string.aurora_theme_summary), view -> {
+            AuroraThemeDialog.show(requireActivity());
+            dismissAllowingStateLoss();
+        });
         imageSizeValue = addRow(content, R.string.setting_size, imageSizes[PlayerSetting.getSize()], this::chooseImageSize);
         return content;
     }

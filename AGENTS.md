@@ -334,3 +334,11 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
 3. 解析入口在 `lists/groups` 为空或元素类型不是模型类时，改用按 JSON 原始键手工映射的兜底解析。
 违反任一条件，release 包里字段名会被混淆成 a/b/c，Gson 返回空壳，界面显示「配置解析失败 / 暂无可用包」，
 而 debug 包与 CI 全绿都看不出来。禁止仅凭 debug 包或构建成功判定数据层可用。
+
+## 主题（Aurora）不可变约束
+
+- `app/src/mobile/res/values/styles.xml` / `app/src/leanback/res/values/styles.xml` 的 `Theme.Base` parent 必须保持 oktv-cat 基线值，禁止改成静态 M3 链，也禁止为了「解耦动态色」替换它。
+- 主题引擎只允许 `Theme.applyStyle(overlay, true)`，禁止 `Activity.setTheme()`、禁止在 `super.onCreate()` 之前改主题；`BaseActivity` 中 `AuroraTheme.apply(this)` 必须位于 `super.onCreate` 之后、`setContentView` 之前。
+- 四套预设与所有 ThemeOverlay 必须 `parent=""`，且只含字面值颜色/尺寸，不得引用 `?attr/` 造成 0x0。
+- 顶层 `Theme.App.Aurora` 等预设不得包含 `android:window*` / `isLightTheme`（与 DayNight 基线冲突）。
+- 任何主题改动，CI 必须对**编译后 APK** 用 `aapt2 dump resources --values` 检查 `bottomNavigationStyle`、`colorSurface`、`colorSurfaceContainer` 等关键 attr 非 `@null`/0；只检查源码 XML 不算验证。

@@ -19,6 +19,7 @@ import androidx.viewbinding.ViewBinding;
 
 import com.fongmi.android.tv.event.RefreshEvent;
 import com.fongmi.android.tv.setting.Setting;
+import com.fongmi.android.tv.ui.theme.AuroraTheme;
 import com.fongmi.android.tv.ui.custom.CustomWallView;
 import com.fongmi.android.tv.utils.ResUtil;
 import com.google.android.material.color.DynamicColors;
@@ -42,6 +43,7 @@ public abstract class BaseActivity extends AppCompatActivity {
         enableEdgeToEdge();
         enableDynamicColor();
         super.onCreate(savedInstanceState);
+        AuroraTheme.apply(this);
         setContentView(getBinding().getRoot());
         EventBus.getDefault().register(this);
         initView(savedInstanceState);

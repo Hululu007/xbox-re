@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 强调色 overlay：parent="" 避免 AAPT 隐式继承；同步 colorOnPrimary
+         保证任意强调色下按钮文字都有足够对比度。 -->
+    <style name="ThemeOverlay.Aurora.Accent.Jade" parent="">
+        <item name="auroraAccent">#FF7FE0B4</item>
+        <item name="auroraAccentSoft">#FF173A2C</item>
+        <item name="colorPrimary">#FF7FE0B4</item>
+        <item name="colorOnPrimary">#FF062018</item>
+        <item name="colorSecondary">#FF7FE0B4</item>
+        <item name="colorOnSecondary">#FF062018</item>
+        <item name="colorControlActivated">#FF7FE0B4</item>
+    </style>
+    <style name="ThemeOverlay.Aurora.Accent.Azure" parent="">
+        <item name="auroraAccent">#FF7CC4FF</item>
+        <item name="auroraAccentSoft">#FF14293D</item>
+        <item name="colorPrimary">#FF7CC4FF</item>
+        <item name="colorOnPrimary">#FF061A2E</item>
+        <item name="colorSecondary">#FF7CC4FF</item>
+        <item name="colorOnSecondary">#FF061A2E</item>
+        <item name="colorControlActivated">#FF7CC4FF</item>
+    </style>
+    <style name="ThemeOverlay.Aurora.Accent.Amber" parent="">
+        <item name="auroraAccent">#FFFFC46B</item>
+        <item name="auroraAccentSoft">#FF3B2A0E</item>
+        <item name="colorPrimary">#FFFFC46B</item>
+        <item name="colorOnPrimary">#FF2A1A00</item>
+        <item name="colorSecondary">#FFFFC46B</item>
+        <item name="colorOnSecondary">#FF2A1A00</item>
+        <item name="colorControlActivated">#FFFFC46B</item>
+    </style>
+    <style name="ThemeOverlay.Aurora.Accent.Rose" parent="">
+        <item name="auroraAccent">#FFFFA8C8</item>
+        <item name="auroraAccentSoft">#FF3D1B2A</item>
+        <item name="colorPrimary">#FFFFA8C8</item>
+        <item name="colorOnPrimary">#FF2A0D1A</item>
+        <item name="colorSecondary">#FFFFA8C8</item>
+        <item name="colorOnSecondary">#FF2A0D1A</item>
+        <item name="colorControlActivated">#FFFFA8C8</item>
+    </style>
+    <style name="ThemeOverlay.Aurora.Accent.Violet" parent="">
+        <item name="auroraAccent">#FFC9B6FF</item>
+        <item name="auroraAccentSoft">#FF2C2547</item>
+        <item name="colorPrimary">#FFC9B6FF</item>
+        <item name="colorOnPrimary">#FF180C2E</item>
+        <item name="colorSecondary">#FFC9B6FF</item>
+        <item name="colorOnSecondary">#FF180C2E</item>
+        <item name="colorControlActivated">#FFC9B6FF</item>
+    </style>
+    <style name="ThemeOverlay.Aurora.Accent.Cyan" parent="">
+        <item name="auroraAccent">#FF6EE7F5</item>
+        <item name="auroraAccentSoft">#FF0F3038</item>
+        <item name="colorPrimary">#FF6EE7F5</item>
+        <item name="colorOnPrimary">#FF002830</item>
+        <item name="colorSecondary">#FF6EE7F5</item>
+        <item name="colorOnSecondary">#FF002830</item>
+        <item name="colorControlActivated">#FF6EE7F5</item>
+    </style>
+    <style name="ThemeOverlay.Aurora.Accent.Lime" parent="">
+        <item name="auroraAccent">#FFC6E88F</item>
+        <item name="auroraAccentSoft">#FF263713</item>
+        <item name="colorPrimary">#FFC6E88F</item>
+        <item name="colorOnPrimary">#FF16220A</item>
+        <item name="colorSecondary">#FFC6E88F</item>
+        <item name="colorOnSecondary">#FF16220A</item>
+        <item name="colorControlActivated">#FFC6E88F</item>
+    </style>
+    <style name="ThemeOverlay.Aurora.Accent.Slate" parent="">
+        <item name="auroraAccent">#FFCFD8DC</item>
+        <item name="auroraAccentSoft">#FF28343A</item>
+        <item name="colorPrimary">#FFCFD8DC</item>
+        <item name="colorOnPrimary">#FF111A1E</item>
+        <item name="colorSecondary">#FFCFD8DC</item>
+        <item name="colorOnSecondary">#FF111A1E</item>
+        <item name="colorControlActivated">#FFCFD8DC</item>
+    </style>
+    <style name="ThemeOverlay.Aurora.Corner.Small" parent="">
+        <item name="auroraCorner">4dp</item>
+        <item name="auroraCornerLarge">8dp</item>
+    </style>
+    <style name="ThemeOverlay.Aurora.Corner.Large" parent="">
+        <item name="auroraCorner">20dp</item>
+        <item name="auroraCornerLarge">28dp</item>
+    </style>
+    <style name="ThemeOverlay.Aurora.Corner.Pill" parent="">
+        <item name="auroraCorner">28dp</item>
+        <item name="auroraCornerLarge">36dp</item>
+    </style>
+    <style name="ThemeOverlay.Aurora.Text.Small" parent="">
+        <item name="auroraTextSize">13sp</item>
+    </style>
+    <style name="ThemeOverlay.Aurora.Text.Large" parent="">
+        <item name="auroraTextSize">17sp</item>
+    </style>
+
+    <!-- 调色板 overlay：parent="" 只覆盖颜色/圆角，不换主题 parent 链。
+         在 DynamicColors 注入之后 applyStyle，保证预设配色生效且启动链与基线一致。 -->
+    <style name="ThemeOverlay.Aurora.Palette.Aurora" parent="">
+        <item name="auroraBackdrop">#FF0E1512</item>
+        <item name="auroraSurface">#FF17211D</item>
+        <item name="auroraSurfaceHigh">#FF22302A</item>
+        <item name="auroraSurfaceLow">#FF0A100D</item>
+        <item name="auroraOnSurface">#FFF2F7F4</item>
+        <item name="auroraOnSurfaceVariant">#FFC2D0C9</item>
+        <item name="auroraAccent">#FF7FE0B4</item>
+        <item name="auroraAccentSoft">#FF173A2C</item>
+        <item name="auroraOutline">#FF33453C</item>
+        <item name="auroraCorner">12dp</item>
+        <item name="auroraCornerLarge">20dp</item>
+        <item name="auroraTextSize">14sp</item>
+        <item name="auroraButtonShape">0</item>
+        <item name="auroraTileShape">0</item>
+        <item name="auroraDialogStyle">0</item>
+        <item name="auroraDialogGravity">17</item>
+        <item name="android:textColorPrimary">#FFF2F7F4</item>
+        <item name="android:textColorSecondary">#FFC2D0C9</item>
+        <item name="android:textColorHint">#FFC2D0C9</item>
+        <item name="colorPrimary">#FF7FE0B4</item>
+        <item name="colorOnPrimary">#FF062018</item>
+        <item name="colorSecondary">#FF7FE0B4</item>
+        <item name="colorOnSecondary">#FF062018</item>
+        <item name="colorSurface">#FF17211D</item>
+        <item name="colorOnSurface">#FFF2F7F4</item>
+        <item name="colorSurfaceVariant">#FF22302A</item>
+        <item name="colorOnSurfaceVariant">#FFC2D0C9</item>
+        <item name="colorSurfaceContainer">#FF17211D</item>
+        <item name="colorSurfaceContainerHigh">#FF22302A</item>
+        <item name="colorSurfaceContainerLow">#FF0A100D</item>
+        <item name="colorOutline">#FF33453C</item>
+        <item name="colorControlActivated">#FF7FE0B4</item>
+        <item name="colorControlNormal">#FFC2D0C9</item>
+    </style>
+    <style name="ThemeOverlay.Aurora.Palette.Paper" parent="">
+        <item name="auroraBackdrop">#FFF7F9F8</item>
+        <item name="auroraSurface">#FFFFFFFF</item>
+        <item name="auroraSurfaceHigh">#FFE9EFEC</item>
+        <item name="auroraSurfaceLow">#FFFCFDFC</item>
+        <item name="auroraOnSurface">#FF101A16</item>
+        <item name="auroraOnSurfaceVariant">#FF47574F</item>
+        <item name="auroraAccent">#FF0F6B4B</item>
+        <item name="auroraAccentSoft">#FFD9EDE4</item>
+        <item name="auroraOutline">#FFC9D6D0</item>
+        <item name="auroraCorner">8dp</item>
+        <item name="auroraCornerLarge">14dp</item>
+        <item name="auroraTextSize">14sp</item>
+        <item name="auroraButtonShape">2</item>
+        <item name="auroraTileShape">1</item>
+        <item name="auroraDialogStyle">1</item>
+        <item name="auroraDialogGravity">17</item>
+        <item name="android:textColorPrimary">#FF101A16</item>
+        <item name="android:textColorSecondary">#FF47574F</item>
+        <item name="android:textColorHint">#FF47574F</item>
+        <item name="colorPrimary">#FF0F6B4B</item>
+        <item name="colorOnPrimary">#FFFFFFFF</item>
+        <item name="colorSecondary">#FF0F6B4B</item>
+        <item name="colorOnSecondary">#FFFFFFFF</item>
+        <item name="colorSurface">#FFFFFFFF</item>
+        <item name="colorOnSurface">#FF101A16</item>
+        <item name="colorSurfaceVariant">#FFE9EFEC</item>
+        <item name="colorOnSurfaceVariant">#FF47574F</item>
+        <item name="colorSurfaceContainer">#FFFFFFFF</item>
+        <item name="colorSurfaceContainerHigh">#FFE9EFEC</item>
+        <item name="colorSurfaceContainerLow">#FFFCFDFC</item>
+        <item name="colorOutline">#FFC9D6D0</item>
+        <item name="colorControlActivated">#FF0F6B4B</item>
+        <item name="colorControlNormal">#FF47574F</item>
+    </style>
+    <style name="ThemeOverlay.Aurora.Palette.Ink" parent="">
+        <item name="auroraBackdrop">#FF0B0E12</item>
+        <item name="auroraSurface">#FF141920</item>
+        <item name="auroraSurfaceHigh">#FF1E252F</item>
+        <item name="auroraSurfaceLow">#FF080A0E</item>
+        <item name="auroraOnSurface">#FFF3F6FB</item>
+        <item name="auroraOnSurfaceVariant">#FFB4BECC</item>
+        <item name="auroraAccent">#FF8FC2FF</item>
+        <item name="auroraAccentSoft">#FF16283E</item>
+        <item name="auroraOutline">#FF2E3846</item>
+        <item name="auroraCorner">6dp</item>
+        <item name="auroraCornerLarge">12dp</item>
+        <item name="auroraTextSize">14sp</item>
+        <item name="auroraButtonShape">1</item>
+        <item name="auroraTileShape">2</item>
+        <item name="auroraDialogStyle">2</item>
+        <item name="auroraDialogGravity">81</item>
+        <item name="android:textColorPrimary">#FFF3F6FB</item>
+        <item name="android:textColorSecondary">#FFB4BECC</item>
+        <item name="android:textColorHint">#FFB4BECC</item>
+        <item name="colorPrimary">#FF8FC2FF</item>
+        <item name="colorOnPrimary">#FF071422</item>
+        <item name="colorSecondary">#FF8FC2FF</item>
+        <item name="colorOnSecondary">#FF071422</item>
+        <item name="colorSurface">#FF141920</item>
+        <item name="colorOnSurface">#FFF3F6FB</item>
+        <item name="colorSurfaceVariant">#FF1E252F</item>
+        <item name="colorOnSurfaceVariant">#FFB4BECC</item>
+        <item name="colorSurfaceContainer">#FF141920</item>
+        <item name="colorSurfaceContainerHigh">#FF1E252F</item>
+        <item name="colorSurfaceContainerLow">#FF080A0E</item>
+        <item name="colorOutline">#FF2E3846</item>
+        <item name="colorControlActivated">#FF8FC2FF</item>
+        <item name="colorControlNormal">#FFB4BECC</item>
+    </style>
+    <style name="ThemeOverlay.Aurora.Palette.Glass" parent="">
+        <item name="auroraBackdrop">#FF100F1F</item>
+        <item name="auroraSurface">#FF1D1C33</item>
+        <item name="auroraSurfaceHigh">#FF2A2944</item>
+        <item name="auroraSurfaceLow">#FF0B0A17</item>
+        <item name="auroraOnSurface">#FFF6F5FF</item>
+        <item name="auroraOnSurfaceVariant">#FFC6C3E0</item>
+        <item name="auroraAccent">#FFB9A9FF</item>
+        <item name="auroraAccentSoft">#FF2A2447</item>
+        <item name="auroraOutline">#FF3C3960</item>
+        <item name="auroraCorner">18dp</item>
+        <item name="auroraCornerLarge">28dp</item>
+        <item name="auroraTextSize">15sp</item>
+        <item name="auroraButtonShape">4</item>
+        <item name="auroraTileShape">2</item>
+        <item name="auroraDialogStyle">3</item>
+        <item name="auroraDialogGravity">17</item>
+        <item name="android:textColorPrimary">#FFF6F5FF</item>
+        <item name="android:textColorSecondary">#FFC6C3E0</item>
+        <item name="android:textColorHint">#FFC6C3E0</item>
+        <item name="colorPrimary">#FFB9A9FF</item>
+        <item name="colorOnPrimary">#FF100B24</item>
+        <item name="colorSecondary">#FFB9A9FF</item>
+        <item name="colorOnSecondary">#FF100B24</item>
+        <item name="colorSurface">#FF1D1C33</item>
+        <item name="colorOnSurface">#FFF6F5FF</item>
+        <item name="colorSurfaceVariant">#FF2A2944</item>
+        <item name="colorOnSurfaceVariant">#FFC6C3E0</item>
+        <item name="colorSurfaceContainer">#FF1D1C33</item>
+        <item name="colorSurfaceContainerHigh">#FF2A2944</item>
+        <item name="colorSurfaceContainerLow">#FF0B0A17</item>
+        <item name="colorOutline">#FF3C3960</item>
+        <item name="colorControlActivated">#FFB9A9FF</item>
+        <item name="colorControlNormal">#FFC6C3E0</item>
+    </style>
+</resources>
