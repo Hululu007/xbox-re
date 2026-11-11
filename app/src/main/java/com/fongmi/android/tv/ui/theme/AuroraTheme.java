@@ -412,7 +412,8 @@ public final class AuroraTheme {
         int bg = color(context, R.attr.auroraAccent, 0xFF5FC79A);
         if ("soft".equals(shape)) bg = color(context, R.attr.auroraAccentSoft, 0xFF1E3A30);
         else if ("outline".equals(shape)) bg = color(context, R.attr.auroraSurfaceHigh, 0xFF232C28);
-        return readableOn(bg, color(context, R.attr.colorOnPrimary, 0xFFF7FBF9));
+        // colorOnPrimary 是 Material 库 attr，app 的 non-transitive R 不含它；偏好色给常量，readableOn 会按实际背景纠正
+        return readableOn(bg, 0xFFF7FBF9);
     }
 
     /** 浮层文字按实际背景取色，描边 / 玻璃（透明底）不再与窗口背景同色。 */
