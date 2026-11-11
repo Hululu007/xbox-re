@@ -67,14 +67,52 @@
   /* ---- ② JsReqBridge 形态 ---- */
   global.FM_JSREQ = { req: function (url, obj) { return req(url, JSON.stringify(obj || {})); } };
 
-  /* ---- ③ 海阔原版 fy_bridge_app 形态 ---- */
+  /* ---- ③ 海阔原版 fy_bridge_app 形态 ----
+   * 阶段七：按 hikerView/help_web_bridge.json 的官方 27 方法全量对齐
+   * （原实现只有 8 个，规则调用 playVideos/importRule/parseLazyRule 等会直接报错）。
+   * 所有方法均为「同步返回字符串」语义，异步回调类方法用 report 留痕。 */
   global.fy_bridge_app = {
     fetch: function (url, obj) { return req(url, typeof obj === 'string' ? obj : JSON.stringify(obj || {})); },
-    getInternalJs: function () { return ''; },
+    getInternalJs: function () { return ''; },   /* JsT4 + shim 已注入全局，无需重复注入 */
     getVar: function (k) { return store[k] || ''; },
     putVar: function (k, v) { store[k] = v; },
-    refreshPage: function () {}, refreshX5Desc: function () {},
-    toDetailPage: function () {}, writeFile: function () {}, back: function () {}
+    clearVar: function (k) { delete store[k]; },
+    getCookie: function (u) { report('cookie.get', u); return ''; },
+    getHeaderUrl: function () { return ''; },
+    getUa: function () { return ''; },
+    setWebUa: function (ua) { store.__ua = ua; report('web.ua', ua); },
+    setWebTitle: function (t) { report('web.title', t); },
+    setAppBarColor: function (c) { report('appbar.color', c); },
+    showPic: function (u) { report('showPic', u); },
+    saveImage: function (u, p) { report('saveImage', u); },
+    writeFile: function (p, c) { store['file:' + p] = c; },
+    readFile: function (p) { return store['file:' + p] || ''; },
+    refreshPage: function (b) { report('refreshPage', b === false ? 'false' : 'true'); },
+    refreshX5Desc: function (d) { report('refreshX5Desc', d); },
+    toDetailPage: function (u) { report('toDetailPage', u); },
+    back: function (b) { report('back', b === false ? 'false' : 'true'); },
+    newPage: function (u) { report('newPage', u); },
+    open: function (u) { report('open', u); },
+    openThirdApp: function (a) { report('openThirdApp', a); },
+    importRule: function (r) { report('hiker.importRule', String(r).slice(0, 200)); return true; },
+    playVideo: function (u) { return play(u, '', ''); },
+    playVideos: function (json) {
+      var list = [];
+      try { list = JSON.parse(json || '[]'); } catch (e) { list = []; }
+      for (var i = 0; i < list.length; i++) {
+        var it = list[i] || {};
+        if (it.use && it.url) play(it.url, it.title || '', '');
+      }
+      return true;
+    },
+    parseDomForHtml: function (h, r) {
+      var m = String(h || '').match(/<a[^>]*>([\s\S]*?)<\/a>/);
+      return m ? m[1].replace(/<[^>]*>/g, '') : '';
+    },
+    parseLazyRule: function (u) { return req(String(u || ''), '{}'); },
+    parseLazyRuleAsync: function (u) { report('lazyRule.async', u); return ''; },
+    parsePaste: function (s) { report('parsePaste', s); return s || ''; },
+    clearM3u8Ad: function () { report('clearM3u8Ad', ''); return true; }
   };
 
   /* ---- ④ JsT4 垫片的底层 __fmBridge(name, argsJson) ---- */
@@ -105,6 +143,13 @@
     req: req,
     report: report,
     play: play,
+    /* 阶段七：供 hiker_scheme.js 分发 hiker://files/ 与 file:// 时读本地文件 */
+    readFile: function (p) {
+      if (java && typeof java.readFile === 'function') {
+        try { return java.readFile(p); } catch (e) { return ''; }
+      }
+      return store['file:' + p] || '';
+    },
     capabilities: function () {
       if (java) { try { return JSON.parse(java.capabilities()); } catch (e) {} }
       return { bridge: 'offline-mock', sync: true, 'return': 'string', play: 'mock', es5: true };

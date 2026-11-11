@@ -1,0 +1,1117 @@
+{
+  "stage": "阶段七",
+  "rule_corpus": 78,
+  "baseline": {
+    "stage6_D2": 31,
+    "stage5": 23
+  },
+  "groups": {
+    "H0_before_install": {
+      "official": 134,
+      "available": 12,
+      "full": [
+        "confirm",
+        "base64Encode",
+        "base64Decode",
+        "atob",
+        "btoa",
+        "open"
+      ],
+      "bridge": [
+        "md5"
+      ],
+      "delegate": [
+        "pdfh",
+        "pdfa",
+        "pd",
+        "fetch",
+        "request"
+      ],
+      "degrade": [],
+      "missing": [
+        "parseDomForArray",
+        "require",
+        "setResult",
+        "setHomeResult",
+        "getInternalJs",
+        "getResCode",
+        "toDetailPage",
+        "getVar",
+        "putVar",
+        "clearVar",
+        "getMyVar",
+        "putMyVar",
+        "clearMyVar",
+        "listMyVarKeys",
+        "getItem",
+        "setItem",
+        "clearItem",
+        "getPublicItem",
+        "setPublicItem",
+        "clearPublicItem",
+        "getParam",
+        "getPageTitle",
+        "setPageTitle",
+        "setPagePicUrl",
+        "setPageParams",
+        "setLastChapterRule",
+        "refreshPage",
+        "refreshX5Desc",
+        "back",
+        "toast",
+        "error",
+        "setError",
+        "log",
+        "nlog",
+        "showLoading",
+        "hideLoading",
+        "showSelectOptions",
+        "addListener",
+        "copy",
+        "getTime",
+        "buildUrl",
+        "getUrl",
+        "getAppVersion",
+        "getSearchMode",
+        "setSearchMode",
+        "getRule",
+        "getHome",
+        "hasHomeSub",
+        "getColTypes",
+        "getLastRules",
+        "getRuleCount",
+        "findItem",
+        "findItemsByCls",
+        "updateItem",
+        "addItemAfter",
+        "addItemBefore",
+        "deleteItem",
+        "deleteItemByCls",
+        "parseDomForHtml",
+        "parseDom",
+        "readFile",
+        "writeFile",
+        "saveFile",
+        "deleteFile",
+        "fileExist",
+        "getPath",
+        "deleteCache",
+        "getPastes",
+        "parsePaste",
+        "sharePaste",
+        "encodeStr",
+        "decodeStr",
+        "encodeToString",
+        "hexToBytes",
+        "hexToBase64",
+        "searchContains",
+        "setSearchResult",
+        "nsetHomeResult",
+        "nsetLastChapterRule",
+        "closeMe",
+        "openAppIntent",
+        "openThirdApp",
+        "getHeaderUrl",
+        "getUa",
+        "setWebTitle",
+        "setWebUa",
+        "playVideo",
+        "playVideos",
+        "refresh",
+        "rc",
+        "be",
+        "bf",
+        "fc",
+        "evalPrivateJS",
+        "aesEncode",
+        "aesDecode",
+        "rsaEncrypt",
+        "rsaDecrypt",
+        "getCryptoJS",
+        "getCookie",
+        "fetchCookie",
+        "fetchCache",
+        "fetchCodeByWebView",
+        "batchFetch",
+        "batchExecute",
+        "postRequest",
+        "downloadFile",
+        "requireDownload",
+        "cacheM3u8",
+        "batchCacheM3u8",
+        "clearM3u8Ad",
+        "clearM3u8AdLazy",
+        "x5Rule",
+        "parseLazyRule",
+        "parseLazyRuleAsync",
+        "getIP",
+        "convertBase64Image",
+        "createQRCode",
+        "startProxyServer",
+        "registerDNS",
+        "registerTask",
+        "unRegisterTask"
+      ],
+      "levels": {
+        "full": 6,
+        "bridge": 1,
+        "delegate": 5,
+        "degrade": 0
+      }
+    },
+    "R_regression": {
+      "probe": {
+        "bridges": [
+          {
+            "id": "HikerBridge",
+            "kind": "sync",
+            "present": true,
+            "desc": "本模块独立 Activity 注入的同步 Java 桥（推荐）"
+          },
+          {
+            "id": "FM_SHELL",
+            "kind": "sync",
+            "present": true,
+            "desc": "v390 jar：FM_SHELL.call(name,payload) 同步字符串"
+          },
+          {
+            "id": "FM_JSREQ",
+            "kind": "sync",
+            "present": true,
+            "desc": "v390 jar：JsReqBridge.req 同步字符串"
+          },
+          {
+            "id": "fy_bridge_app",
+            "kind": "sync",
+            "present": true,
+            "desc": "海阔原版 WebView：fetch/getInternalJs 同步"
+          },
+          {
+            "id": "fongmiBridge",
+            "kind": "async",
+            "present": false,
+            "desc": "oktv-cat / wogg：invoke + Promise（不可用于同步规则）"
+          },
+          {
+            "id": "window.fm",
+            "kind": "async",
+            "present": false,
+            "desc": "fm SDK：req() 返回 Promise（不可用于同步规则）"
+          }
+        ],
+        "syncUsable": [
+          "HikerBridge",
+          "FM_SHELL",
+          "FM_JSREQ",
+          "fy_bridge_app"
+        ],
+        "asyncOnly": false,
+        "hasHomeSdk": false,
+        "documentIsolated": true
+      },
+      "coverage": {
+        "official": 134,
+        "available": 134,
+        "full": [
+          "getVar",
+          "putVar",
+          "clearVar",
+          "getMyVar",
+          "putMyVar",
+          "clearMyVar",
+          "listMyVarKeys",
+          "getItem",
+          "setItem",
+          "clearItem",
+          "getPublicItem",
+          "setPublicItem",
+          "clearPublicItem",
+          "getParam",
+          "getPageTitle",
+          "setPageTitle",
+          "setPagePicUrl",
+          "setPageParams",
+          "setLastChapterRule",
+          "refreshPage",
+          "refreshX5Desc",
+          "back",
+          "toast",
+          "error",
+          "setError",
+          "log",
+          "nlog",
+          "showLoading",
+          "hideLoading",
+          "confirm",
+          "showSelectOptions",
+          "addListener",
+          "copy",
+          "getTime",
+          "buildUrl",
+          "getUrl",
+          "getAppVersion",
+          "getSearchMode",
+          "setSearchMode",
+          "getRule",
+          "getHome",
+          "hasHomeSub",
+          "getColTypes",
+          "getLastRules",
+          "getRuleCount",
+          "findItem",
+          "findItemsByCls",
+          "updateItem",
+          "addItemAfter",
+          "addItemBefore",
+          "deleteItem",
+          "deleteItemByCls",
+          "parseDomForHtml",
+          "parseDom",
+          "readFile",
+          "writeFile",
+          "saveFile",
+          "deleteFile",
+          "fileExist",
+          "getPath",
+          "deleteCache",
+          "getPastes",
+          "parsePaste",
+          "sharePaste",
+          "base64Encode",
+          "base64Decode",
+          "atob",
+          "btoa",
+          "encodeStr",
+          "decodeStr",
+          "encodeToString",
+          "hexToBytes",
+          "hexToBase64",
+          "searchContains",
+          "setSearchResult",
+          "nsetHomeResult",
+          "nsetLastChapterRule",
+          "closeMe",
+          "open",
+          "openAppIntent",
+          "openThirdApp",
+          "getHeaderUrl",
+          "getUa",
+          "setWebTitle",
+          "setWebUa",
+          "playVideo",
+          "playVideos",
+          "refresh",
+          "rc",
+          "be",
+          "bf",
+          "fc",
+          "evalPrivateJS"
+        ],
+        "bridge": [
+          "md5",
+          "aesEncode",
+          "aesDecode",
+          "rsaEncrypt",
+          "rsaDecrypt",
+          "getCryptoJS",
+          "getCookie",
+          "fetchCookie",
+          "fetchCache",
+          "fetchCodeByWebView",
+          "batchFetch",
+          "batchExecute",
+          "postRequest",
+          "downloadFile",
+          "requireDownload",
+          "cacheM3u8",
+          "batchCacheM3u8",
+          "clearM3u8Ad",
+          "clearM3u8AdLazy",
+          "x5Rule",
+          "parseLazyRule",
+          "parseLazyRuleAsync",
+          "getIP",
+          "convertBase64Image",
+          "createQRCode"
+        ],
+        "delegate": [
+          "pdfh",
+          "pdfa",
+          "pd",
+          "parseDomForArray",
+          "fetch",
+          "request",
+          "require",
+          "setResult",
+          "setHomeResult",
+          "getInternalJs",
+          "getResCode",
+          "toDetailPage"
+        ],
+        "degrade": [
+          "startProxyServer",
+          "registerDNS",
+          "registerTask",
+          "unRegisterTask"
+        ],
+        "missing": [],
+        "levels": {
+          "full": 93,
+          "bridge": 25,
+          "delegate": 12,
+          "degrade": 4
+        }
+      },
+      "apiSurface": {
+        "added": 147,
+        "kept": 0,
+        "official": 134,
+        "total": 157
+      },
+      "scheme": {
+        "wrapped": 2,
+        "version": "2.0.0"
+      },
+      "bridge": "FM_SHELL.call(req)",
+      "warnings": [],
+      "version": "2.0.0"
+    },
+    "F_scheme": {
+      "cases": [
+        {
+          "url": "hiker://empty",
+          "route": "hiker://empty",
+          "status": 200,
+          "ok": true,
+          "body": "",
+          "error": ""
+        },
+        {
+          "url": "hiker://empty#http://a.com/x",
+          "route": "hiker://empty",
+          "status": 200,
+          "ok": true,
+          "body": "#http://a.com/x",
+          "error": ""
+        },
+        {
+          "url": "hiker://page/x",
+          "route": "hiker://page",
+          "status": 200,
+          "ok": true,
+          "body": "x",
+          "error": ""
+        },
+        {
+          "url": "hiker://home",
+          "route": "hiker://home",
+          "status": 200,
+          "ok": true,
+          "body": "{}",
+          "error": ""
+        },
+        {
+          "url": "hiker://home@豆瓣",
+          "route": "hiker://home",
+          "status": 200,
+          "ok": true,
+          "body": "[{\"title\":\"豆瓣新版\"}]",
+          "error": ""
+        },
+        {
+          "url": "hiker://bookmark",
+          "route": "hiker://bookmark",
+          "status": 200,
+          "ok": true,
+          "body": "[]",
+          "error": ""
+        },
+        {
+          "url": "hiker://collection",
+          "route": "hiker://collection",
+          "status": 200,
+          "ok": true,
+          "body": "[]",
+          "error": ""
+        },
+        {
+          "url": "hiker://files/a.txt",
+          "route": "hiker://files",
+          "status": 200,
+          "ok": true,
+          "body": "HELLO",
+          "error": ""
+        },
+        {
+          "url": "hiker://files/missing.txt",
+          "route": "hiker://files",
+          "status": 404,
+          "ok": false,
+          "body": "",
+          "error": "missing.txt文件不存在"
+        },
+        {
+          "url": "hiker://assets/missing.js",
+          "route": "hiker://assets",
+          "status": 404,
+          "ok": false,
+          "body": "",
+          "error": "missing.js文件不存在"
+        },
+        {
+          "url": "hiker://images/logo",
+          "route": "hiker://images",
+          "status": 200,
+          "ok": true,
+          "body": "file:///res/logo.png",
+          "error": ""
+        },
+        {
+          "url": "hiker://search",
+          "route": "hiker://search",
+          "status": 200,
+          "ok": true,
+          "body": "",
+          "error": ""
+        },
+        {
+          "url": "file:///tmp/none.txt",
+          "route": "file://",
+          "status": 404,
+          "ok": false,
+          "body": "",
+          "error": "/tmp/none.txt文件不存在"
+        },
+        {
+          "url": "hiker://###",
+          "route": "hiker://",
+          "status": 404,
+          "ok": false,
+          "body": "",
+          "error": "格式有误"
+        },
+        {
+          "url": "https://external.test/",
+          "route": "network",
+          "status": 200,
+          "ok": true,
+          "body": "<html><body><div class=\"list\"><a class=\"item\" href",
+          "error": ""
+        }
+      ],
+      "fetchEmpty": "",
+      "fetchExternal": "<html><body><div class=\"list\"><a class=\"item\" href=\"/v/1.htm"
+    },
+    "G_fresh_scope": {
+      "fresh": [
+        {
+          "ok": true,
+          "out": "{\"ua\":true,\"plugin\":\"string\"}",
+          "err": null,
+          "fresh": true
+        },
+        {
+          "ok": true,
+          "out": "\"v\"",
+          "err": null,
+          "fresh": true
+        },
+        {
+          "ok": true,
+          "out": "\"function\"",
+          "err": null,
+          "fresh": true
+        }
+      ],
+      "bareScopeError": "TypeError: getUaObject is not a function"
+    },
+    "H_contract": {
+      "coverage": {
+        "official": 134,
+        "available": 134,
+        "full": [
+          "getVar",
+          "putVar",
+          "clearVar",
+          "getMyVar",
+          "putMyVar",
+          "clearMyVar",
+          "listMyVarKeys",
+          "getItem",
+          "setItem",
+          "clearItem",
+          "getPublicItem",
+          "setPublicItem",
+          "clearPublicItem",
+          "getParam",
+          "getPageTitle",
+          "setPageTitle",
+          "setPagePicUrl",
+          "setPageParams",
+          "setLastChapterRule",
+          "refreshPage",
+          "refreshX5Desc",
+          "back",
+          "toast",
+          "error",
+          "setError",
+          "log",
+          "nlog",
+          "showLoading",
+          "hideLoading",
+          "confirm",
+          "showSelectOptions",
+          "addListener",
+          "copy",
+          "getTime",
+          "buildUrl",
+          "getUrl",
+          "getAppVersion",
+          "getSearchMode",
+          "setSearchMode",
+          "getRule",
+          "getHome",
+          "hasHomeSub",
+          "getColTypes",
+          "getLastRules",
+          "getRuleCount",
+          "findItem",
+          "findItemsByCls",
+          "updateItem",
+          "addItemAfter",
+          "addItemBefore",
+          "deleteItem",
+          "deleteItemByCls",
+          "parseDomForHtml",
+          "parseDom",
+          "readFile",
+          "writeFile",
+          "saveFile",
+          "deleteFile",
+          "fileExist",
+          "getPath",
+          "deleteCache",
+          "getPastes",
+          "parsePaste",
+          "sharePaste",
+          "base64Encode",
+          "base64Decode",
+          "atob",
+          "btoa",
+          "encodeStr",
+          "decodeStr",
+          "encodeToString",
+          "hexToBytes",
+          "hexToBase64",
+          "searchContains",
+          "setSearchResult",
+          "nsetHomeResult",
+          "nsetLastChapterRule",
+          "closeMe",
+          "open",
+          "openAppIntent",
+          "openThirdApp",
+          "getHeaderUrl",
+          "getUa",
+          "setWebTitle",
+          "setWebUa",
+          "playVideo",
+          "playVideos",
+          "refresh",
+          "rc",
+          "be",
+          "bf",
+          "fc",
+          "evalPrivateJS"
+        ],
+        "bridge": [
+          "md5",
+          "aesEncode",
+          "aesDecode",
+          "rsaEncrypt",
+          "rsaDecrypt",
+          "getCryptoJS",
+          "getCookie",
+          "fetchCookie",
+          "fetchCache",
+          "fetchCodeByWebView",
+          "batchFetch",
+          "batchExecute",
+          "postRequest",
+          "downloadFile",
+          "requireDownload",
+          "cacheM3u8",
+          "batchCacheM3u8",
+          "clearM3u8Ad",
+          "clearM3u8AdLazy",
+          "x5Rule",
+          "parseLazyRule",
+          "parseLazyRuleAsync",
+          "getIP",
+          "convertBase64Image",
+          "createQRCode"
+        ],
+        "delegate": [
+          "pdfh",
+          "pdfa",
+          "pd",
+          "parseDomForArray",
+          "fetch",
+          "request",
+          "require",
+          "setResult",
+          "setHomeResult",
+          "getInternalJs",
+          "getResCode",
+          "toDetailPage"
+        ],
+        "degrade": [
+          "startProxyServer",
+          "registerDNS",
+          "registerTask",
+          "unRegisterTask"
+        ],
+        "missing": [],
+        "levels": {
+          "full": 93,
+          "bridge": 25,
+          "delegate": 12,
+          "degrade": 4
+        }
+      },
+      "official": 134,
+      "contract": {
+        "delegate": [
+          "pdfh",
+          "pdfa",
+          "pd",
+          "parseDomForArray",
+          "fetch",
+          "request",
+          "require",
+          "setResult",
+          "setHomeResult",
+          "getInternalJs",
+          "getResCode",
+          "toDetailPage"
+        ],
+        "full": [
+          "getVar",
+          "putVar",
+          "putVar2",
+          "clearVar",
+          "getMyVar",
+          "putMyVar",
+          "clearMyVar",
+          "listMyVarKeys",
+          "getItem",
+          "setItem",
+          "clearItem",
+          "getPublicItem",
+          "setPublicItem",
+          "clearPublicItem",
+          "getUaObject",
+          "getParam",
+          "getPageTitle",
+          "setPageTitle",
+          "setPagePicUrl",
+          "setPageParams",
+          "setPageReverse",
+          "isPageReversed",
+          "setLastChapterRule",
+          "refreshPage",
+          "refreshX5Desc",
+          "back",
+          "toast",
+          "error",
+          "setError",
+          "log",
+          "nlog",
+          "showLoading",
+          "hideLoading",
+          "confirm",
+          "showSelectOptions",
+          "addListener",
+          "copy",
+          "getTime",
+          "buildUrl",
+          "getUrl",
+          "getAppVersion",
+          "getSearchMode",
+          "setSearchMode",
+          "getRule",
+          "getHome",
+          "getHomeSub",
+          "hasHomeSub",
+          "getColTypes",
+          "getLastRules",
+          "getRuleCount",
+          "getPrivateJS",
+          "getJsPlugin",
+          "getJsLazyPlugin",
+          "findItem",
+          "findItemsByCls",
+          "updateItem",
+          "addItemAfter",
+          "addItemBefore",
+          "deleteItem",
+          "deleteItemByCls",
+          "parseDomForHtml",
+          "parseDom",
+          "readFile",
+          "writeFile",
+          "saveFile",
+          "deleteFile",
+          "fileExist",
+          "getPath",
+          "deleteCache",
+          "getPastes",
+          "parsePaste",
+          "sharePaste",
+          "base64Encode",
+          "base64Decode",
+          "atob",
+          "btoa",
+          "encodeStr",
+          "decodeStr",
+          "encodeToString",
+          "hexToBytes",
+          "hexToBase64",
+          "searchContains",
+          "setSearchResult",
+          "setStrResult",
+          "setLastChapterResult",
+          "nsetHomeResult",
+          "nsetLastChapterRule",
+          "closeMe",
+          "open",
+          "openAppIntent",
+          "openThirdApp",
+          "getHeaderUrl",
+          "getUa",
+          "setWebTitle",
+          "setWebUa",
+          "playVideo",
+          "playVideos",
+          "refresh",
+          "rc",
+          "be",
+          "bf",
+          "fc",
+          "evalPrivateJS"
+        ],
+        "bridge": [
+          "md5",
+          "aesEncode",
+          "aesDecode",
+          "rsaEncrypt",
+          "rsaDecrypt",
+          "getCryptoJS",
+          "getCookie",
+          "fetchCookie",
+          "fetchCache",
+          "fetchCodeByWebView",
+          "batchFetch",
+          "batchExecute",
+          "postRequest",
+          "downloadFile",
+          "requireDownload",
+          "requireCache",
+          "cacheM3u8",
+          "fixM3u8",
+          "batchCacheM3u8",
+          "clearM3u8Ad",
+          "clearM3u8AdLazy",
+          "refreshVideoUrl",
+          "refreshX5WebView",
+          "x5Rule",
+          "parseLazyRule",
+          "parseLazyRuleAsync",
+          "getIP",
+          "getCpuAbi",
+          "findReachableIP",
+          "ipping",
+          "getCryptoJS2",
+          "writeHexFile",
+          "convertBase64Image",
+          "createQRCode"
+        ],
+        "degrade": [
+          "evalPrivateJSEngine",
+          "loadJavaClass",
+          "startProxyServer",
+          "registerDNS",
+          "registerTask",
+          "unRegisterTask",
+          "syncExecute",
+          "publishRule"
+        ]
+      },
+      "fy_bridge": {
+        "clearM3u8Ad": "function",
+        "clearVar": "function",
+        "getCookie": "function",
+        "getHeaderUrl": "function",
+        "getInternalJs": "function",
+        "getUa": "function",
+        "getVar": "function",
+        "importRule": "function",
+        "newPage": "function",
+        "open": "function",
+        "openThirdApp": "function",
+        "parseDomForHtml": "function",
+        "parseLazyRule": "function",
+        "parseLazyRuleAsync": "function",
+        "parsePaste": "function",
+        "playVideo": "function",
+        "playVideos": "function",
+        "putVar": "function",
+        "refreshPage": "function",
+        "refreshX5Desc": "function",
+        "saveImage": "function",
+        "setAppBarColor": "function",
+        "setWebTitle": "function",
+        "setWebUa": "function",
+        "showPic": "function",
+        "toDetailPage": "function",
+        "writeFile": "function",
+        "fetch": "function"
+      },
+      "fy_bridge_missing": [],
+      "fy_bridge_total": 28
+    },
+    "H_gain": {
+      "stage6": 36,
+      "stage7": 134,
+      "delta": 98,
+      "official": 134
+    },
+    "I_full_corpus": {
+      "setResult": 32,
+      "noError": 32,
+      "total": 78,
+      "stage6_D2": 31,
+      "delta": 1
+    },
+    "J_playdata": {
+      "objectHeaders": {
+        "urls": [
+          "u1",
+          "u2"
+        ],
+        "names": [
+          "完整版",
+          "预览"
+        ],
+        "headers": [
+          "Referer@http://a",
+          "UserAgent@UA"
+        ],
+        "flags": [
+          {
+            "name": "完整版",
+            "episodes": [
+              "u1"
+            ],
+            "headers": [
+              "Referer@http://a"
+            ]
+          },
+          {
+            "name": "预览",
+            "episodes": [
+              "u2"
+            ],
+            "headers": [
+              "UserAgent@UA"
+            ]
+          }
+        ],
+        "title": "",
+        "subtitle": "",
+        "audioUrls": [],
+        "subtitleUrl": ""
+      },
+      "stringHeaders": {
+        "urls": [
+          "u1"
+        ],
+        "names": [],
+        "headers": [
+          "Referer@http://a"
+        ],
+        "flags": [],
+        "title": "",
+        "subtitle": "",
+        "audioUrls": [],
+        "subtitleUrl": ""
+      }
+    }
+  },
+  "assertions": {
+    "H0 未装配时覆盖率显著低于官方契约": {
+      "ok": true,
+      "detail": "12/134"
+    },
+    "R 同步桥可用": {
+      "ok": true,
+      "detail": "['HikerBridge', 'FM_SHELL', 'FM_JSREQ', 'fy_bridge_app']"
+    },
+    "R 无首页 SDK": {
+      "ok": true,
+      "detail": "False"
+    },
+    "R 作用域隔离": {
+      "ok": true,
+      "detail": "True"
+    },
+    "R 兼容层版本 2.0.0": {
+      "ok": true,
+      "detail": "2.0.0"
+    },
+    "R 契约层已装配": {
+      "ok": true,
+      "detail": "{'added': 147, 'kept': 0, 'official': 134, 'total': 157}"
+    },
+    "R hiker:// 分发层已包装同步桥": {
+      "ok": true,
+      "detail": "{'wrapped': 2, 'version': '2.0.0'}"
+    },
+    "R 官方 API 覆盖 >= 100": {
+      "ok": true,
+      "detail": "134/134"
+    },
+    "F hiker://empty → 200 空串": {
+      "ok": true,
+      "detail": "{'url': 'hiker://empty', 'route': 'hiker://empty', 'status': 200, 'ok': True, 'body': '', 'error': ''}"
+    },
+    "F clearTag 不砍真实地址": {
+      "ok": true,
+      "detail": "{'url': 'hiker://empty#http://a.com/x', 'route': 'hiker://empty', 'status': 200, 'ok': True, 'body': '#http://a.com/x', 'error': ''}"
+    },
+    "F hiker://page 余串原文": {
+      "ok": true,
+      "detail": "{'url': 'hiker://page/x', 'route': 'hiker://page', 'status': 200, 'ok': True, 'body': 'x', 'error': ''}"
+    },
+    "F hiker://home 规则 JSON": {
+      "ok": true,
+      "detail": "{'url': 'hiker://home@豆瓣', 'route': 'hiker://home', 'status': 200, 'ok': True, 'body': '[{\"title\":\"豆瓣新版\"}]', 'error': ''}"
+    },
+    "F 库地址不报 scheme 错误": {
+      "ok": true,
+      "detail": "bookmark/collection 200"
+    },
+    "F hiker://files 读到本地文件": {
+      "ok": true,
+      "detail": "{'url': 'hiker://files/a.txt', 'route': 'hiker://files', 'status': 200, 'ok': True, 'body': 'HELLO', 'error': ''}"
+    },
+    "F 文件不存在 → 404 且留错误": {
+      "ok": true,
+      "detail": "{'url': 'hiker://files/missing.txt', 'route': 'hiker://files', 'status': 404, 'ok': False, 'body': '', 'error': 'missing.txt文件不存在'}"
+    },
+    "F assets 缺失 → 404": {
+      "ok": true,
+      "detail": "{'url': 'hiker://assets/missing.js', 'route': 'hiker://assets', 'status': 404, 'ok': False, 'body': '', 'error': 'missing.js文件不存在'}"
+    },
+    "F images 映射 → 200": {
+      "ok": true,
+      "detail": "{'url': 'hiker://images/logo', 'route': 'hiker://images', 'status': 200, 'ok': True, 'body': 'file:///res/logo.png', 'error': ''}"
+    },
+    "F file:// 缺失 → 404": {
+      "ok": true,
+      "detail": "{'url': 'file:///tmp/none.txt', 'route': 'file://', 'status': 404, 'ok': False, 'body': '', 'error': '/tmp/none.txt文件不存在'}"
+    },
+    "F 格式有误 → 404": {
+      "ok": true,
+      "detail": "{'url': 'hiker://###', 'route': 'hiker://', 'status': 404, 'ok': False, 'body': '', 'error': '格式有误'}"
+    },
+    "F 外部地址走网络桥": {
+      "ok": true,
+      "detail": "{'url': 'https://external.test/', 'route': 'network', 'status': 200, 'ok': True, 'body': '<html><body><div class=\"list\"><a class=\"item\" href', 'error': ''}"
+    },
+    "F fetch('hiker://empty') 命中分发（不返回 HTML）": {
+      "ok": true,
+      "detail": "''"
+    },
+    "F fetch(外部地址) 走同步桥返回 HTML": {
+      "ok": true,
+      "detail": "<html><body><div class=\"list\"><a class=\"item\" href=\"/v/1.htm"
+    },
+    "G 空作用域复现事故": {
+      "ok": true,
+      "detail": "TypeError: getUaObject is not a function"
+    },
+    "G fresh #1 预置函数齐全且 setResult": {
+      "ok": true,
+      "detail": "{'ok': True, 'out': '{\"ua\":true,\"plugin\":\"string\"}', 'err': None, 'fresh': True}"
+    },
+    "G fresh #2 规则级变量隔离可用": {
+      "ok": true,
+      "detail": "{'ok': True, 'out': '\"v\"', 'err': None, 'fresh': True}"
+    },
+    "G fresh #3 桥转发 API 也存在": {
+      "ok": true,
+      "detail": "{'ok': True, 'out': '\"function\"', 'err': None, 'fresh': True}"
+    },
+    "H 覆盖率显著提升（阶段六 36）": {
+      "ok": true,
+      "detail": "134/134（阶段六 36）"
+    },
+    "H 真实现档 >= 60": {
+      "ok": true,
+      "detail": "{'full': 93, 'bridge': 25, 'delegate': 12, 'degrade': 4}"
+    },
+    "H 桥转发档 >= 20": {
+      "ok": true,
+      "detail": "{'full': 93, 'bridge': 25, 'delegate': 12, 'degrade': 4}"
+    },
+    "H 缺失 API = 0": {
+      "ok": true,
+      "detail": "[]"
+    },
+    "H fy_bridge_app 28 方法全齐（官方 27 + fetch）": {
+      "ok": true,
+      "detail": "[]"
+    },
+    "I 全库 setResult 不回退": {
+      "ok": true,
+      "detail": "32/78 (阶段六 31)"
+    },
+    "I 无异常不回退": {
+      "ok": true,
+      "detail": "32/78"
+    },
+    "J 对象数组 headers → K@V": {
+      "ok": true,
+      "detail": "['Referer@http://a', 'UserAgent@UA']"
+    },
+    "J names 多线路保留为 flags": {
+      "ok": true,
+      "detail": "[{'name': '完整版', 'episodes': ['u1'], 'headers': ['Referer@http://a']}, {'name': '预览', 'episodes': ['u2'], 'headers': ['UserAgent@UA']}]"
+    },
+    "J 字符串 headers 原样保留": {
+      "ok": true,
+      "detail": "['Referer@http://a']"
+    }
+  },
+  "official_contract": {
+    "help_js_api": 130,
+    "web_bridge": 27,
+    "engine_annotation": 100,
+    "engine_alias": 15,
+    "real_rule_used": 134,
+    "stage6_covered": 36,
+    "stage6_missing": 98
+  },
+  "summary": {
+    "passed": 36,
+    "total": 36,
+    "all_pass": true,
+    "stage6_to_stage7_api_gain": {
+      "stage6": 36,
+      "stage7": 134,
+      "delta": 98,
+      "official": 134
+    }
+  }
+}

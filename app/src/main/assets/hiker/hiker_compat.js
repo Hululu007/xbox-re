@@ -15,6 +15,15 @@
  *   - wogg.js                    : window.fm / fongmiBridge，await 异步，返回 {ok,status,body}
  *   - oktv-cat / HomeWebBridge   : invoke() -> Task.execute 线程池 -> fongmiNative.resolve(异步 Promise)
  *   - hk_source / HkGateway      : Java 侧五处拦截，无 WebView 桥，属另一条移植路线
+ *   - hikerView (阶段七新增)     : JSEngine 100 个 @JSAnnotation API / help_js.json 160 函数 /
+ *                                 help_web_bridge.json 27 方法 / CodeUtil + HikerRuleUtil 的
+ *                                 hiker:// scheme 分发与 404/500 错误码语义（官方契约基准）
+ *   - xingchen (阶段七新增)     : HkJsRuntime(Rhino) / HkEngineManager 按规则隔离 /
+ *                                 HkCodeUtil 同款分发 / 真机教训（hiker:// 全灭、R8 混淆
+ *                                 打断反射 JS 名、新鲜作用域缺预置函数、@js= 缺 currentRuntime、
+ *                                 PlayData headers 对象数组被压扁）
+ *
+ * 阶段七新增（第 6 节）：官方契约覆盖统计、hiker:// 分发、新鲜作用域全量预置函数。
  *
  * 兼容性红线：宿主首页 SDK 把 window.fetch 变成异步 Promise，并把 window.fm 注册为异步对象；
  * 海阔规则用 eval.call(null, fetch(url)) 期望同步字符串。二者绝不能放进同一个 JS 上下文。
@@ -111,6 +120,21 @@
     if (!global.HikerRuntime) {
       report.warnings.push('未检测到 hiker_runtime_shim.js，规则 API 不完整');
     }
+    // 阶段七：先装官方契约补齐层 + hiker:// 分发层，再装 shim（顺序不可颠倒：
+    // 分发层要包装 fetch/request，shim 随后会覆盖 fetch/request，故此处先装
+    // 契约层，待 shim 装完再由 HC.finalize() 重新包装一次）
+    if (global.HikerApiSurface) {
+      try {
+        report.apiSurface = global.HikerApiSurface.install(global, {
+          page: opts.page || {},
+          ruleKey: (opts.page && opts.page.MY_RULE && opts.page.MY_RULE.title) || '',
+          network: true
+        });
+      } catch (e) { report.warnings.push('API 契约层装配失败: ' + e); }
+    } else {
+      report.warnings.push('未检测到 hiker_api_surface.js，官方 API 覆盖率受限');
+    }
+
     // 装配 shim（若存在）：把探测到的同步桥显式传入，避免 shim 自己误选异步桥
     if (global.HikerRuntime && typeof global.HikerRuntime.install === 'function') {
       var page = opts.page || {};
@@ -124,6 +148,14 @@
       report.ready = true;
       report.bridge = global.HikerRuntime.bridge;
     }
+    // shim 会覆盖 fetch/request，故在 shim 之后重新包装分发层
+    if (global.HikerScheme) {
+      try { report.scheme = global.HikerScheme.install(opts); }
+      catch (e) { report.warnings.push('hiker:// 分发层装配失败: ' + e); }
+    } else {
+      report.warnings.push('未检测到 hiker_scheme.js，hiker:// 内部地址会被当网络请求');
+    }
+    report.coverage = HC.coverage();
     return report;
   };
 
@@ -200,7 +232,73 @@
     return rec;
   };
 
-  HC.version = '1.0.0';
+  /* ---------------- 6) 官方契约 / hiker:// 分发 / 新鲜作用域（阶段七） ---------------- */
+  /* 契约基准：hikerView help_js.json + help_web_bridge.json + JSEngine @JSAnnotation，
+   * 用 hiker_54.db 真实规则筛出「实际被调用」的 134 个 API。 */
+  HC.contract = function () {
+    var AS = global.HikerApiSurface;
+    if (!AS) return null;
+    return {
+      official: AS.official.length,
+      levels: {
+        full: AS.contract.full.length, bridge: AS.contract.bridge.length,
+        delegate: AS.contract.delegate.length, degrade: AS.contract.degrade.length
+      },
+      sources: ['hikerView/help_js.json', 'hikerView/help_web_bridge.json',
+                'hikerView/JSEngine.java', 'hiker_54.db']
+    };
+  };
+
+  /* 覆盖率：目标作用域（默认 window）上 134 个官方 API 的可用数与分档 */
+  HC.coverage = function (target) {
+    var AS = global.HikerApiSurface;
+    if (!AS) return { official: 134, available: 0, missing: [], levels: {} };
+    return AS.coverage(target || global);
+  };
+
+  /* hiker:// 内部地址同步分发（取自 xingchen 1.2.8 真机事故） */
+  HC.scheme = function (url, opts) {
+    if (!global.HikerScheme) return null;
+    var o = opts || {};
+    o.request = o.request || null;
+    return global.HikerScheme.dispatch(url, o);
+  };
+
+  /* 新鲜作用域执行：把 134 个 API + MY_* 全量注入新作用域，
+   * 修掉 xingchen 真机的 "getUaObject / getJsPlugin 未定义"（点播放、lazyRule、分类钮）。 */
+  HC.runInFresh = function (code, page, opts) {
+    opts = opts || {};
+    var rec = { ok: false, out: null, err: null, fresh: true };
+    if (!global.HikerApiSurface) { rec.err = 'no-api-surface'; return rec; }
+    var scope = global.HikerApiSurface.installFresh(page || {}, opts);
+    var defaults = { MY_URL: '', MY_HOME: '', MY_PAGE: 1, MY_KEYWORD: '',
+                     MY_RULE: {}, MY_PARAMS: '', input: '', params: {}, d: [], host: '' };
+    Object.keys(defaults).forEach(function (k) {
+      if (typeof scope[k] === 'undefined') scope[k] = defaults[k];
+    });
+    var captured = null;
+    if (typeof global.setResult === 'function') scope.setResult = global.setResult;
+    else scope.setResult = function (v) { captured = v; };
+    /* 清空上次结果，避免读到旧值造成假阳性 */
+    if (global.HikerRuntime) { try { global.HikerRuntime.lastResult = null; } catch (e) {} }
+    try {
+      /* eslint-disable no-new-func */
+      new Function('scope', 'with(scope){' + String(code) + '\n}').call({}, scope);
+      var r = captured !== null ? captured :
+              (global.HikerRuntime ? global.HikerRuntime.lastResult : null);
+      if (r !== null && r !== undefined && !(r && typeof r.then === 'function')) {
+        rec.ok = true;
+        try { rec.out = JSON.stringify(r).slice(0, 200); } catch (e) { rec.out = String(r).slice(0, 200); }
+      } else {
+        rec.err = (r && typeof r.then === 'function') ? 'async-result-not-string' : 'no-setResult';
+      }
+    } catch (e) {
+      rec.err = (e && e.name ? e.name + ': ' : '') + String(e && e.message || e).slice(0, 160);
+    }
+    return rec;
+  };
+
+  HC.version = '2.0.0';
   HC.bridgeSpecs = BRIDGE_SPECS;
   global.HikerCompat = HC;
 

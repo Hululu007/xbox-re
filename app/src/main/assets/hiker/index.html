@@ -158,10 +158,12 @@ footer{color:var(--sub);font-size:12px;text-align:center;padding:10px 0 4px}
     <div class="log" id="log"></div>
   </section>
 
-  <footer>海阔独立入口 · 阶段六 · 独立 WebView / 独立同步桥 / 兼容层 HikerCompat v1.0.0</footer>
+  <footer>海阔独立入口 · 阶段七 · 独立 WebView / 独立同步桥 / 官方契约补齐 / hiker:// 分发 / HikerCompat v2.0.0</footer>
 </div>
 
 <script src="hiker_bridge_adapter.js"></script>
+<script src="hiker_scheme.js"></script>
+<script src="hiker_api_surface.js"></script>
 <script src="jst4.js"></script>
 <script src="hiker_runtime_shim.js"></script>
 <script src="hiker_compat.js"></script>
@@ -220,7 +222,8 @@ footer{color:var(--sub);font-size:12px;text-align:center;padding:10px 0 4px}
     var cap = window.HikerHost.capabilities();
     $('bMode').textContent = cap.bridge + (cap.port ? ':' + cap.port : '');
     $('kBridge').textContent = inst.bridge || cap.bridge;
-    $('kApi').textContent = inst.probe ? 'OK' : '—';
+    var cov = inst.coverage || window.HikerCompat.coverage();
+    $('kApi').textContent = cov.available + '/' + cov.official;
     $('kRules').textContent = '内置';
     $('kPort').textContent = cap.port || '离线';
     out.push('bridge      : ' + (inst.bridge || '(未装配)'));
@@ -228,6 +231,11 @@ footer{color:var(--sub);font-size:12px;text-align:center;padding:10px 0 4px}
     out.push('asyncOnly   : ' + p.asyncOnly);
     out.push('hasHomeSdk  : ' + p.hasHomeSdk);
     out.push('isolated    : ' + p.documentIsolated);
+    out.push('apiSurface  : ' + (inst.apiSurface ? inst.apiSurface.added + ' 个 API 已装配' : '未装配'));
+    out.push('apiCoverage : ' + cov.available + '/' + cov.official
+      + '  [full ' + cov.levels.full + ' / bridge ' + cov.levels.bridge
+      + ' / delegate ' + cov.levels.delegate + ' / degrade ' + cov.levels.degrade + ']');
+    out.push('hikerScheme : ' + (inst.scheme ? inst.scheme.wrapped + ' 个同步桥已包装' : '未装配'));
     out.push('shim        : ' + inst.shim + '  jst4: ' + inst.jst4);
     out.push('warnings    : ' + (inst.warnings.length ? inst.warnings.join(' | ') : '无'));
     out.push('capabilities: ' + JSON.stringify(cap));
@@ -476,6 +484,29 @@ footer{color:var(--sub);font-size:12px;text-align:center;padding:10px 0 4px}
     lines.push('=== 反假阳性 ===');
     lines.push('  normalize(string) : ' + JSON.stringify(window.HikerCompat.normalize('<html>ok</html>')));
     lines.push('  normalize(Promise): ' + JSON.stringify(window.HikerCompat.normalize(Promise.resolve(1))));
+    lines.push('');
+    lines.push('=== 官方 API 契约覆盖率（hikerView help_js / JSEngine + hiker_54.db） ===');
+    var cov = window.HikerCompat.coverage();
+    lines.push('  可用 ' + cov.available + '/' + cov.official
+      + '  [真实现 ' + cov.levels.full + ' / 桥转发 ' + cov.levels.bridge
+      + ' / 保留 ' + cov.levels.delegate + ' / 降级 ' + cov.levels.degrade + ']');
+    lines.push('  缺失 : ' + (cov.missing.length ? cov.missing.slice(0, 18).join(', ') : '无'));
+    lines.push('');
+    lines.push('=== hiker:// 内部地址分发（取自 xingchen 1.2.8 真机事故） ===');
+    var probes = ['hiker://empty', 'hiker://empty#http://a.com/x', 'hiker://page/x',
+                  'hiker://home', 'hiker://files/missing.txt', 'hiker://bookmark',
+                  'file:///tmp/none.txt'];
+    for (var q = 0; q < probes.length; q++) {
+      var d = window.HikerCompat.scheme(probes[q]);
+      lines.push('  ' + probes[q] + ' → ' + (d ? d.route + ' / ' + d.status
+        + (d.error ? ' / ' + d.error : '') + ' / body=' + JSON.stringify(d.body.slice(0, 34)) : 'null'));
+    }
+    lines.push('');
+    lines.push('=== 新鲜作用域（修 getUaObject / getJsPlugin 未定义） ===');
+    var fr = window.HikerCompat.runInFresh(
+      "var u = JSON.parse(getUaObject()); var p = getJsPlugin(); setResult({ua:!!u, plugin:typeof p});",
+      { MY_URL: 'https://example.com' });
+    lines.push('  fresh setResult: ' + fr.ok + '  out=' + fr.out + '  err=' + (fr.err || '—'));
     $('compatOut').textContent = lines.join('\n');
   }
   $('btnCompat').onclick = compat;
