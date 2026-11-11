@@ -87,6 +87,11 @@ jobs:
         run: |
           sdkmanager "platform-tools" "platforms;android-37.0" "build-tools;37.0.0"
 
+      - name: Verify theme resource chain (static, no emulator needed)
+        run: |
+          set -euo pipefail
+          python3 tools/theme_chain_check.py
+
       - name: Verify mobile search scope feature is present
         run: |
           set -euo pipefail

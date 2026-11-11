@@ -99,9 +99,31 @@ public final class AuroraTheme {
         try {
             if (isSystem(activity)) return;
             int res = presetTheme(get(activity, KEY_PRESET, "aurora"));
-            if (res != 0) activity.setTheme(res);
+            // 启动期资源链探针：先在临时 Context 上展开预设主题，确认 Material 控件
+            // 必需的颜色属性都能解析出真实值，再 setTheme。任何一条解析为 0x0 就
+            // 保持 Manifest 的基线主题（可跑链），宁可不换肤也不让 inflate 崩溃。
+            if (res != 0 && themeChainUsable(activity, res)) activity.setTheme(res);
         } catch (Throwable ignored) {
             // 主题资源异常时保持 Manifest 主题，绝不阻塞 Activity 启动。
+        }
+    }
+
+    /** 静态展开主题链，模拟 LayoutInflater 解析 ?attr/ 的过程；无需真机或模拟器。 */
+    private static boolean themeChainUsable(@NonNull Activity activity, @StyleRes int res) {
+        try {
+            ContextThemeWrapper probe = new ContextThemeWrapper(activity, res);
+            android.content.res.Resources r = activity.getResources();
+            String pkg = activity.getPackageName();
+            for (String name : new String[]{"colorPrimary", "colorOnSurface", "colorSurface", "colorSurfaceContainer"}) {
+                int id = r.getIdentifier(name, "attr", pkg);
+                if (id == 0) continue;
+                TypedValue tv = new TypedValue();
+                if (!probe.getTheme().resolveAttribute(id, tv, true)) return false;
+                if (tv.data == 0 && tv.type == TypedValue.TYPE_NULL) return false;
+            }
+            return true;
+        } catch (Throwable ignored) {
+            return false;
         }
     }
 
