@@ -126,6 +126,10 @@ public abstract class BaseActivity extends AppCompatActivity {
     }
 
     private void enableDynamicColor() {
+        // 非「跟随系统」预设下 AuroraTheme.apply() 会用 setTheme 整体替换主题，这里叠加的
+        // 动态色 overlay 必被丢弃；跳过可避免 contentBasedSource 在部分机型抛异常，
+        // 也省掉一次无用的 getTheme().applyStyle()。
+        if (!AuroraTheme.isSystem(this)) return;
         try {
             int color = Setting.getDynamicColor();
             if (color != 0) DynamicColors.applyToActivityIfAvailable(this, new DynamicColorsOptions.Builder().setContentBasedSource(color).build());

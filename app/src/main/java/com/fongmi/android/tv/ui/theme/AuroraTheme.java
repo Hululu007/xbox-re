@@ -119,7 +119,18 @@ public final class AuroraTheme {
         }
     }
 
-    /** 切换后检查关键 attr 能否解析；任一为 0/NULL 就不允许用这套 theme 去 inflate。 */
+    /**
+     * 切换后检查关键 attr 能否解析；任一为 0/NULL 就不允许用这套 theme 去 inflate。
+     *
+     * <p>额外精确拦截 #0x0 的回归：Material 的 NavigationBarView / MaterialTextView 会取
+     * {@code android:textColorSecondary} 等 framework 颜色 attr 的 {@code value.resourceId}
+     * 去 {@code AppCompatResources.getColorStateList()}。一旦这些 attr 被写成字面色
+     * （{@code #AARRGGBB}），resourceId 就是 0，构造 BottomNavigationView 时抛
+     * {@code Resources$NotFoundException: Resource ID #0x0}。
+     *
+     * <p>用 {@code resolveRefs=false} 读原始类型即可识别字面色，且不会把正常的
+     * {@code @color/} 引用误判为失败（误判会导致主题静默回退、界面回到原生观感）。
+     */
     private static boolean themeUsable(@NonNull Activity activity) {
         int[] required = {
                 android.R.attr.textColorPrimary,
@@ -134,6 +145,20 @@ public final class AuroraTheme {
             if (!activity.getTheme().resolveAttribute(id, tv, true)) return false;
             if (tv.type == TypedValue.TYPE_NULL) return false;
             if (tv.type == TypedValue.TYPE_REFERENCE && tv.data == 0) return false;
+        }
+        int[] frameworkColorRefs = {
+                android.R.attr.textColorPrimary,
+                android.R.attr.textColorSecondary,
+                android.R.attr.textColorTertiary,
+                android.R.attr.textColorHint,
+                android.R.attr.colorControlHighlight,
+        };
+        for (int id : frameworkColorRefs) {
+            TypedValue raw = new TypedValue();
+            if (!activity.getTheme().resolveAttribute(id, raw, false)) return false;
+            if (raw.type == TypedValue.TYPE_NULL) return false;
+            if (raw.type >= TypedValue.TYPE_FIRST_COLOR_INT
+                    && raw.type <= TypedValue.TYPE_LAST_COLOR_INT) return false;
         }
         return true;
     }

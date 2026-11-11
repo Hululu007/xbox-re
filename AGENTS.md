@@ -335,20 +335,23 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
 违反任一条件，release 包里字段名会被混淆成 a/b/c，Gson 返回空壳，界面显示「配置解析失败 / 暂无可用包」，
 而 debug 包与 CI 全绿都看不出来。禁止仅凭 debug 包或构建成功判定数据层可用。
 
-## 主题（Aurora）不可变约束
+## 主题（Aurora）约束（以文末「2026-11-11 崩溃复盘」为准）
+
+> 本节在崩溃前把错误假设写成了「不可变约束」（只允许 `applyStyle` / 禁止 `setTheme` /
+> 预设必须 `parent=""`），与复盘结论直接冲突，2026-11-11 一并更正。以文末复盘为唯一准绳。
 
 - `app/src/mobile/res/values/styles.xml` / `app/src/leanback/res/values/styles.xml` 的 `Theme.Base` parent 必须保持 oktv-cat 基线值，禁止改成静态 M3 链，也禁止为了「解耦动态色」替换它。
-- 主题引擎只允许 `Theme.applyStyle(overlay, true)`，禁止 `Activity.setTheme()`、禁止在 `super.onCreate()` 之前改主题；`BaseActivity` 中 `AuroraTheme.apply(this)` 必须位于 `super.onCreate` 之后、`setContentView` 之前。
-- 四套预设与所有 ThemeOverlay 必须 `parent=""`，且只含字面值颜色/尺寸，不得引用 `?attr/` 造成 0x0。
-- 顶层 `Theme.App.Aurora` 等预设不得包含 `android:window*` / `isLightTheme`（与 DayNight 基线冲突）。
+- 主题引擎唯一合法入口是 `Activity.setTheme()`（完整 parent 链），禁止 `Theme.applyStyle()`；`BaseActivity` 中 `AuroraTheme.apply(this)` 必须位于 `super.onCreate` 之后、`setContentView` 之前，切换后必须跑 `themeUsable()` 探针，失败回落 `Theme.App`。
+- 四套预设必须 `parent="Theme.App"`，且不得包含 `android:textColor*` / `android:window*` / `isLightTheme`。
+- **不得把 framework 颜色 attr 写成字面色**：`NavigationBarView` / `MaterialTextView` 会取 `android:textColorSecondary` 等 attr 的 `value.resourceId` 去 `AppCompatResources.getColorStateList()`；写成 `#AARRGGBB` 会让 `resourceId == 0`，构造 `BottomNavigationView` 时抛 `Resources$NotFoundException: Resource ID #0x0`。`colorPrimary` / `colorSurface` 等 M3 属性不在此列（Material 读的是 `value.data`），但也应保持为资源引用最稳妥。
 - 任何主题改动，CI 必须对**编译后 APK** 用 `aapt2 dump resources --values` 检查 `bottomNavigationStyle`、`colorSurface`、`colorSurfaceContainer` 等关键 attr 非 `@null`/0；只检查源码 XML 不算验证。
 
 
 ## 主题启动链硬判据（CI 真正执行）
 
-- `tools/theme_baseline_check.py` 由 workflow 的「Verify theme startup chain against oktv-cat baseline」步骤执行，失败即 `exit 1` 阻断发布。历史上检查脚本只躺在仓库里从未被 CI 调用，这是「CI 全绿却启动即崩」反复发生的方法缺口。
-- 硬判据：三份 `styles.xml`、三份 `AndroidManifest.xml`、两份 `activity_home.xml` 共 8 个文件，sha256 必须与可运行基线 `oktv-cat @ f7f9a031` 逐字节一致；主题引擎禁止 `setTheme`，四套预设必须 `parent=""` 纯 overlay，且不得含 `android:window*` / `isLightTheme`。
-- 理由：`HomeActivity → activity_home.xml:22 → BottomNavigationView.<init> → Resources$NotFoundException #0x0` 的根因是运行时 theme 链被改动，不是签名、下载或重签；与已知可启动基线比对，比自定义规则更不容易「自己出题自己判卷」。
+- `tools/theme_baseline_check.py` 由 workflow 的「Verify theme startup chain against oktv-cat baseline」步骤执行，失败即 `exit 1` 阻断发布。历史上检查脚本只躺在仓库里从未被 CI 调用，这是「CI 全绿却启动即崩」反复发生的方法缺口；后来又把「必须 parent=""、禁止 setTheme」写成硬门禁，等于锁死错误假设，已在 2026-11-11 纠正。
+- 硬判据：三份 `styles.xml`、三份 `AndroidManifest.xml`、两份 `activity_home.xml` 共 8 个文件，sha256 必须与可运行基线 `oktv-cat @ f7f9a031` 逐字节一致；主题引擎必须使用 `Activity.setTheme()` 且禁止 `Theme.applyStyle()`，四套预设必须 `parent="Theme.App"` 完整链，且不得含 `android:textColor*` / `android:window*` / `isLightTheme`；切换后必须有 `themeUsable()` 探针兜底。
+- 理由：`HomeActivity → activity_home.xml:22 → BottomNavigationView.<init> → Resources$NotFoundException #0x0` 的根因是运行时 theme 链被改写、framework 颜色 attr 被覆盖成字面色，不是签名、下载或重签；与已知可启动基线比对，比自定义规则更不容易「自己出题自己判卷」。
 - 签名后的「Verify compiled theme resources in signed APK」步骤对最终 APK 跑 `aapt2 dump resources --values` 作编译后诊断；该段只读，不碰 v2 签名块、不重写 ZIP。
 
 ## 主题启动链（不可变，2026-11-11 崩溃复盘）
