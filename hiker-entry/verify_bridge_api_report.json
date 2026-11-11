@@ -1,0 +1,282 @@
+{
+  "stage": "阶段八 · 补桥方法",
+  "groups": {
+    "A_java": {
+      "md5_hello": "5d41402abc4b2a76b9719d911017c592",
+      "md5_empty": "d41d8cd98f00b204e9800998ecf8427e",
+      "aes_enc": "VYYSt9MNV4cxw7060yMpjw==",
+      "aes_dec": "海阔规则",
+      "aes_wrong_key": "",
+      "rsa_enc_len": 172,
+      "rsa_dec": "secret",
+      "b64e": "QUJD",
+      "b64d": "ABC",
+      "writeHex": "hiker://files/a.bin",
+      "readHex": "Hello",
+      "b64img": "hiker://files/pic.png",
+      "b64img_read": "PNGDATA",
+      "fixM3u8": "#EXTM3U\nhttp://a.com/x/seg1.ts\n",
+      "clearM3u8Ad": "#EXTM3U\n#EXTINF:10,\nseg1.ts\n#EXTINF:10,\nseg2.ts\n",
+      "qr_prefix": "data:image/svg+xml;base64,",
+      "qr_len": 15916,
+      "qr_overflow": "",
+      "fetchCookie": "sid=abc; token=t1",
+      "getCookie": "sid=abc; token=t1",
+      "fetchCache1": "ECHO:/echo?x=1",
+      "fetchCache2": "ECHO:/echo?x=1",
+      "batchFetch": "[\"A\",\"B\"]",
+      "postRequest": "POST:hello=1",
+      "downloadFile": "hiker://files/dl.bin",
+      "downloadRead": "BINARY-OK",
+      "cacheM3u8": "hiker://files/m3u8_0bb836cd8238.m3u8",
+      "cacheM3u8_body": "#EXTM3U\n#EXT-X-TARGETDURATION:10\n#EXTINF:10,\nhttp://127.0.0.1:37677/seg1.ts\n#EXT-X-DISCONTINUITY\n#EXTINF:5,\nhttp://127.0.0.1:37677/ad/adv.ts\n#EXTINF:10,\nhttp://127.0.0.1:37677/seg2.ts\n",
+      "parseLazyRule": "<html><body><div class=\"list\"><a class=\"item\" href=\"/v/1.html\">影片A</a></div></body></html>",
+      "refreshVideoUrl": "http://127.0.0.1:37677/final?x=redirected",
+      "getIP": "172.24.0.11",
+      "getCpuAbi": "amd64",
+      "degraded_x5": "",
+      "degraded_x5Rule": "",
+      "getCryptoJS": "",
+      "unknown": "",
+      "json_roundtrip": "{\"a\":[1,true,null,\"中\"],\"b\":{\"k\":\"v\"}}",
+      "report": "{\"events\":[\"error:aesDecode:BadPaddingException\",\"degraded:createQRCode:overflow\",\"degraded:fetchCodeByWebView\",\"degraded:x5Rule\",\"owner-js:getCryptoJS\",\"unknown:no_such_api\"],\"cookies\":1,\"cache\":3,\"files\":4,\"root\":\"/tmp/hiker\"}",
+      "capabilities": "{\"layer\":\"HikerApi\",\"implemented\":35,\"methods\":[\"md5\",\"aesEncode\",\"aesDecode\",\"rsaEncrypt\",\"rsaDecrypt\",\"getCryptoJS\",\"getCookie\",\"fetchCookie\",\"fetchCache\",\"fetchCodeByWebView\",\"batchFetch\",\"batchExecute\",\"postRequest\",\"downloadFile\",\"requireDownload\",\"cacheM3u8\",\"batchCacheM3u8\",\"clearM3u8Ad\",\"clearM3u8AdLazy\",\"x5Rule\",\"parseLazyRule\",\"parseLazyRuleAsync\",\"getIP\",\"convertBase64Image\",\"createQRCode\",\"requireCache\",\"fixM3u8\",\"refreshVideoUrl\",\"refreshX5WebView\",\"getCpuAbi\",\"findReachableIP\",\"ipping\",\"getCryptoJS2\",\"writeHexFile\",\"readFile\"]}"
+    },
+    "B_http": {
+      "server_hits": {
+        "echo": 1,
+        "a": 1,
+        "b": 1,
+        "post": 1,
+        "cookie": 2
+      },
+      "base": "http://127.0.0.1:37677"
+    },
+    "C_qr": {
+      "cases": 6,
+      "matched": 6,
+      "versions": [
+        1,
+        2,
+        1,
+        3,
+        9,
+        null
+      ]
+    }
+  },
+  "assertions": {
+    "A javac 编译 5 个纯 JDK 类": {
+      "ok": true,
+      "detail": "Note: Some input files use or override a deprecated API.\nNote: Recompile with -Xlint:deprecation for"
+    },
+    "A Java 驱动编译": {
+      "ok": true,
+      "detail": "0 错误"
+    },
+    "A Java 驱动运行": {
+      "ok": true,
+      "detail": "exit 0"
+    },
+    "md5('hello') 正确": {
+      "ok": true,
+      "detail": "5d41402abc4b2a76b9719d911017c592"
+    },
+    "md5('') 正确": {
+      "ok": true,
+      "detail": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "AES 加密非明文": {
+      "ok": true,
+      "detail": "VYYSt9MNV4cxw7060yMpjw=="
+    },
+    "AES 解密回原文": {
+      "ok": true,
+      "detail": "海阔规则"
+    },
+    "AES 错密钥不伪成功": {
+      "ok": true,
+      "detail": "空串或乱码"
+    },
+    "RSA 加密产出密文": {
+      "ok": true,
+      "detail": "172"
+    },
+    "RSA 解密回原文": {
+      "ok": true,
+      "detail": "secret"
+    },
+    "Base64 编码/解码": {
+      "ok": true,
+      "detail": "QUJD / ABC"
+    },
+    "writeHexFile 返回 hiker://files 路径": {
+      "ok": true,
+      "detail": "hiker://files/a.bin"
+    },
+    "readFile 读回写入内容": {
+      "ok": true,
+      "detail": "Hello"
+    },
+    "convertBase64Image 落盘可读": {
+      "ok": true,
+      "detail": "hiker://files/pic.png -> 'PNGDATA'"
+    },
+    "fixM3u8 相对分片转绝对": {
+      "ok": true,
+      "detail": "#EXTM3U | http://a.com/x/seg1.ts | "
+    },
+    "clearM3u8Ad 去广告且保留真实分片": {
+      "ok": true,
+      "detail": "#EXTM3U | #EXTINF:10, | seg1.ts | #EXTINF:10, | seg2.ts | "
+    },
+    "createQRCode 返回 data URI": {
+      "ok": true,
+      "detail": "data:image/svg+xml;base64, len=15916"
+    },
+    "createQRCode 超容量明确留空": {
+      "ok": true,
+      "detail": "''"
+    },
+    "getIP 返回 IPv4": {
+      "ok": true,
+      "detail": "172.24.0.11"
+    },
+    "getCpuAbi 非空": {
+      "ok": true,
+      "detail": "amd64"
+    },
+    "X5 依赖 API 明确空串": {
+      "ok": true,
+      "detail": "不伪装成功"
+    },
+    "getCryptoJS 由 JS 层承担（Java 留痕）": {
+      "ok": true,
+      "detail": "owner-js"
+    },
+    "未知 API 不假成功": {
+      "ok": true,
+      "detail": "''"
+    },
+    "HikerJson 往返保真": {
+      "ok": true,
+      "detail": "{\"a\":[1,true,null,\"中\"],\"b\":{\"k\":\"v\"}}"
+    },
+    "HikerApi 实现数 35（官方 25 + 额外 10）": {
+      "ok": true,
+      "detail": "35"
+    },
+    "降级 / 未知 / owner 全部留痕": {
+      "ok": true,
+      "detail": "QRCode:overflow degraded:fetchCodeByWebView degraded:x5Rule owner-js:getCryptoJS unknown:no_such_api"
+    },
+    "fetchCookie 收集 Set-Cookie": {
+      "ok": true,
+      "detail": "sid=abc; token=t1"
+    },
+    "getCookie 复用同域 jar": {
+      "ok": true,
+      "detail": "sid=abc; token=t1"
+    },
+    "fetchCache 两次结果一致": {
+      "ok": true,
+      "detail": "ECHO:/echo?x=1"
+    },
+    "fetchCache 第二次命中缓存（服务端仅 1 次）": {
+      "ok": true,
+      "detail": "server echo hits=1"
+    },
+    "batchFetch 并发返回数组": {
+      "ok": true,
+      "detail": "[\"A\",\"B\"]"
+    },
+    "postRequest 回显 body": {
+      "ok": true,
+      "detail": "POST:hello=1"
+    },
+    "downloadFile 落盘": {
+      "ok": true,
+      "detail": "hiker://files/dl.bin"
+    },
+    "downloadFile 内容可读": {
+      "ok": true,
+      "detail": "BINARY-OK"
+    },
+    "cacheM3u8 改写分片为绝对地址": {
+      "ok": true,
+      "detail": "#EXTM3U | #EXT-X-TARGETDURATION:10 | #EXTINF:10, | http://127.0.0.1:37677/seg1.ts | #EXT-X"
+    },
+    "parseLazyRule 返回页面正文": {
+      "ok": true,
+      "detail": "<html><body><div class=\"list\"><a class=\"item\" href=\"/v/1.htm"
+    },
+    "refreshVideoUrl 跟随 302": {
+      "ok": true,
+      "detail": "http://127.0.0.1:37677/final?x=redirected"
+    },
+    "QR 矩阵 6 个用例逐格一致": {
+      "ok": true,
+      "detail": "6/6 与 python-qrcode 一致"
+    },
+    "md5 走 Java 桥真返回值": {
+      "ok": true,
+      "detail": "5d41402abc4b2a76b9719d911017c592"
+    },
+    "bridgeCall 优先 HikerBridge.call": {
+      "ok": true,
+      "detail": "2 次 call"
+    },
+    "参数显式 JSON 序列化": {
+      "ok": true,
+      "detail": "[[\"md5\", \"[\\\"hello\\\"]\"], [\"md5\", \"[\\\"hello\\\"]\"]]"
+    },
+    "batchFetch 还原成数组": {
+      "ok": true,
+      "detail": "[\"A\",\"B\"]"
+    },
+    "CryptoJS.MD5 走 Java 桥": {
+      "ok": true,
+      "detail": "5d41402abc4b2a76b9719d911017c592"
+    },
+    "CryptoJS.AES.encrypt 走 Java 桥": {
+      "ok": true,
+      "detail": "CIPHER"
+    },
+    "CryptoJS.AES.decrypt 走 Java 桥": {
+      "ok": true,
+      "detail": "PLAIN"
+    },
+    "X5 降级有留痕而非静默空": {
+      "ok": true,
+      "detail": "[[\"degrade\",\"fetchCodeByWebView\"]]"
+    },
+    "FM_SHELL.call 转发到 Java 通用入口": {
+      "ok": true,
+      "detail": "5d41402abc4b2a76b9719d911017c592"
+    },
+    "fy_bridge_app.getCookie 转发到 Java 桥": {
+      "ok": true,
+      "detail": "getCookie 调用已记录"
+    },
+    "HikerHost.capabilities 带出 API 实现数": {
+      "ok": true,
+      "detail": "{\"layer\":\"HikerApi\",\"implemented\":35,\"methods\":[]}"
+    },
+    "官方 134 API 仍 134/134 可见": {
+      "ok": true,
+      "detail": "{\"full\":93,\"bridge\":25,\"delegate\":12,\"degrade\":4}"
+    },
+    "离线形态不抛异常且 134/134 可见": {
+      "ok": true,
+      "detail": "{\"full\":93,\"bridge\":25,\"delegate\":12,\"degrade\":4}"
+    }
+  },
+  "summary": {
+    "passed": 51,
+    "total": 51,
+    "all_pass": true,
+    "java_api_implemented": 35,
+    "bridge_official": 25,
+    "bridge_extra": 10
+  }
+}

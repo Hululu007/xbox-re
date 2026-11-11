@@ -31,6 +31,12 @@ public class HikerBridge {
 
     public HikerBridge(HikerActivity activity) {
         this.activity = activity;
+        /* 把下载 / 图片 / m3u8 缓存落到 App 私有目录，供 HikerHost.readFile 读回。
+         * 用 try/catch 包裹：单元测试里 activity 可能为 null，且不影响桥的同步语义。 */
+        try {
+            HikerApi.setRoot(new java.io.File(activity.getFilesDir(), "hiker").getAbsolutePath());
+        } catch (Throwable ignored) {
+        }
     }
 
     /* ------------------------------------------------------------------ 同步网络 */
@@ -156,6 +162,76 @@ public class HikerBridge {
         return "{\"bridge\":\"HikerBridge\",\"sync\":true,\"return\":\"string\","
                 + "\"play\":\"local-push\",\"port\":" + detectPort() + ",\"es5\":true}";
     }
+
+    /* ------------------------------------------------------------------ 阶段八：bridge 档 API 补齐 */
+
+    /**
+     * 34 个 bridge 档 API 的同步主通道（HikerApi 提供真语义）。
+     *
+     * 为什么不逐个暴露 @JavascriptInterface 方法：addJavascriptInterface 在 JS 传入
+     * 数组/对象时会隐式 String 化（常见结果 "[object Object]"），且方法参数个数必须与
+     * JS 调用严格一致，否则 WebView 直接抛错。统一走 call(name, argsJson) 后，
+     * JS 侧用 JSON.stringify(args) 显式序列化，Java 侧用 HikerJson 还原，参数不丢不串。
+     * 所有方法同步返回 String，与海阔规则 eval.call(null, fetch(...)) 的硬约束一致。
+     */
+    @JavascriptInterface
+    public String call(String name, String argsJson) {
+        return HikerApi.call(name, argsJson);
+    }
+
+    /** 桥能力自省：让页面能区分「符号可见」与「有语义」，避免假阳性。 */
+    @JavascriptInterface
+    public String apiCapabilities() {
+        return HikerApi.capabilities();
+    }
+
+    /** 运行期留痕（降级 / 错误 / 缓存统计），供真机探针排查。 */
+    @JavascriptInterface
+    public String apiReport() {
+        return HikerApi.report();
+    }
+
+    /* 具名方法：按官方高频签名提供，兼容「直接按方法名调用」的历史形态。
+     * 三参以上、对象/数组参数一律走 call(name, argsJson)，避免 WebView 参数个数不匹配。 */
+    @JavascriptInterface
+    public String md5(String text) { return HikerApi.callVarargs("md5", text); }
+
+    @JavascriptInterface
+    public String aesEncode(String text, String key) { return HikerApi.callVarargs("aesEncode", text, key); }
+
+    @JavascriptInterface
+    public String aesDecode(String text, String key) { return HikerApi.callVarargs("aesDecode", text, key); }
+
+    @JavascriptInterface
+    public String getCookie(String url) { return HikerApi.callVarargs("getCookie", url); }
+
+    @JavascriptInterface
+    public String fetchCookie(String url) { return HikerApi.callVarargs("fetchCookie", url); }
+
+    @JavascriptInterface
+    public String fetchCache(String url) { return HikerApi.callVarargs("fetchCache", url); }
+
+    @JavascriptInterface
+    public String postRequest(String url, String body) { return HikerApi.callVarargs("postRequest", url, body); }
+
+    @JavascriptInterface
+    public String downloadFile(String url, String path) { return HikerApi.callVarargs("downloadFile", url, path); }
+
+    @JavascriptInterface
+    public String cacheM3u8(String url) { return HikerApi.callVarargs("cacheM3u8", url); }
+
+    @JavascriptInterface
+    public String clearM3u8Ad(String m3u8) { return HikerApi.callVarargs("clearM3u8Ad", m3u8); }
+
+    @JavascriptInterface
+    public String createQRCode(String text) { return HikerApi.callVarargs("createQRCode", text); }
+
+    @JavascriptInterface
+    public String getIP() { return HikerApi.callVarargs("getIP"); }
+
+    /** hiker://files/ 与 hiker_scheme.js 的 file:// 分发会调用；阶段七的适配器已预留该调用点。 */
+    @JavascriptInterface
+    public String readFile(String path) { return HikerApi.callVarargs("readFile", path); }
 
     /* ------------------------------------------------------------------ options 解析（不依赖 org.json，保证可独立编译） */
 

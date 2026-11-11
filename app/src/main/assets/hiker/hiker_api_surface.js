@@ -120,11 +120,22 @@
     s = str(s);
     try { return global.atob ? decodeURIComponent(escape(global.atob(s))) : s; } catch (e) { return s; }
   }
-  /* 同步桥转发：Java 显式方法 > FM_SHELL.call > __fmBridge > HikerHost.req > 降级留痕 */
+  /* 同步桥转发（阶段八）：
+   *   HikerBridge.call(name, JSON.stringify(args))   ← 主通道，参数显式序列化
+   *   > HikerBridge 具名方法（自然签名）            ← 兼容直接按名调用
+   *   > FM_SHELL.call > __fmBridge > HikerHost.req  ← 离线 / 历史形态
+   *   > 明确空串 + 留痕                            ← 不静默假成功
+   *
+   * 为什么把 call 放最前：addJavascriptInterface 遇到 JS 数组/对象时会隐式 String 化
+   * （常见 "[object Object]"），且方法参数个数必须与 JS 调用严格一致。
+   * 统一走 call(name, argsJson) 后由 HikerJson 还原，25 个 bridge API 的参数才不丢不串。 */
   function bridgeCall(name, args, opts) {
     opts = opts || {};
     var a = Array.prototype.slice.call(args || []), r = null;
-    if (global.HikerBridge && typeof global.HikerBridge[name] === 'function') {
+    if (global.HikerBridge && typeof global.HikerBridge.call === 'function') {
+      try { r = global.HikerBridge.call(name, JSON.stringify(a)); } catch (e) {}
+    }
+    if (r === null && global.HikerBridge && typeof global.HikerBridge[name] === 'function') {
       try { r = global.HikerBridge[name].apply(global.HikerBridge, a); } catch (e) {}
     }
     if (r === null && global.FM_SHELL && typeof global.FM_SHELL.call === 'function') {
@@ -168,6 +179,12 @@
     if (all) return h.match(/<a[^>]*>[\s\S]*?<\/a>/g) || [];
     var m = h.match(/<a[^>]*>([\s\S]*?)<\/a>/);
     return m ? m[1].replace(/<[^>]*>/g, '') : '';
+  }
+  /* 阶段八：batch* 类 API 的 Java 桥返回 JSON 数组字符串，还原成数组才符合官方语义。
+   * 只接受带 length 的解析结果，避免把离线 mock 的 '{}' 误当成数组。 */
+  function parseArray(v) {
+    var o = jparse(v, null);
+    return (o && typeof o.length === 'number') ? o : v;
   }
 
   /* ---------------- 真实现（高频 API） ---------------- */
@@ -308,8 +325,53 @@
     playVideos: function (v) { return fire('playVideos', v); },
     refresh: function () { return IMPL.refreshPage(false); },
     evalPrivateJS: function () { return degrade('evalPrivateJS'); },
-    /* 别名（JSEngine alias / help_js） */
-    getCryptoJS: function () { return global.CryptoJS || degrade('getCryptoJS'); }
+    /* 阶段八：数组类 bridge API 还原成真数组（官方 batchFetch / batchExecute 返回数组） */
+    batchFetch: function () { return parseArray(bridgeCall('batchFetch', arguments, {})); },
+    batchExecute: function () { return parseArray(bridgeCall('batchExecute', arguments, {})); },
+    batchCacheM3u8: function () { return parseArray(bridgeCall('batchCacheM3u8', arguments, {})); },
+    /* 内核依赖 / 异步语义：Java 侧明确返回空串，这里补降级留痕，杜绝「静默空」 */
+    fetchCodeByWebView: function () {
+      var v = bridgeCall('fetchCodeByWebView', arguments, {});
+      if (!v) S.reports.push(['degrade', 'fetchCodeByWebView']);
+      return v;
+    },
+    x5Rule: function () {
+      var v = bridgeCall('x5Rule', arguments, {});
+      if (!v) S.reports.push(['degrade', 'x5Rule']);
+      return v;
+    },
+    parseLazyRuleAsync: function () {
+      var v = bridgeCall('parseLazyRuleAsync', arguments, {});
+      if (!v) S.reports.push(['degrade', 'parseLazyRuleAsync']);
+      return v;
+    },
+    refreshX5WebView: function () {
+      var v = bridgeCall('refreshX5WebView', arguments, {});
+      if (!v) S.reports.push(['degrade', 'refreshX5WebView']);
+      return v;
+    },
+    /* CryptoJS 兼容对象：MD5 / AES 走 Java 桥真实现，而不是返回一个降级标记。
+     * 官方规则常见：var C = getCryptoJS(); C.MD5(s).toString();
+     *                C.AES.encrypt(text, key).toString(); C.AES.decrypt(c, key).toString(); */
+    getCryptoJS: function () {
+      if (global.CryptoJS) return global.CryptoJS;
+      function wrap(v) { return { toString: function () { return v; } }; }
+      return {
+        enc: {
+          Utf8: { parse: function (s) { return str(s); }, stringify: function (s) { return str(s); } },
+          Base64: { parse: function (s) { return str(s); }, stringify: function (s) { return str(s); } }
+        },
+        MD5: function (s) { return wrap(bridgeCall('md5', [str(s)], {})); },
+        AES: {
+          encrypt: function (text, key) {
+            return wrap(bridgeCall('aesEncode', [str(text), str(key)], {}));
+          },
+          decrypt: function (cipher, key) {
+            return wrap(bridgeCall('aesDecode', [str(cipher), str(key)], {}));
+          }
+        }
+      };
+    }
   };
 
   /* ---------------- 构建：full 用真实现；bridge / degrade 生成默认转发 ---------------- */

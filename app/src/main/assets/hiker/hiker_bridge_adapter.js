@@ -56,6 +56,11 @@
       if (name === 'getCache') return store[p.key || p.k] || '';
       if (name === 'setCache') { store[p.key || p.k] = p.value || p.v; return '{}'; }
       if (name === 'play') { play(url, p.title, p.pic); return '{}'; }
+      /* 阶段八：其余 bridge 档 API 转发到 Java 通用入口（不再静默返回 '{}' 造成假成功）。
+       * bridgeCall 传入的 payload 形如 {args:[...]}，这里显式 JSON 序列化。 */
+      if (java && typeof java.call === 'function') {
+        try { return java.call(name, JSON.stringify(p.args || [])); } catch (e) { return '{}'; }
+      }
       return '{}';
     }
   };
@@ -77,7 +82,12 @@
     getVar: function (k) { return store[k] || ''; },
     putVar: function (k, v) { store[k] = v; },
     clearVar: function (k) { delete store[k]; },
-    getCookie: function (u) { report('cookie.get', u); return ''; },
+    getCookie: function (u) {
+      if (java && typeof java.call === 'function') {
+        try { return java.call('getCookie', JSON.stringify([u])); } catch (e) {}
+      }
+      report('cookie.get', u); return '';
+    },
     getHeaderUrl: function () { return ''; },
     getUa: function () { return ''; },
     setWebUa: function (ua) { store.__ua = ua; report('web.ua', ua); },
@@ -109,10 +119,20 @@
       var m = String(h || '').match(/<a[^>]*>([\s\S]*?)<\/a>/);
       return m ? m[1].replace(/<[^>]*>/g, '') : '';
     },
-    parseLazyRule: function (u) { return req(String(u || ''), '{}'); },
+    parseLazyRule: function (u) {
+      if (java && typeof java.call === 'function') {
+        try { return java.call('parseLazyRule', JSON.stringify([String(u || '')])); } catch (e) {}
+      }
+      return req(String(u || ''), '{}');
+    },
     parseLazyRuleAsync: function (u) { report('lazyRule.async', u); return ''; },
     parsePaste: function (s) { report('parsePaste', s); return s || ''; },
-    clearM3u8Ad: function () { report('clearM3u8Ad', ''); return true; }
+    clearM3u8Ad: function (m3u8) {
+      if (java && typeof java.call === 'function') {
+        try { return java.call('clearM3u8Ad', JSON.stringify([m3u8 || ''])); } catch (e) {}
+      }
+      report('clearM3u8Ad', ''); return true;
+    }
   };
 
   /* ---- ④ JsT4 垫片的底层 __fmBridge(name, argsJson) ---- */
@@ -151,8 +171,14 @@
       return store['file:' + p] || '';
     },
     capabilities: function () {
-      if (java) { try { return JSON.parse(java.capabilities()); } catch (e) {} }
-      return { bridge: 'offline-mock', sync: true, 'return': 'string', play: 'mock', es5: true };
+      var c = null;
+      if (java) { try { c = JSON.parse(java.capabilities()); } catch (e) {} }
+      if (!c) c = { bridge: 'offline-mock', sync: true, 'return': 'string', play: 'mock', es5: true };
+      /* 阶段八：把「有语义」的 bridge API 清单也带出来，页面可区分符号可见与真实现 */
+      try {
+        if (java && typeof java.apiCapabilities === 'function') c.api = JSON.parse(java.apiCapabilities());
+      } catch (e) {}
+      return c;
     }
   };
 

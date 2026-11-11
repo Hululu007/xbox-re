@@ -115,7 +115,10 @@
         "hasHomeSdk": false,
         "documentIsolated": true
       },
-      "warnings": [],
+      "warnings": [
+        "未检测到 hiker_api_surface.js，官方 API 覆盖率受限",
+        "未检测到 hiker_scheme.js，hiker:// 内部地址会被当网络请求"
+      ],
       "forms": {
         "lifecycle": 3,
         "hiker-scheme": 1,

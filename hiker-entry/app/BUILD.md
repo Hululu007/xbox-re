@@ -13,6 +13,7 @@
 | 兼容层 | `hiker_compat.js`：五类历史桥探测 / 语义归一 / 作用域隔离 / 多变形态降级 |
 | 桥适配 | `hiker_bridge_adapter.js`：把 Java 同步桥适配成 `FM_SHELL` / `FM_JSREQ` / `fy_bridge_app` / `__fmBridge` 四种历史形态 |
 | 运行时垫片 | `jst4.js`（37 个全局 API）+ `hiker_runtime_shim.js`（L1~L5 补齐层） |
+| 业务桥实现（阶段八） | `HikerJson` / `HikerQR` / `HikerApi`（纯 JDK，35 个方法）+ `HikerBridge.call` 通用入口；`bridge` 档 25 个 API 由「有符号」补齐为「有语义」 |
 | 六段链路 | 入口 → 口令管理 → 口令数据 → 生成站点 → 站点运行 → 桥接播放 |
 | 播放出口 | `HikerBridge.play()` → 本地 `/action?do=push&url=` → `ServerEvent.push` → `VideoActivity.push` |
 
@@ -24,9 +25,12 @@
 app/src/main/java/com/fongmi/android/tv/hiker/
     HikerEntry.java        # 唯一对外出口 start(Activity)
     HikerActivity.java     # 独立 Activity / 独立 WebView / 生命周期
-    HikerBridge.java       # 同步字符串 Java 桥（13 个 @JavascriptInterface 方法）
+    HikerBridge.java       # 同步字符串 Java 桥（31 个 @JavascriptInterface 方法）
     HikerHttp.java         # 同步 HTTP（GBK/UTF-8 探测、gzip），仅 JDK 依赖
     HikerContract.java     # 常量
+    HikerJson.java         # 极简 JSON + 自建 Base64（阶段八，纯 JDK）
+    HikerQR.java           # QR 编码器（阶段八，纯 JDK）
+    HikerApi.java          # 35 个 bridge API 的 call(name,argsJson) 分发与实现（阶段八，纯 JDK）
 
 app/src/main/assets/hiker/
     index.html                   # 容器页（六段链路 + 兼容面板，ES5）
@@ -79,17 +83,19 @@ cd xbox-re
 
 | 验证 | 结果 |
 |---|---|
-| `ecj + android-all.jar` 真编译 5 个新增 Java 类 | **0 错误** → 7 个 `.class` → `d8` 生成 12 KB `classes.dex` |
-| `@JavascriptInterface` 方法签名核验 | 13 个公开方法全部正确（`javap`） |
-| 改动文件静态校验 | **40/40 通过**：只增不删、XML 合法、Java 语法一致、符号引用闭合、assets 引用齐全 |
+| `ecj + android-all.jar` 真编译 8 个 Java 类 | **0 错误** → 15 个 `.class` → `d8` 生成 44 KB `classes.dex` |
+| `@JavascriptInterface` 方法签名核验 | 31 个公开方法全部正确（`javap`） |
+| 改动文件静态校验 | **45/45 通过**：只增不删、XML 合法、Java 语法一致、符号引用闭合、assets 引用齐全 |
 | 兼容性实证 A/B/C/D1/D2/E | 首页混用 `INCOMPATIBLE`；独立入口 `3/3`；全库同口径 `23/78 → 31/78` |
 | 容器页端到端（有桥 / 离线两种形态） | **44/44 断言通过**，页面 JS 异常 0 |
 | 所有 JS `node --check` | 通过；兼容层去注释后 ES5 禁用语法 0 命中 |
+| **阶段八补桥方法语义验证** | `verify_bridge_api.py` **51/51**：A 纯计算 24 / B 本地 HTTP 网络语义 10 / C QR 与 python-qrcode 逐格一致 6 / D JS 转发链路 12 |
 
 复现：
 
 ```bash
 cd hiker-entry
+python3 verify_bridge_api.py            # 阶段八补桥方法 51/51
 ./build_verify.sh                       # Java 真编译 + dex
 python3 compat_verify.py                # 兼容性 A/B/C/D1/D2/E 实证
 python3 verify_entry.py                 # 容器页六段链路 e2e
@@ -115,6 +121,7 @@ python3 app/patch/verify_patch.py       # 改动文件静态校验
 |---|---|
 | 完整 APK | 沙箱未产出，需本地按第 2 节构建 |
 | mobile flavor 入口 | `Func` / `HomeButton` 是 leanback（TV 版）特有体系，本版入口按钮改动落在 leanback；`HikerActivity`、桥、assets、资源都在 `main` 两个 flavor 共用。若也要在 mobile 首页加入口，需在 `app/src/mobile/.../HomeActivity.java` 自行加一行 `HikerEntry.start(this)`（独立模块本身无需改动） |
+| `bridge` 档 25 个 API | 阶段八已补 21 个 Java 真实现 + 1 个 JS 层 CryptoJS 兼容对象（MD5/AES 走 Java 桥）；`fetchCodeByWebView`/`x5Rule`/`parseLazyRuleAsync` 3 个内核依赖仍明确降级 |
 | Rhino / Python / 加密规则 | 兼容层只做识别与降级标记；真正执行需 Java 侧引擎（阶段五 P2），仓库未包含 |
 | 覆盖率 31/78 | 离线 stub HTML 下的数字，真机需回归 |
 | 真机最小探针 | 未做（独立 Activity 的 `addJavascriptInterface` 在真机 WebView 上的行为需过一遍） |
