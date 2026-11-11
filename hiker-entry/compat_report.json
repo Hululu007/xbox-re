@@ -1,0 +1,466 @@
+{
+  "static_contracts": {
+    "宿主 fongmiBridge (oktv-cat)": {
+      "文件": "HomeWebBridge.java / HomeWebController.getSdk()",
+      "语义": "异步 Promise",
+      "派发": "invoke -> Task.execute 线程池 -> fongmiNative.resolve",
+      "@JavascriptInterface": 8,
+      "case 数": 31,
+      "window.fm 方法数": 20,
+      "同步可用": false,
+      "返回": "{ok,status,body} 对象 / Promise"
+    },
+    "海阔原版 fy_bridge_app (hiker_54.db)": {
+      "文件": "home_js.txt",
+      "语义": "同步字符串",
+      "方法": [
+        "back",
+        "fetch",
+        "getInternalJs",
+        "getVar",
+        "putVar",
+        "refreshPage",
+        "refreshX5Desc",
+        "toDetailPage",
+        "writeFile"
+      ],
+      "次数": 19,
+      "重写 window.fetch": true,
+      "同步可用": true,
+      "返回": "正文字符串"
+    },
+    "v390 jar 多桥 (fm-api.js)": {
+      "文件": "fm-api.js",
+      "语义": "同步优先 + 异步兜底",
+      "桥名": [
+        "FM_HOST",
+        "FM_SHELL",
+        "Fm",
+        "_nativeBridge",
+        "fongmiBridge"
+      ],
+      "同步桥": "FM_SHELL.call / FM_HOST.invoke / JsReqBridge.req",
+      "说明": "注释明确『同步桥会阻塞 JS 线程』",
+      "同步可用": true,
+      "返回": "JSON 字符串"
+    },
+    "wogg H5 (window.fm)": {
+      "文件": "wogg.js",
+      "语义": "异步 await",
+      "次数": "fm.req 52 次 / 8 方法 / 110+ 调用",
+      "同步可用": false,
+      "返回": "{ok,status,body,error} / Promise"
+    },
+    "hk_source 补丁 (HkGateway)": {
+      "文件": "HkGateway.java / 01_SiteApi_五处拦截.java",
+      "语义": "Java 侧五处拦截，无 WebView 桥",
+      "分流": "homeContent/categoryContent/detailContent/playerContent/searchContent",
+      "同步可用": true,
+      "备注": "Rhino + 原生 UI 路线，与本模块 WebView 路线不同"
+    }
+  },
+  "rule_corpus": {
+    "total_article_rules": 121,
+    "js_search_rules": 78,
+    "e2e_picks": 3
+  },
+  "groups": {
+    "A_mixed_with_home": {
+      "hostFetchIsAsync": true,
+      "shimOverwritesHostFetch": true,
+      "hostOverwritesShimFetch": true,
+      "globalFetchConflict": true,
+      "hasHomeSdk": true,
+      "documentIsolated": false,
+      "syncUsable": [],
+      "asyncOnly": true,
+      "verdict": "INCOMPATIBLE"
+    },
+    "B_isolated_baseline": {
+      "setResult": 3,
+      "total": 3,
+      "bridge": "FM_SHELL.call(req)",
+      "pageErrors": [],
+      "results": [
+        {
+          "id": 2512,
+          "ok": true,
+          "err": null,
+          "out": "[{\"title\":\"点我开始聚合搜索undefined\",\"url\":\"hiker://page/soup?p=fypage\",\"extra\":{\"pageTitle\":\"搜索undefined\"}}]"
+        },
+        {
+          "id": 2510,
+          "ok": true,
+          "err": null,
+          "out": "{\"data\":[]}"
+        },
+        {
+          "id": 2511,
+          "ok": true,
+          "err": null,
+          "out": "{\"data\":[]}"
+        }
+      ]
+    },
+    "C_isolated_with_compat": {
+      "setResult": 3,
+      "total": 3,
+      "bridge": "FM_SHELL.call(req)",
+      "probe": {
+        "syncUsable": [
+          "HikerBridge",
+          "FM_SHELL"
+        ],
+        "asyncOnly": false,
+        "hasHomeSdk": false,
+        "documentIsolated": true
+      },
+      "warnings": [],
+      "forms": {
+        "lifecycle": 3,
+        "hiker-scheme": 1,
+        "sync-request": 2,
+        "jquery-style": 2,
+        "dom-pdfh": 1,
+        "dom-pdfa": 1
+      },
+      "degraded": 0,
+      "unsupported": 0,
+      "pageErrors": [],
+      "results": [
+        {
+          "id": 2512,
+          "runnable": true,
+          "action": "run-in-webview",
+          "forms": [
+            {
+              "id": "lifecycle",
+              "strategy": "需每页变量注入与结果回传",
+              "need": "runtime"
+            },
+            {
+              "id": "hiker-scheme",
+              "strategy": "需独立页面栈路由",
+              "need": "runtime"
+            }
+          ],
+          "ok": true,
+          "out": "[{\"title\":\"点我开始聚合搜索undefined\",\"url\":\"hiker://page/soup?p=fypage\",\"extra\":{\"pageTitle\":\"搜索undefined\"}}]",
+          "err": null
+        },
+        {
+          "id": 2510,
+          "runnable": true,
+          "action": "run-in-webview",
+          "forms": [
+            {
+              "id": "sync-request",
+              "strategy": "需同步字符串桥",
+              "need": "sync"
+            },
+            {
+              "id": "jquery-style",
+              "strategy": "$ 必须 jQuery 风格化",
+              "need": "dom"
+            },
+            {
+              "id": "lifecycle",
+              "strategy": "需每页变量注入与结果回传",
+              "need": "runtime"
+            }
+          ],
+          "ok": true,
+          "out": "{\"data\":[]}",
+          "err": null
+        },
+        {
+          "id": 2511,
+          "runnable": true,
+          "action": "run-in-webview",
+          "forms": [
+            {
+              "id": "sync-request",
+              "strategy": "需同步字符串桥",
+              "need": "sync"
+            },
+            {
+              "id": "dom-pdfh",
+              "strategy": "需 JsT4 / DOM 解析垫片",
+              "need": "dom"
+            },
+            {
+              "id": "dom-pdfa",
+              "strategy": "需 JsT4 / DOM 解析垫片",
+              "need": "dom"
+            },
+            {
+              "id": "jquery-style",
+              "strategy": "$ 必须 jQuery 风格化",
+              "need": "dom"
+            },
+            {
+              "id": "lifecycle",
+              "strategy": "需每页变量注入与结果回传",
+              "need": "runtime"
+            }
+          ],
+          "ok": true,
+          "out": "{\"data\":[]}",
+          "err": null
+        }
+      ]
+    },
+    "D1_full_baseline": {
+      "setResult": 23,
+      "noError": 26,
+      "total": 78,
+      "note": "同一批 78 条、同一套桥/垫片，仅不带 HikerCompat，用于口径对齐"
+    },
+    "D2_full_corpus": {
+      "setResult": 31,
+      "noError": 31,
+      "total": 78,
+      "same_mouth_baseline": 23,
+      "delta": 8,
+      "beta_stage5_reference": 23,
+      "forms": {
+        "sync-request": 16,
+        "jquery-style": 52,
+        "lifecycle": 62,
+        "dom-pdfh": 22,
+        "dom-pdfa": 20,
+        "hiker-scheme": 55,
+        "sync-fetch": 34,
+        "crypto-shim": 2,
+        "encrypted-rule": 1
+      },
+      "degraded": 1,
+      "unsupported": 1
+    },
+    "E_variants": {
+      "variants": [
+        {
+          "id": "std-js",
+          "cls": {
+            "forms": [
+              {
+                "id": "lifecycle",
+                "strategy": "需每页变量注入与结果回传",
+                "need": "runtime"
+              }
+            ],
+            "unsupported": [],
+            "needsSyncBridge": false,
+            "runnable": true,
+            "action": "run-in-webview"
+          },
+          "run": {
+            "id": "std-js",
+            "runnable": true,
+            "action": "run-in-webview",
+            "forms": [
+              {
+                "id": "lifecycle",
+                "strategy": "需每页变量注入与结果回传",
+                "need": "runtime"
+              }
+            ],
+            "ok": false,
+            "out": null,
+            "err": "TypeError: setResult is not a function"
+          }
+        },
+        {
+          "id": "rhino",
+          "cls": {
+            "forms": [
+              {
+                "id": "lifecycle",
+                "strategy": "需每页变量注入与结果回传",
+                "need": "runtime"
+              },
+              {
+                "id": "rhino",
+                "strategy": "Rhino 专有，WebView 不可执行，需 QuickJS/Rhino 引擎降级",
+                "need": "unsupported"
+              }
+            ],
+            "unsupported": [
+              "rhino"
+            ],
+            "needsSyncBridge": false,
+            "runnable": false,
+            "action": "degrade-to-engine"
+          },
+          "run": {
+            "id": "rhino",
+            "runnable": false,
+            "action": "degrade-to-engine",
+            "forms": [
+              {
+                "id": "lifecycle",
+                "strategy": "需每页变量注入与结果回传",
+                "need": "runtime"
+              },
+              {
+                "id": "rhino",
+                "strategy": "Rhino 专有，WebView 不可执行，需 QuickJS/Rhino 引擎降级",
+                "need": "unsupported"
+              }
+            ],
+            "ok": false,
+            "out": null,
+            "err": "unsupported-form: rhino"
+          }
+        },
+        {
+          "id": "python",
+          "cls": {
+            "forms": [
+              {
+                "id": "lifecycle",
+                "strategy": "需每页变量注入与结果回传",
+                "need": "runtime"
+              },
+              {
+                "id": "python",
+                "strategy": "Python 规则，需 Chaquopy 引擎降级",
+                "need": "unsupported"
+              }
+            ],
+            "unsupported": [
+              "python"
+            ],
+            "needsSyncBridge": false,
+            "runnable": false,
+            "action": "degrade-to-engine"
+          },
+          "run": {
+            "id": "python",
+            "runnable": false,
+            "action": "degrade-to-engine",
+            "forms": [
+              {
+                "id": "lifecycle",
+                "strategy": "需每页变量注入与结果回传",
+                "need": "runtime"
+              },
+              {
+                "id": "python",
+                "strategy": "Python 规则，需 Chaquopy 引擎降级",
+                "need": "unsupported"
+              }
+            ],
+            "ok": false,
+            "out": null,
+            "err": "unsupported-form: python"
+          }
+        },
+        {
+          "id": "encrypted",
+          "cls": {
+            "forms": [
+              {
+                "id": "lifecycle",
+                "strategy": "需每页变量注入与结果回传",
+                "need": "runtime"
+              },
+              {
+                "id": "encrypted-rule",
+                "strategy": "私有加密规则，需 Java 侧 evalPrivateJS 引擎降级",
+                "need": "unsupported"
+              }
+            ],
+            "unsupported": [
+              "encrypted-rule"
+            ],
+            "needsSyncBridge": false,
+            "runnable": false,
+            "action": "degrade-to-engine"
+          },
+          "run": {
+            "id": "encrypted",
+            "runnable": false,
+            "action": "degrade-to-engine",
+            "forms": [
+              {
+                "id": "lifecycle",
+                "strategy": "需每页变量注入与结果回传",
+                "need": "runtime"
+              },
+              {
+                "id": "encrypted-rule",
+                "strategy": "私有加密规则，需 Java 侧 evalPrivateJS 引擎降级",
+                "need": "unsupported"
+              }
+            ],
+            "ok": false,
+            "out": null,
+            "err": "unsupported-form: encrypted-rule"
+          }
+        },
+        {
+          "id": "sync-network",
+          "cls": {
+            "forms": [
+              {
+                "id": "sync-fetch",
+                "strategy": "需同步字符串桥",
+                "need": "sync"
+              },
+              {
+                "id": "dom-pdfa",
+                "strategy": "需 JsT4 / DOM 解析垫片",
+                "need": "dom"
+              },
+              {
+                "id": "lifecycle",
+                "strategy": "需每页变量注入与结果回传",
+                "need": "runtime"
+              }
+            ],
+            "unsupported": [],
+            "needsSyncBridge": true,
+            "runnable": true,
+            "action": "run-in-webview"
+          },
+          "run": {
+            "id": "sync-network",
+            "runnable": true,
+            "action": "run-in-webview",
+            "forms": [
+              {
+                "id": "sync-fetch",
+                "strategy": "需同步字符串桥",
+                "need": "sync"
+              },
+              {
+                "id": "dom-pdfa",
+                "strategy": "需 JsT4 / DOM 解析垫片",
+                "need": "dom"
+              },
+              {
+                "id": "lifecycle",
+                "strategy": "需每页变量注入与结果回传",
+                "need": "runtime"
+              }
+            ],
+            "ok": false,
+            "out": null,
+            "err": "TypeError: setResult is not a function"
+          }
+        }
+      ],
+      "normalize_sync": {
+        "ok": true,
+        "reason": "sync-string",
+        "text": "<html>ok</html>"
+      },
+      "normalize_async": {
+        "ok": false,
+        "reason": "async-promise",
+        "text": ""
+      }
+    }
+  }
+}

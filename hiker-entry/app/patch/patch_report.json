@@ -1,0 +1,65 @@
+{
+  "edits": [
+    {
+      "path": "leanback/java/com/fongmi/android/tv/bean/Func.java",
+      "type": "insert",
+      "note": "setDrawable 追加 home_hiker 分支，drawable=0 图标空白的兼容性坑"
+    },
+    {
+      "path": "leanback/java/com/fongmi/android/tv/ui/activity/HomeActivity.java",
+      "type": "insert",
+      "note": "setFunc 在横排功能按钮末尾追加一个入口"
+    },
+    {
+      "path": "leanback/java/com/fongmi/android/tv/ui/activity/HomeActivity.java",
+      "type": "insert",
+      "note": "onItemClick 追加跳转（全限定名，避免改 import 区）"
+    },
+    {
+      "path": "leanback/java/com/fongmi/android/tv/bean/HomeButton.java",
+      "type": "insert",
+      "note": "排序全集追加 id=10；sortedAll()/insertMissing 会自动补齐旧用户偏好串，向后兼容"
+    },
+    {
+      "path": "leanback/java/com/fongmi/android/tv/bean/HomeButton.java",
+      "type": "insert",
+      "note": "all() 追加第 11 个按钮"
+    },
+    {
+      "path": "leanback/java/com/fongmi/android/tv/bean/HomeButton.java",
+      "type": "insert",
+      "note": "getDefaultButtons 追加，保证新用户默认可见"
+    },
+    {
+      "path": "main/res/values/strings_hiker.xml",
+      "type": "new-file",
+      "note": "英文基准（所有 flavor 共用 main，资源回退兜底）"
+    },
+    {
+      "path": "main/res/values-zh-rCN/strings_hiker.xml",
+      "type": "new-file",
+      "note": "简体中文"
+    },
+    {
+      "path": "main/res/values-zh-rTW/strings_hiker.xml",
+      "type": "new-file",
+      "note": "繁体中文"
+    },
+    {
+      "path": "main/res/values-zh/strings_hiker.xml",
+      "type": "new-file",
+      "note": "中文 fallback"
+    },
+    {
+      "path": "main/res/drawable/ic_home_hiker.xml",
+      "type": "new-file",
+      "note": "海阔入口图标（立方体，与现有 ic_home_* 风格一致）"
+    },
+    {
+      "path": "main/AndroidManifest.xml",
+      "type": "insert",
+      "note": "注册 HikerActivity（放在 main，leanback/mobile 两个 flavor 都生效）"
+    }
+  ],
+  "ok": true
+}

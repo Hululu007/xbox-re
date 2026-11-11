@@ -1,0 +1,119 @@
+--- a/leanback/java/com/fongmi/android/tv/bean/Func.java
++++ b/leanback/java/com/fongmi/android/tv/bean/Func.java
+@@ -39,6 +39,8 @@
+         else if (resId == R.string.home_push) this.drawable = R.drawable.ic_home_push;
+         else if (resId == R.string.home_search) this.drawable = R.drawable.ic_home_search;
+         else if (resId == R.string.home_setting) this.drawable = R.drawable.ic_home_setting;
++        // 新增：海阔独立入口（阶段六）。与首页其它按钮同一体系，仅多一个 drawable 分支。
++        else if (resId == R.string.home_hiker) this.drawable = R.drawable.ic_home_hiker;
+     }
+ 
+     @Override
+
+--- a/leanback/java/com/fongmi/android/tv/ui/activity/HomeActivity.java
++++ b/leanback/java/com/fongmi/android/tv/ui/activity/HomeActivity.java
+@@ -467,6 +467,7 @@
+         items.add(Func.create(R.string.home_keep));
+         items.add(Func.create(R.string.home_push));
+         items.add(Func.create(R.string.home_setting));
++        items.add(Func.create(R.string.home_hiker)); // 新增：海阔独立入口（阶段六）
+         mFuncAdapter.setItems(items, new BaseDiffCallback<Func>());
+     }
+ 
+
+--- a/leanback/java/com/fongmi/android/tv/ui/activity/HomeActivity.java
++++ b/leanback/java/com/fongmi/android/tv/ui/activity/HomeActivity.java
+@@ -467,6 +467,7 @@
+         items.add(Func.create(R.string.home_keep));
+         items.add(Func.create(R.string.home_push));
+         items.add(Func.create(R.string.home_setting));
++        items.add(Func.create(R.string.home_hiker)); // 新增：海阔独立入口（阶段六）
+         mFuncAdapter.setItems(items, new BaseDiffCallback<Func>());
+     }
+ 
+@@ -591,6 +592,7 @@
+         else if (item.getResId() == R.string.home_push) PushActivity.start(this);
+         else if (item.getResId() == R.string.home_search) SearchActivity.start(this);
+         else if (item.getResId() == R.string.home_setting) SettingActivity.start(this);
++        else if (item.getResId() == R.string.home_hiker) com.fongmi.android.tv.hiker.HikerEntry.start(this);
+     }
+ 
+     @Override
+
+--- a/leanback/java/com/fongmi/android/tv/bean/HomeButton.java
++++ b/leanback/java/com/fongmi/android/tv/bean/HomeButton.java
+@@ -20,7 +20,7 @@
+ 
+     private static final String KEY_BUTTON = "home_button";
+     private static final String KEY_SORTED = "home_button_sorted";
+-    private static final String ALL = "0,1,2,3,8,4,5,6,7,9";
++    private static final String ALL = "0,1,2,3,8,4,5,6,7,9,10";
+     private static List<HomeButton> buttons;
+ 
+     private final int id;
+
+--- a/leanback/java/com/fongmi/android/tv/bean/HomeButton.java
++++ b/leanback/java/com/fongmi/android/tv/bean/HomeButton.java
+@@ -20,7 +20,7 @@
+ 
+     private static final String KEY_BUTTON = "home_button";
+     private static final String KEY_SORTED = "home_button_sorted";
+-    private static final String ALL = "0,1,2,3,8,4,5,6,7,9";
++    private static final String ALL = "0,1,2,3,8,4,5,6,7,9,10";
+     private static List<HomeButton> buttons;
+ 
+     private final int id;
+@@ -39,6 +39,7 @@
+         buttons.add(new HomeButton(6, R.string.home_history_button));
+         buttons.add(new HomeButton(7, R.string.home_setting));
+         buttons.add(new HomeButton(9, R.string.home_custom_csp));
++        buttons.add(new HomeButton(10, R.string.home_hiker));
+         return buttons;
+     }
+ 
+
+--- a/leanback/java/com/fongmi/android/tv/bean/HomeButton.java
++++ b/leanback/java/com/fongmi/android/tv/bean/HomeButton.java
+@@ -20,7 +20,7 @@
+ 
+     private static final String KEY_BUTTON = "home_button";
+     private static final String KEY_SORTED = "home_button_sorted";
+-    private static final String ALL = "0,1,2,3,8,4,5,6,7,9";
++    private static final String ALL = "0,1,2,3,8,4,5,6,7,9,10";
+     private static List<HomeButton> buttons;
+ 
+     private final int id;
+@@ -39,6 +39,7 @@
+         buttons.add(new HomeButton(6, R.string.home_history_button));
+         buttons.add(new HomeButton(7, R.string.home_setting));
+         buttons.add(new HomeButton(9, R.string.home_custom_csp));
++        buttons.add(new HomeButton(10, R.string.home_hiker));
+         return buttons;
+     }
+ 
+@@ -115,6 +116,7 @@
+         if (!Setting.isHomeHistory()) ids.add("6");
+         ids.add("7");
+         ids.add("9");
++        ids.add("10");
+         return TextUtils.join(",", ids);
+     }
+ 
+
+--- a/main/AndroidManifest.xml
++++ b/main/AndroidManifest.xml
+@@ -96,6 +96,13 @@
+                 android:value="androidx.startup" />
+         </provider>
+ 
++        <!-- 阶段六：海阔独立入口。独立 WebView / 独立同步桥，不复用首页 webOverlay。 -->
++        <activity
++            android:name=".hiker.HikerActivity"
++            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
++            android:exported="false"
++            android:screenOrientation="sensorLandscape" />
++
+         <activity
+             android:name=".ui.activity.CrashActivity"
+             android:process=":error_activity"
+

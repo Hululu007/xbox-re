@@ -39,6 +39,8 @@ public class Func implements Diffable<Func> {
         else if (resId == R.string.home_push) this.drawable = R.drawable.ic_home_push;
         else if (resId == R.string.home_search) this.drawable = R.drawable.ic_home_search;
         else if (resId == R.string.home_setting) this.drawable = R.drawable.ic_home_setting;
+        // 新增：海阔独立入口（阶段六）。与首页其它按钮同一体系，仅多一个 drawable 分支。
+        else if (resId == R.string.home_hiker) this.drawable = R.drawable.ic_home_hiker;
     }
 
     @Override

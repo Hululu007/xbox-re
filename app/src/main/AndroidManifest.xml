@@ -96,6 +96,13 @@
                 android:value="androidx.startup" />
         </provider>
 
+        <!-- 阶段六：海阔独立入口。独立 WebView / 独立同步桥，不复用首页 webOverlay。 -->
+        <activity
+            android:name=".hiker.HikerActivity"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
+            android:exported="false"
+            android:screenOrientation="sensorLandscape" />
+
         <activity
             android:name=".ui.activity.CrashActivity"
             android:process=":error_activity"

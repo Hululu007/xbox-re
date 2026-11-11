@@ -1,0 +1,5 @@
+main/res/values/strings_hiker.xml
+main/res/values-zh-rCN/strings_hiker.xml
+main/res/values-zh-rTW/strings_hiker.xml
+main/res/values-zh/strings_hiker.xml
+main/res/drawable/ic_home_hiker.xml

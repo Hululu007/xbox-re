@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 阶段六：海阔独立入口（新增文件，避免改动现有 strings.xml，多语言按资源回退） -->
+    <string name="home_hiker">Hiker</string>
+    <string name="hiker_entry_title">Hiker Module</string>
+</resources>

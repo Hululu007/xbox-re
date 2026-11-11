@@ -1,0 +1,210 @@
+{
+  "checks": [
+    {
+      "name": "Func.java 无删除/无重排",
+      "ok": true,
+      "detail": "删除=0 替换=0(允许0)"
+    },
+    {
+      "name": "Func.java 增量=2 行",
+      "ok": true,
+      "detail": "实际新增=2 替换=0"
+    },
+    {
+      "name": "HomeActivity.java 无删除/无重排",
+      "ok": true,
+      "detail": "删除=0 替换=0(允许0)"
+    },
+    {
+      "name": "HomeActivity.java 增量=2 行",
+      "ok": true,
+      "detail": "实际新增=2 替换=0"
+    },
+    {
+      "name": "HomeButton.java 无删除/无重排",
+      "ok": true,
+      "detail": "删除=0 替换=1(允许1)"
+    },
+    {
+      "name": "HomeButton.java 增量=3 行",
+      "ok": true,
+      "detail": "实际新增=2 替换=1"
+    },
+    {
+      "name": "AndroidManifest_main.xml 无删除/无重排",
+      "ok": true,
+      "detail": "删除=0 替换=0(允许0)"
+    },
+    {
+      "name": "AndroidManifest_main.xml 增量=7 行",
+      "ok": true,
+      "detail": "实际新增=7 替换=0"
+    },
+    {
+      "name": "XML 合法 main/AndroidManifest.xml",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "XML 合法 main/res/values/strings_hiker.xml",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "XML 合法 main/res/values-zh-rCN/strings_hiker.xml",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "XML 合法 main/res/values-zh-rTW/strings_hiker.xml",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "XML 合法 main/res/values-zh/strings_hiker.xml",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "XML 合法 main/res/drawable/ic_home_hiker.xml",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Manifest 注册 HikerActivity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Manifest exported=false",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "strings home_hiker [values]",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "strings home_hiker [values-zh-rCN]",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "strings home_hiker [values-zh-rTW]",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "strings home_hiker [values-zh]",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "drawable vector 合法",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Java 语法一致性 Func.java",
+      "ok": true,
+      "detail": "改动后=False 基线=False（基线含 Java16 模式匹配，javalang 无法解析，ecj 已真编译通过）"
+    },
+    {
+      "name": "Java 语法一致性 HomeActivity.java",
+      "ok": true,
+      "detail": "改动后=True 基线=True"
+    },
+    {
+      "name": "Java 语法一致性 HomeButton.java",
+      "ok": true,
+      "detail": "改动后=True 基线=True"
+    },
+    {
+      "name": "Java 语法 hiker/HikerActivity.java",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Java 语法 hiker/HikerBridge.java",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Java 语法 hiker/HikerContract.java",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Java 语法 hiker/HikerEntry.java",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Java 语法 hiker/HikerHttp.java",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Func 引用 R.string.home_hiker",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Func 引用 R.drawable.ic_home_hiker",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "HomeActivity setFunc 加入口",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "HomeActivity 跳转 HikerEntry",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "HomeButton id=10 三处一致",
+      "ok": true,
+      "detail": "ALL / all() / getDefaultButtons() 均含 10"
+    },
+    {
+      "name": "HikerEntry 提供 start(Activity)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "HikerEntry 指向 HikerActivity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "asset 引用 hiker_bridge_adapter.js",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "asset 引用 jst4.js",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "asset 引用 hiker_runtime_shim.js",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "asset 引用 hiker_compat.js",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "ok": true,
+  "summary": {
+    "passed": 40,
+    "total": 40,
+    "ok": true
+  }
+}

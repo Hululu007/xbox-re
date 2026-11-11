@@ -1,0 +1,220 @@
+{
+  "groups": {
+    "A_with_java_bridge": {
+      "tokens": 1,
+      "datasets": 1,
+      "sites": 4,
+      "vods": 3,
+      "plays": 1,
+      "syncUsable": [
+        "HikerBridge",
+        "FM_SHELL",
+        "FM_JSREQ",
+        "fy_bridge_app"
+      ],
+      "hasHomeSdk": false,
+      "documentIsolated": true
+    },
+    "B_offline_mock": {
+      "tokens": 1,
+      "datasets": 1,
+      "sites": 4,
+      "vods": 3,
+      "plays": 1,
+      "syncUsable": [
+        "FM_SHELL",
+        "FM_JSREQ",
+        "fy_bridge_app"
+      ],
+      "hasHomeSdk": false,
+      "documentIsolated": true
+    }
+  },
+  "assertions": {
+    "A_with_java_bridge 同步桥可用": {
+      "ok": true,
+      "detail": "['HikerBridge', 'FM_SHELL', 'FM_JSREQ', 'fy_bridge_app']"
+    },
+    "A_with_java_bridge 无首页 SDK": {
+      "ok": true,
+      "detail": "False"
+    },
+    "A_with_java_bridge 作用域隔离": {
+      "ok": true,
+      "detail": "True"
+    },
+    "A_with_java_bridge 非仅异步": {
+      "ok": true,
+      "detail": "False"
+    },
+    "A_with_java_bridge 兼容层已装配": {
+      "ok": true,
+      "detail": "同步桥 HikerBridge/FM_SHELL/FM_JSREQ/fy_bridge_app"
+    },
+    "A_with_java_bridge 口令载入": {
+      "ok": true,
+      "detail": "tokens=1"
+    },
+    "A_with_java_bridge 端点含 {code}": {
+      "ok": true,
+      "detail": "https://example.com/api?k={code}&kw={kw}"
+    },
+    "A_with_java_bridge 数据集生成": {
+      "ok": true,
+      "detail": "datasets=1"
+    },
+    "A_with_java_bridge 解析 4 站点": {
+      "ok": true,
+      "detail": "sites=4"
+    },
+    "A_with_java_bridge 生成 4 站点": {
+      "ok": true,
+      "detail": "sites=4"
+    },
+    "A_with_java_bridge registry 有 4 items": {
+      "ok": true,
+      "detail": "{\n  \"items\": [\n    {\n      \"key\": \"hk_a\",\n      \"name\": \"海阔演示A\",\n      \"type\": 3"
+    },
+    "A_with_java_bridge 注入按钮无异常": {
+      "ok": true,
+      "detail": "已请求 /manage/csp 或离线降级"
+    },
+    "A_with_java_bridge 规则产出 setResult": {
+      "ok": true,
+      "detail": "vods=3"
+    },
+    "A_with_java_bridge 运行面板有结果": {
+      "ok": true,
+      "detail": "站点运行结果"
+    },
+    "A_with_java_bridge Rhino 正确降级": {
+      "ok": true,
+      "detail": "['✗ rhino [degrade-to-engine] unsupported-form: rhino']"
+    },
+    "A_with_java_bridge Python 正确降级": {
+      "ok": true,
+      "detail": "['✗ py [degrade-to-engine] unsupported-form: python']"
+    },
+    "A_with_java_bridge 播放记录 >= 1": {
+      "ok": true,
+      "detail": "plays=1"
+    },
+    "A_with_java_bridge 播放走本地推送通道": {
+      "ok": true,
+      "detail": "['local-push(/action?do=push)']"
+    },
+    "A_with_java_bridge Java 桥 play 被调用": {
+      "ok": true,
+      "detail": "java play=4"
+    },
+    "A_with_java_bridge Java 桥 report 回传": {
+      "ok": true,
+      "detail": "reports=10"
+    },
+    "A_with_java_bridge 五类桥能力表": {
+      "ok": true,
+      "detail": "能力表已渲染"
+    },
+    "A_with_java_bridge 反假阳性展示": {
+      "ok": true,
+      "detail": "Promise 归一拒绝"
+    },
+    "A_with_java_bridge 页面 JS 异常 0": {
+      "ok": true,
+      "detail": "[]"
+    },
+    "B_offline_mock 同步桥可用": {
+      "ok": true,
+      "detail": "['FM_SHELL', 'FM_JSREQ', 'fy_bridge_app']"
+    },
+    "B_offline_mock 无首页 SDK": {
+      "ok": true,
+      "detail": "False"
+    },
+    "B_offline_mock 作用域隔离": {
+      "ok": true,
+      "detail": "True"
+    },
+    "B_offline_mock 非仅异步": {
+      "ok": true,
+      "detail": "False"
+    },
+    "B_offline_mock 兼容层已装配": {
+      "ok": true,
+      "detail": "同步桥 FM_SHELL/FM_JSREQ/fy_bridge_app"
+    },
+    "B_offline_mock 口令载入": {
+      "ok": true,
+      "detail": "tokens=1"
+    },
+    "B_offline_mock 端点含 {code}": {
+      "ok": true,
+      "detail": "https://example.com/api?k={code}&kw={kw}"
+    },
+    "B_offline_mock 数据集生成": {
+      "ok": true,
+      "detail": "datasets=1"
+    },
+    "B_offline_mock 解析 4 站点": {
+      "ok": true,
+      "detail": "sites=4"
+    },
+    "B_offline_mock 生成 4 站点": {
+      "ok": true,
+      "detail": "sites=4"
+    },
+    "B_offline_mock registry 有 4 items": {
+      "ok": true,
+      "detail": "{\n  \"items\": [\n    {\n      \"key\": \"hk_a\",\n      \"name\": \"海阔演示A\",\n      \"type\": 3"
+    },
+    "B_offline_mock 注入按钮无异常": {
+      "ok": true,
+      "detail": "已请求 /manage/csp 或离线降级"
+    },
+    "B_offline_mock 规则产出 setResult": {
+      "ok": true,
+      "detail": "vods=3"
+    },
+    "B_offline_mock 运行面板有结果": {
+      "ok": true,
+      "detail": "站点运行结果"
+    },
+    "B_offline_mock Rhino 正确降级": {
+      "ok": true,
+      "detail": "['✗ rhino [degrade-to-engine] unsupported-form: rhino']"
+    },
+    "B_offline_mock Python 正确降级": {
+      "ok": true,
+      "detail": "['✗ py [degrade-to-engine] unsupported-form: python']"
+    },
+    "B_offline_mock 播放记录 >= 1": {
+      "ok": true,
+      "detail": "plays=1"
+    },
+    "B_offline_mock 播放走本地推送通道": {
+      "ok": true,
+      "detail": "['local-push(/action?do=push)']"
+    },
+    "B_offline_mock 五类桥能力表": {
+      "ok": true,
+      "detail": "能力表已渲染"
+    },
+    "B_offline_mock 反假阳性展示": {
+      "ok": true,
+      "detail": "Promise 归一拒绝"
+    },
+    "B_offline_mock 页面 JS 异常 0": {
+      "ok": true,
+      "detail": "[]"
+    }
+  },
+  "pageErrors": {
+    "A_with_java_bridge": [],
+    "B_offline_mock": []
+  },
+  "summary": {
+    "passed": 44,
+    "total": 44,
+    "all_pass": true
+  }
+}
