@@ -127,7 +127,6 @@ public abstract class BaseActivity extends AppCompatActivity {
     }
 
     private void enableDynamicColor() {
-        if (!AuroraTheme.isSystem(this)) return;
         try {
             int color = Setting.getDynamicColor();
             if (color != 0) DynamicColors.applyToActivityIfAvailable(this, new DynamicColorsOptions.Builder().setContentBasedSource(color).build());

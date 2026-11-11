@@ -26,7 +26,7 @@
     <!-- 静态 M3 基础主题：与 DynamicColors 链完全解耦。
          Aurora 预设在此链上运行时不再依赖 DynamicColors.applyToActivityIfAvailable()，
          避免动态色表未注入时 Material 控件读到 0x0 资源。 -->
-    <style name="Theme.Base.Static" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Theme.Base.Static" parent="Theme.Base">
         <item name="android:statusBarColor">@color/transparent</item>
         <item name="android:navigationBarColor">@color/transparent</item>
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>

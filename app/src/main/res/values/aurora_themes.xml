@@ -3,7 +3,7 @@
     <!-- Aurora 四套预设：全部继承 Theme.App.Static（静态 Material3 链），
          不再依赖 DynamicColors 运行时注入；色板按 WCAG 对比度重排，
          背景/卡片/文字/强调色同色相阶梯，避免发灰与低对比。 -->
-    <style name="Theme.App.Aurora" parent="Theme.App.Static">
+    <style name="Theme.App.Aurora" parent="Theme.App">
         <item name="auroraBackdrop">#FF0E1512</item>
         <item name="auroraSurface">#FF17211D</item>
         <item name="auroraSurfaceHigh">#FF22302A</item>
@@ -46,7 +46,7 @@
         <item name="isLightTheme">false</item>
     </style>
 
-    <style name="Theme.App.Paper" parent="Theme.App.Static">
+    <style name="Theme.App.Paper" parent="Theme.App">
         <item name="auroraBackdrop">#FFF7F9F8</item>
         <item name="auroraSurface">#FFFFFFFF</item>
         <item name="auroraSurfaceHigh">#FFE9EFEC</item>
@@ -89,7 +89,7 @@
         <item name="isLightTheme">true</item>
     </style>
 
-    <style name="Theme.App.Ink" parent="Theme.App.Static">
+    <style name="Theme.App.Ink" parent="Theme.App">
         <item name="auroraBackdrop">#FF0B0E12</item>
         <item name="auroraSurface">#FF141920</item>
         <item name="auroraSurfaceHigh">#FF1E252F</item>
@@ -132,7 +132,7 @@
         <item name="isLightTheme">false</item>
     </style>
 
-    <style name="Theme.App.Glass" parent="Theme.App.Static">
+    <style name="Theme.App.Glass" parent="Theme.App">
         <item name="auroraBackdrop">#FF100F1F</item>
         <item name="auroraSurface">#FF1D1C33</item>
         <item name="auroraSurfaceHigh">#FF2A2944</item>

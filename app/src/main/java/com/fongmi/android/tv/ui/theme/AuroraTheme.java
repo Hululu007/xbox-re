@@ -109,6 +109,8 @@ public final class AuroraTheme {
     public static void applyOverlay(@NonNull Activity activity) {
         try {
             if (isSystem(activity)) return;
+            int palette = paletteOverlay(get(activity, KEY_PRESET, "aurora"));
+            if (palette != 0) activity.getTheme().applyStyle(palette, true);
             int accent = accentOverlay(get(activity, KEY_ACCENT, "default"));
             if (accent != 0) activity.getTheme().applyStyle(accent, true);
             int corner = cornerOverlay(get(activity, KEY_CORNER, "default"));
@@ -125,6 +127,8 @@ public final class AuroraTheme {
         int res = presetTheme(get(base, KEY_PRESET, "aurora"));
         if (res == 0) res = R.style.Theme_App_Aurora;
         ContextThemeWrapper wrapper = new ContextThemeWrapper(base, res);
+        int palette = paletteOverlay(get(base, KEY_PRESET, "aurora"));
+        if (palette != 0) wrapper.getTheme().applyStyle(palette, true);
         int accent = accentOverlay(get(base, KEY_ACCENT, "default"));
         if (accent != 0) wrapper.getTheme().applyStyle(accent, true);
         int corner = cornerOverlay(get(base, KEY_CORNER, "default"));
@@ -132,6 +136,23 @@ public final class AuroraTheme {
         int text = textOverlay(get(base, KEY_TEXT, "default"));
         if (text != 0) wrapper.getTheme().applyStyle(text, true);
         return wrapper;
+    }
+
+    /** 预设调色板：只覆盖颜色与圆角属性，不动 widget style / parent 链。 */
+    @StyleRes
+    private static int paletteOverlay(String key) {
+        switch (key) {
+            case "paper":
+                return R.style.ThemeOverlay_Aurora_Palette_Paper;
+            case "ink":
+                return R.style.ThemeOverlay_Aurora_Palette_Ink;
+            case "glass":
+                return R.style.ThemeOverlay_Aurora_Palette_Glass;
+            case "system":
+                return 0;
+            default:
+                return R.style.ThemeOverlay_Aurora_Palette_Aurora;
+        }
     }
 
     @StyleRes
