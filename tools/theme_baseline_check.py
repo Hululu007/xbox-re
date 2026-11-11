@@ -113,29 +113,54 @@ for p in glob.glob(os.path.join(ROOT, 'app', 'src', '*', 'res', '**', '*.xml'), 
 for a in sorted(refs - attrs):
     errors.append('?attr/%s used but not declared' % a)
 
-# 6) 编译后 resources.arsc 诊断（可选；硬判据由 1~5 承担）
+# 6) 编译后 resources.arsc 硬判据（源码级由 1~5 承担，此处拦的是「只有真机才暴露」的那类）。
+#    aapt2 没有 --values 选项（只有 --no-values）：旧版传 --values 会让它把该串当文件名，
+#    stdout 为空 -> dump_lines=0 -> 下面所有诊断形同虚设，CI 全绿仍会启动即崩。
 if len(sys.argv) >= 3:
     apk, aapt2 = sys.argv[1], sys.argv[2]
-    if os.path.isfile(apk) and aapt2 and os.path.isfile(aapt2):
+    if not (os.path.isfile(apk) and aapt2 and os.path.isfile(aapt2)):
+        errors.append('aapt2 diagnostic requested but apk/aapt2 missing: %s %s' % (apk, aapt2))
+    else:
         try:
-            r = subprocess.run([aapt2, 'dump', 'resources', '--values', apk],
+            r = subprocess.run([aapt2, 'dump', 'resources', apk],
                                capture_output=True, text=True, timeout=240)
             out = r.stdout or ''
+            lines = out.splitlines()
             print('[aapt2] %s dump_lines=%d bytes=%d rc=%d'
-                  % (os.path.basename(apk), len(out.splitlines()), len(out), r.returncode))
+                  % (os.path.basename(apk), len(lines), len(out), r.returncode))
+            if len(lines) < 100:
+                errors.append('aapt2 dump produced no usable output (bad aapt2 args or corrupt apk)')
             key = ['colorPrimary', 'colorOnPrimary', 'colorSurface', 'colorOnSurface',
                    'colorSurfaceContainer', 'colorOutline', 'bottomNavigationStyle']
             for a in key:
                 print('[aapt2]   attr/%s present=%s' % (a, ('attr/' + a) in out))
-            # 明确出现空值才拦；格式不符只诊断，不误杀
-            bad = [l.strip() for l in out.splitlines()
-                   if re.search(r'@(?:null|0x0|empty)\b', l) and ('style' in l.lower() or 'item' in l.lower())]
-            for l in bad[:10]:
-                errors.append('compiled theme item resolved empty: ' + l)
+
+            # 只扫四套预设的 style bag：framework attr（0x0101xxxx）若被赋成字面色
+            # #AARRGGBB，Material 控件取 value.resourceId 会得到 0 -> #0x0 崩溃。
+            # 引用形式（= @0x... / =?0x...）不算违规，不会误杀合法配置。
+            in_bag = False
+            preset_seen = set()
+            for line in lines:
+                m = re.search(r'style/Theme\.App\.(Aurora|Paper|Ink|Glass)\s*$', line)
+                if m:
+                    in_bag = True
+                    preset_seen.add(m.group(1))
+                    continue
+                if in_bag and line.strip().startswith('resource 0x'):
+                    in_bag = False
+                    continue
+                if in_bag and re.match(r'\s+0x0101[0-9a-fA-F]{4}=#', line):
+                    errors.append('compiled preset writes framework color attr as literal '
+                                  '(material widget would read resourceId=0): ' + line.strip())
+                # 只拦「预设内」的空值。Material 库自带 style 里大量 @null 是合法的
+                # （itemBackground / itemActiveIndicatorStyle / itemMinHeight 等），
+                # 全局扫 @null 会把正常包全部误杀（AGENTS.md 第 139 条同款坑）。
+                if in_bag and re.search(r'=\s*@(?:null|0x0|empty)\b', line):
+                    errors.append('compiled theme preset item resolved empty: ' + line.strip())
+            if len(preset_seen) != 4:
+                errors.append('aapt2 dump missing theme presets: found %s' % sorted(preset_seen))
         except Exception as e:
-            print('[aapt2] diagnostic skipped: %s' % e)
-    else:
-        print('[aapt2] diagnostic skipped (apk or aapt2 not found): %s %s' % (apk, aapt2))
+            errors.append('aapt2 diagnostic failed: %s' % e)
 
 if errors:
     print('THEME STARTUP-CHAIN CHECK FAILED (%d):' % len(errors))
