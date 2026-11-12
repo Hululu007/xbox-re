@@ -341,7 +341,7 @@ Before changing code, locks, build scripts, patches, artifacts, or runtime behav
 > 预设必须 `parent=""`），与复盘结论直接冲突，2026-11-11 一并更正。以文末复盘为唯一准绳。
 
 - `app/src/mobile/res/values/styles.xml` / `app/src/leanback/res/values/styles.xml` 的 `Theme.Base` parent 必须保持 oktv-cat 基线值，禁止改成静态 M3 链，也禁止为了「解耦动态色」替换它。
-- 主题引擎唯一合法入口是 `Activity.setTheme()`（完整 parent 链），禁止 `Theme.applyStyle()`；`BaseActivity` 中 `AuroraTheme.apply(this)` 必须位于 `super.onCreate` 之后、`setContentView` 之前，切换后必须跑 `themeUsable()` 探针，失败回落 `Theme.App`。
+- 主题引擎唯一合法入口是 `Activity.setTheme()`（完整 parent 链），禁止 `Theme.applyStyle()`；`BaseActivity` 中 `AuroraTheme.apply(this)` 必须位于 `super.onCreate` 之后、`setContentView` 之前，切换后必须跑 `themeUsable()` 探针；探针只作诊断，**禁止失败回落 `Theme.App`**（2026-11-12 第二次复盘更正）。
 - 四套预设必须 `parent="Theme.App"`，且不得包含 `android:textColor*` / `android:window*` / `isLightTheme`。
 - **不得把 framework 颜色 attr 写成字面色**：`NavigationBarView` / `MaterialTextView` 会取 `android:textColorSecondary` 等 attr 的 `value.resourceId` 去 `AppCompatResources.getColorStateList()`；写成 `#AARRGGBB` 会让 `resourceId == 0`，构造 `BottomNavigationView` 时抛 `Resources$NotFoundException: Resource ID #0x0`。`colorPrimary` / `colorSurface` 等 M3 属性不在此列（Material 读的是 `value.data`），但也应保持为资源引用最稳妥。
 - 任何主题改动，CI 必须对**编译后 APK** 用 `aapt2 dump resources --values` 检查 `bottomNavigationStyle`、`colorSurface`、`colorSurfaceContainer` 等关键 attr 非 `@null`/0；只检查源码 XML 不算验证。
@@ -366,7 +366,7 @@ resource id 0。此前 `theme_baseline_check.py` 把「必须 parent=\"\"、禁�
 1. 启动关键 8 文件与 `oktv-cat @ f7f9a031` 逐字节一致（门禁 1）。
 2. 四套预设必须 `parent="Theme.App"`，禁止任何 `android:textColor*` / `android:window*` / `isLightTheme`。
 3. 唯一合法入口是 `Activity.setTheme()`；禁止 `Theme.applyStyle()`；切换后必须跑 `themeUsable()` 探针，
-   失败回落 `Theme.App`。
+   探针仅作诊断，失败不得回落 `Theme.App`（见文末第二次复盘）。
 4. 强调色/圆角/字号由代码直读偏好提供，不再叠加 style。
 5. 签名链（v2-only、零 ZIP 重写）与 workflow 签名步骤不得因主题改动而调整。
 
@@ -392,3 +392,42 @@ resource id 0。此前 `theme_baseline_check.py` 把「必须 parent=\"\"、禁�
 
 约束依旧：唯一合法主题入口仍是 `Activity.setTheme()`，禁止叠加裸 style，四套预设
 `parent="Theme.App"`，8 个启动关键文件与 `oktv-cat @ f7f9a031` 逐字节一致，签名链不动。
+
+## 2026-11-12 第二次「主题没生效」复盘（覆盖上面第一次复盘的第 3 条）
+
+用户安装 `v5.6.0-202611120326` 后反馈：主题分支出的包主题依旧没生效。上一轮只修了
+「探针误判回落 / 弹窗被 recreate 恢复 / 细项只在预览生效」，方向不对。用编译产物
+（`aapt2 dump resources`）与源码重新定位，得到四条可验证事实：
+
+1. **业务 UI 根本不读主题色板**：`?attr/aurora*` 在全部 layout / drawable 里 0 引用；
+   主界面背景由 `CustomWallView` 铺满，颜色是 608 处 `@color/white`、70 处 `@color/black`
+   等硬编码；`activity_home.xml` 的 `BottomNavigationView` 背景是 `@color/transparent`。
+   四套预设编译后色值确实不同（Aurora `#0e1512` / Paper `#f7f9f8` / Ink `#0b0e12` /
+   Glass `#100f1f`，32 个强调色组合也各自不同），但只靠 `setTheme` 改 M3 attr，
+   用户看到的界面几乎没有任何变化 —— 这是「主题没生效」的真正主因。
+2. **装饰层触发条件太窄**：旧 `onActivityCreated` 只在 `detailCustomized()` 为真时执行，
+   而该函数只看 corner / text / button / tile，不含 preset / accent。用户改预设或强调色
+   时不会执行任何装饰，主界面自然不变。
+3. **探针回落仍是隐患**：`themeUsable()` 检查 framework 颜色 attr 是否为字面色，部分 OEM
+   ROM（ColorOS / OnePlus 等）的 framework 主题本身就会把它们解析成字面色，旧逻辑据此
+   `setTheme(Theme.App)` 静默回落。编译产物里预设父链 framework 字面色为 0，说明崩溃源
+   已消除，回落纯属过度防御。
+4. **两个 `HomeActivity.onCreate()` 首行 `setTheme(R.style.Theme_App)`**，另有
+   `CatWebActivity` / `LabActivity` 等不继承 `BaseActivity`，都不会走 `apply()`。
+
+修复全部落在 `AuroraTheme.java` 的 **View 层**（与 inflate / theme 无关，不会触发 `#0x0`）：
+
+- `onActivityCreated` 改为只要非「跟随系统」就执行 `applyBackdrop()`；细项装饰仍按
+  `detailCustomized()` 决定，跟随系统时全程零侵入。
+- `applyBackdrop()` 用 `previewContext(activity)` 取预设色（绕开首页 `setTheme(Theme_App)`
+  与不继承 `BaseActivity` 的页面），在 content 的壁纸层之上、业务内容之下插入**幂等**的
+  半透明主题底色 View（约 84% 不透明，保留壁纸质感）；给 `NavigationBarView` 上
+  `auroraSurface` 背景与 accent 强调色；浅色预设下把业务里写死的近白文字改为
+  `auroraOnSurface` 保证可读性。播放 / 投屏 / 崩溃页整页跳过，避免破坏播放器。
+- `apply()` 探针失败只记 `probe WARN (kept, no fallback)`，**不再回落基线**；
+  `catch` 异常兜底仍回落，防止启动崩溃。
+- 面板标题与说明文案同步更正。
+
+硬判据（4b）新增：`applyBackdrop` / `TAG_BACKDROP` / `no fallback` /
+`final boolean themed = !isSystem(activity)` 必须存在，且禁止出现 `probe FAILED -> fallback`。
+启动关键 8 文件、Manifest、签名链、包名 / 应用名 / 版本号依旧不动。

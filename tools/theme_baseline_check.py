@@ -239,9 +239,16 @@ if os.path.isfile(engine):
     if re.search(r'resolveAttribute\(id,\s*raw,\s*false\)\s*\)\s*return false', t):
         errors.append('themeUsable still treats unresolvable framework attr as failure '
                       '(would silently fall back and never apply user config)')
-    for token in ['markChanged', 'onActivityCreated', 'onActivityResumed', 'decorateTree']:
+    for token in ['markChanged', 'onActivityCreated', 'onActivityResumed', 'decorateTree',
+                  'applyBackdrop', 'TAG_BACKDROP', 'no fallback',
+                  'final boolean themed = !isSystem(activity)']:
         if token not in t:
-            errors.append('AuroraTheme missing global refresh/decoration entrypoint: ' + token)
+            errors.append('AuroraTheme missing global refresh/theme-color entrypoint: ' + token)
+    # 探针只能诊断，绝不能回落基线：部分 OEM ROM 的 framework 主题把 framework 颜色
+    # attr 解析成字面色，旧逻辑据此静默 setTheme(Theme.App)，用户改配置界面永远不变。
+    if 'probe FAILED -> fallback' in t or 'Theme.App (probe fallback)' in t:
+        errors.append('theme probe must never fall back to Theme.App '
+                      '(silently discards user config on OEM ROMs)')
 if os.path.isfile(DIALOG):
     t = strip_java_comments(open(DIALOG, encoding='utf-8').read())
     for token in ['applyAndRefresh()', 'dismissAllowingStateLoss()', 'recreate()']:

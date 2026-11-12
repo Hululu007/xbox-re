@@ -56,9 +56,9 @@
     <string name="aurora_dialog_pos_bottom">底部上弹</string>
     <string name="aurora_dialog_pos_top">顶部</string>
     <string name="aurora_dialog_pos_side">侧滑</string>
-    <string name="aurora_preview_title">柔雾青 · 实时预览</string>
+    <string name="aurora_preview_title">外观与主题 · 实时预览</string>
     <string name="aurora_preview_sub">背景、文字、底色与描边随主题联动</string>
     <string name="aurora_preview_button">立即播放</string>
     <string name="aurora_preview_tag">已同步</string>
-    <string name="aurora_note">全部配置写入本机偏好并同步落盘：点「应用并刷新」后本窗口会关闭，当前页与任务栈内其它页面都会用新配置重建。预设 / 强调色切换整包配色，文字大小、按钮形态、圆角与宫格形状作用于业务控件，弹窗风格与位置作用于所有弹窗；上方显示实际生效主题，便于确认保存结果。</string>
+    <string name="aurora_note">全部配置写入本机偏好并同步落盘：点「应用并刷新」后本窗口会关闭，当前页与任务栈内其它页面都会用新配置重建。预设 / 强调色切换主界面背景色与底部导航配色（浅色预设自动把白字改为深字），文字大小、按钮形态、圆角与宫格形状作用于业务控件，弹窗风格与位置作用于所有弹窗；播放页保持原样。上方显示实际生效主题，便于确认保存结果。</string>
 </resources>

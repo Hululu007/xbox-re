@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.Outline;
 import android.graphics.drawable.ColorDrawable;
@@ -32,7 +33,10 @@ import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.fongmi.android.tv.R;
+import com.google.android.material.navigation.NavigationBarView;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.WeakHashMap;
 
 /**
@@ -208,15 +212,14 @@ public final class AuroraTheme {
             if (preset == 0) return;
             activity.setTheme(preset);
             String name = styleName(activity, preset);
-            if (!themeUsable(activity)) {
-                activity.setTheme(R.style.Theme_App);
-                sApplied = "Theme.App (probe fallback)";
-                sProbe = "probe FAILED -> fallback";
-                Log.w(TAG, "theme probe failed for " + name + ", fallback to Theme.App");
-                return;
-            }
             sApplied = name;
-            sProbe = "probe OK";
+            // 探针只作诊断，绝不再回落 Theme.App。历史 #0x0 崩溃的唯一成因是预设 style
+            // 把 framework 颜色 attr 写成字面色；编译产物与门禁已保证预设不含这些项。
+            // 部分 OEM ROM 的 framework 主题本身会把 textColorSecondary 等解析成字面色，
+            // 旧逻辑据此静默回落，用户改任何配置界面都不变 —— 这是「主题没生效」的直接原因之一。
+            boolean usable = themeUsable(activity);
+            sProbe = usable ? "probe OK" : "probe WARN (kept, no fallback)";
+            if (!usable) Log.w(TAG, "theme probe warned for " + name + ", keep applied theme");
             activity.getWindow().setBackgroundDrawable(
                     new ColorDrawable(color(activity, R.attr.auroraBackdrop, 0xFF0E1512)));
             Log.i(TAG, "applied " + name + " on " + activity.getClass().getSimpleName());
@@ -469,10 +472,18 @@ public final class AuroraTheme {
         } catch (Throwable ignored) {
             // 生命周期回调注册失败不能影响 Activity 启动。
         }
-        if (!detailCustomized(activity)) return;
+        // 只要启用了 Aurora 主题（非「跟随系统」）就把主题色铺到业务界面；细项装饰另判。
+        // 旧实现只看 detailCustomized()：用户改「预设 / 强调色」时不触发任何装饰，
+        // 加上业务布局几乎不引用 ?attr/aurora*，主界面自然「怎么改都不变」。
+        final boolean themed = !isSystem(activity);
+        final boolean details = detailCustomized(activity);
+        if (!themed && !details) return;
         try {
             View decor = activity.getWindow().getDecorView();
-            decor.post(() -> decorateTree(activity));
+            decor.post(() -> {
+                if (themed) applyBackdrop(activity);
+                if (details) decorateTree(activity);
+            });
         } catch (Throwable ignored) {
             // 装饰是锦上添花，任何异常都不允许影响业务界面。
         }
@@ -604,5 +615,122 @@ public final class AuroraTheme {
             }
         });
         view.setClipToOutline(true);
+    }
+
+    // ============ 主题色业务层：让 preset / accent 在真实界面看得见 ============
+    //
+    // xbox-re 的业务 UI 是「壁纸 + 硬编码 @color / drawable」体系：主界面由
+    // CustomWallView 铺满背景，颜色大量写死 @color/white、@color/black，
+    // ?attr/aurora* 在所有 layout / drawable 里零引用。因此只靠 setTheme 改 M3 attr
+    // 用户看不到任何变化。这里在 View 层（与 inflate / theme 完全无关，不会触发 #0x0）
+    // 把主题底色铺到壁纸之上、业务内容之下，并给底部导航上强调色。
+    // 全部操作幂等 + try/catch，且「跟随系统」时完全不执行，保持原版零侵入。
+
+    private static final String TAG_BACKDROP = "aurora.backdrop";
+
+    private static void applyBackdrop(@NonNull Activity activity) {
+        try {
+            String name = activity.getClass().getSimpleName();
+            // 播放 / 投屏 / 崩溃页是独立的深色视频层，保持原样，避免破坏播放器可读性。
+            if (name.contains("Video") || name.contains("Live") || name.contains("Playback")
+                    || name.contains("Cast") || name.contains("Player") || name.contains("Crash")) return;
+            View content = activity.findViewById(android.R.id.content);
+            if (!(content instanceof ViewGroup)) return;
+            ViewGroup group = (ViewGroup) content;
+            // 用「预设 Context」取色，而不是 Activity 当前 theme：部分 Activity 不继承
+            // BaseActivity（如 CatWebActivity / LabActivity），或首页自己又 setTheme(Theme_App)，
+            // 直接读 Activity theme 会拿不到 aurora* 值而退回同一个默认色。
+            Context themed = previewContext(activity);
+            int backdrop = color(themed, R.attr.auroraBackdrop, 0xFF0E1512);
+            int surface = color(themed, R.attr.auroraSurface, 0xFF17211D);
+            int accent = color(themed, R.attr.auroraAccent, 0xFF7FE0B4);
+            int onSurface = color(themed, R.attr.auroraOnSurface, 0xFFF2F7F4);
+
+            View tint = group.findViewWithTag(TAG_BACKDROP);
+            if (tint == null) {
+                tint = new View(activity);
+                tint.setTag(TAG_BACKDROP);
+                tint.setClickable(false);
+                tint.setFocusable(false);
+                // 壁纸由 BaseActivity.addCustomWall() 插在 content 的 index 0；
+                // 主题底色插在它之上、业务内容之下，业务根透明时即可透出主题色。
+                int idx = group.getChildCount() > 0
+                        && group.getChildAt(0).getClass().getSimpleName().contains("CustomWall") ? 1 : 0;
+                group.addView(tint, Math.min(idx, group.getChildCount()),
+                        new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.MATCH_PARENT));
+            }
+            // 保留一点壁纸质感，但让主题底色成为主色调（约 84% 不透明）。
+            tint.setBackgroundColor(Color.argb(0xD6, Color.red(backdrop),
+                    Color.green(backdrop), Color.blue(backdrop)));
+            tintNavigation(group, surface, accent, onSurface);
+            if (isLight(backdrop)) recolorLightText(group, onSurface);
+        } catch (Throwable ignored) {
+            // 主题底色是锦上添花，绝不允许影响业务界面。
+        }
+    }
+
+    /** 底部导航是主界面最显眼的元素，随主题 / 强调色一起变色。 */
+    private static void tintNavigation(@NonNull View root, int surface, int accent, int onSurface) {
+        try {
+            List<View> navs = new ArrayList<>();
+            collect(root, NavigationBarView.class, navs);
+            if (navs.isEmpty()) return;
+            int normal = Color.argb(0x9E, Color.red(onSurface),
+                    Color.green(onSurface), Color.blue(onSurface));
+            ColorStateList states = new ColorStateList(
+                    new int[][]{{android.R.attr.state_checked}, new int[0]},
+                    new int[]{accent, normal});
+            for (View v : navs) {
+                v.setBackgroundColor(surface);
+                NavigationBarView nav = (NavigationBarView) v;
+                nav.setItemIconTintList(states);
+                nav.setItemTextColor(states);
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private static void collect(@NonNull View v, @NonNull Class<?> type, @NonNull List<View> out) {
+        try {
+            if (type.isInstance(v)) out.add(v);
+            if (v instanceof ViewGroup) {
+                ViewGroup g = (ViewGroup) v;
+                for (int i = 0; i < g.getChildCount(); i++) collect(g.getChildAt(i), type, out);
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    /** 浅色预设（纸白）下把业务里写死的近白文字改成深色，保证可读性。 */
+    private static void recolorLightText(@NonNull View root, int onSurface) {
+        try {
+            walkText(root, onSurface);
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private static void walkText(@NonNull View v, int onSurface) {
+        try {
+            // 底部导航的 item 文字由 tintNavigation 统一管理，跳过其内部 View。
+            if (v instanceof NavigationBarView) return;
+            if (v instanceof TextView) {
+                TextView tv = (TextView) v;
+                int c = tv.getCurrentTextColor();
+                if (Color.alpha(c) > 200 && Color.red(c) > 200
+                        && Color.green(c) > 200 && Color.blue(c) > 200) tv.setTextColor(onSurface);
+            }
+            if (v instanceof ViewGroup) {
+                ViewGroup g = (ViewGroup) v;
+                for (int i = 0; i < g.getChildCount(); i++) walkText(g.getChildAt(i), onSurface);
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private static boolean isLight(int c) {
+        double l = 0.2126 * linear(Color.red(c)) + 0.7152 * linear(Color.green(c))
+                + 0.0722 * linear(Color.blue(c));
+        return l > 0.55;
     }
 }
