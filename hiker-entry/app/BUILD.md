@@ -59,14 +59,18 @@ app/src/main/res/
 > 资源用**新增独立 xml 文件**（`strings_hiker.xml` / `ic_home_hiker.xml`），不改任何现有资源文件；
 > `HikerEntry.start()` 用全限定名调用，不改 `HomeActivity` 的 import 区。
 
-## 2.0 更新（阶段九 · 真实 CI 构建已跑通）
+## 2.0 更新（阶段九 · 真实 CI 构建已跑通，最终为 success）
 
-2026-11-12 已通过仓库自带 `Android Release` 工作流在 GitHub 托管 runner 上对
-`oktv-cat-hiker-v3` 触发一次真实 Gradle 构建：`BUILD SUCCESSFUL in 9m 16s`，
-产出 `leanback-arm64_v8a-oktv-beta.apk`（≈49.5 MB，v2 签名、完整性校验通过），
-发布于 Release `v5.6.0-beta-202611120847`，APK 可下载。
-Run 整体 `failure` 仅因末尾 `Upload workflow artifacts` 触发 GitHub Actions
-制品存储配额上限，与编译/签名/发布无关。详见 `CI真实构建_结果报告.md`。
+2026-11-12 通过仓库自带 `Android Release` 工作流在 GitHub 托管 runner 上对
+`oktv-cat-hiker-v3` 触发真实 Gradle 构建。第一次 run `43129445593` 因末尾 CI 临时制品
+上传步触发 GitHub Actions 制品存储配额上限且无容错，整体标为 `failure`；
+已清理 53 个历史制品（3.77 GB）、给上传步加 `continue-on-error: true`、
+`retention-days` 30→7，并重新构建 **run `43133327883` 结论 `success`（31/31 步、0 失败步）**：
+`BUILD SUCCESSFUL in 6m 44s`，产出 `leanback-arm64_v8a-oktv-beta.apk`
+（≈49.5 MB，v2 签名、完整性/可安装性校验通过），发布于
+Release `v5.6.0-beta-202611120915`，APK 可下载。
+详见 `CI修复与重新构建_结果报告.md`（含诚实边界：CI 临时制品上传仍因配额记账
+6-12 小时重算延迟报错，但被容错，不影响交付物）。
 本地沙箱无 Android SDK 的限制不变；本节第 2 部分的本地构建命令仍适用于本地自行出包。
 
 ## 2. 本地完整构建（需要你的环境）

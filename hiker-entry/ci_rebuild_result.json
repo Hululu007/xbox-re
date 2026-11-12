@@ -1,0 +1,170 @@
+{
+  "run_id": 43133327883,
+  "status": "completed",
+  "conclusion": "success",
+  "html_url": "https://github.com/kuby007/xbox-re/actions/runs/43133327883",
+  "head_sha": "afae15cff8ab7d2949a80881eecd8301aa0350f2",
+  "created_at": "2026-11-12T01:16:09Z",
+  "updated_at": "2026-11-12T01:26:54Z",
+  "total_steps": 31,
+  "completed_steps": 31,
+  "success_steps": 25,
+  "non_success_steps": [],
+  "all_steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Checkout",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Set up JDK 21",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Set up Python 3.10",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Set up Android SDK",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Install Android packages",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Ensure NDK and CMake for Node runtime module",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Verify mobile search scope feature is present",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Run WebSocket danmaku tests",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Report Gradle failure details",
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Resolve release tag",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Configure release signing",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Build release APKs",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Report build failure",
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Collect artifacts",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Sign APK with v2 only (v1/v3 disabled, no ZIP rewrite)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Verify APK signatures and package identity",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Verify APK completeness and installability",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Set up ORAS",
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Publish APKs to OCI Registry",
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Report OCI publish failure",
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Prepare release notes input",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Generate update manifests",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Create GitHub Release",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Attach signature evidence to release notes",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Sync to CNB",
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Upload workflow artifacts",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Post Set up Python 3.10",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Post Set up JDK 21",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Post Checkout",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ]
+}

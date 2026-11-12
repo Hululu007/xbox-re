@@ -1,0 +1,10 @@
+{
+  "fix_commit": "afae15cff8ab7d2949a80881eecd8301aa0350f2",
+  "fix_parent": "10ae1b7a1ddf4875489ed4ebb2ac74e58b394e80",
+  "path": ".github/workflows/android-release.yml",
+  "verified": true,
+  "new_tag": "v5.6.0-beta-202611120915",
+  "tag_exists": false,
+  "artifacts_cleaned": 53,
+  "cleaned_bytes": 4047775989
+}
