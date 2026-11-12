@@ -207,6 +207,8 @@ public class HomeActivity extends BaseActivity implements NavigationBarView.OnIt
         mBinding.navigation.getMenu().findItem(R.id.live).setVisible(LiveConfig.hasUrl());
         // 实验室底部入口由实验室设置里的「底部导航入口」开关控制；关时只从增强设置进入。
         mBinding.navigation.getMenu().findItem(R.id.lab).setVisible(LabConfig.get().getNavEntry());
+        // 海阔独立入口常驻可见：与首页 fragment 完全解耦，不占 position，不参与选中态同步。
+        mBinding.navigation.getMenu().findItem(R.id.hiker).setVisible(true);
         syncNavigationSelection();
     }
 
@@ -278,6 +280,9 @@ public class HomeActivity extends BaseActivity implements NavigationBarView.OnIt
         if (item.getItemId() == R.id.vod) return changeFragment(0);
         if (item.getItemId() == R.id.live) return openLive();
         if (item.getItemId() == R.id.lab) { LabActivity.start(this); return false; }
+        // 海阔独立入口：与 lab 同模式，跳独立 Activity 并返回 false，
+        // 保持原选中项、不触碰 FragmentStateManager 的 position 映射与 currentPosition。
+        if (item.getItemId() == R.id.hiker) { com.fongmi.android.tv.hiker.HikerEntry.start(this); return false; }
         return false;
     }
 

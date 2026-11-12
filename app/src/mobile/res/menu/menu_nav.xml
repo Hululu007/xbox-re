@@ -25,4 +25,14 @@
         android:title="@string/lab_title"
         android:visible="false" />
 
+    <!-- 海阔独立入口：点击后跳独立 Activity / 独立 WebView，不承载任何首页 fragment。
+         与 lab 同模式（onNavigationItemSelected 返回 false，不改变选中态与 position 映射）。
+         标题复用 main 的 home_hiker（已含中/英/繁本地化），图标为 mobile 专属 ic_nav_hiker。
+         BottomNavigationView 上限 5 项，本菜单由 4 项增至 5 项，未越界。 -->
+    <item
+        android:id="@+id/hiker"
+        android:icon="@drawable/ic_nav_hiker"
+        android:title="@string/home_hiker"
+        android:visible="false" />
+
 </menu>

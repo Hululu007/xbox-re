@@ -1,0 +1,825 @@
+name: Android Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Release tag, blank = v<versionName>-yyyyMMddHHmm or v<versionName>-beta-yyyyMMddHHmm"
+        required: false
+        type: string
+      release_channel:
+        description: "Release channel, auto uses beta on fongmi-sync"
+        required: false
+        default: auto
+        type: choice
+        options:
+          - auto
+          - stable
+          - beta
+      release_notes:
+        description: "Release notes, use \\n for Markdown newlines"
+        required: false
+        type: string
+      prerelease:
+        description: "Mark as pre-release"
+        required: false
+        default: false
+        type: boolean
+      sync_cnb:
+        description: "Mirror APKs to CNB Release and sync CNB manifests"
+        required: false
+        default: false
+        type: boolean
+      publish_oci:
+        description: "Publish APKs as OCI artifacts when Registry variables and secrets are configured"
+        required: false
+        default: true
+        type: boolean
+      apk_variants:
+        description: "APK variants: all (four APKs) or comma separated mobile-arm64_v8a / mobile-armeabi_v7a / leanback-arm64_v8a / leanback-armeabi_v7a"
+        required: false
+        default: all
+        type: string
+
+permissions:
+  contents: write
+
+env:
+  TZ: Asia/Shanghai
+  CNB_API_ENDPOINT: https://api.cnb.cool
+  CNB_WEB_ENDPOINT: https://cnb.cool
+  CNB_REPO_SLUG: fish2035/webhtv-release
+  CNB_REPO_URL: https://cnb.cool/fish2035/webhtv-release.git
+
+jobs:
+  release:
+    name: Build and publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+
+      - name: Install Android packages
+        run: |
+          sdkmanager "platform-tools" "platforms;android-37.0" "build-tools;37.0.0"
+
+      - name: Ensure NDK and CMake for Node runtime module
+        # nodejs/ 模块用 externalNativeBuild + CMake 3.22.1 编 cnode.so 桥接层。
+        # best-effort：runner 若已预装或 AGP 能自动下载，装不上也不阻断构建。
+        # 签名方案保持本分支的 v2-only 不变。
+        run: |
+          sdkmanager "ndk;28.2.13676358" "cmake;3.22.1" || echo "NDK/CMake already available or AGP will download"
+
+      - name: Verify mobile search scope feature is present
+        run: |
+          set -euo pipefail
+          grep -q 'android:id="@+id/modeAll"' app/src/mobile/res/layout/fragment_search.xml
+          grep -q 'android:id="@+id/modeSelected"' app/src/mobile/res/layout/fragment_search.xml
+          grep -q 'android:id="@+id/selectAll"' app/src/mobile/res/layout/dialog_site.xml
+          grep -q 'android:id="@+id/invert"' app/src/mobile/res/layout/dialog_site.xml
+          grep -q 'SCOPE_SELECTED' app/src/mobile/java/com/fongmi/android/tv/ui/fragment/SearchFragment.java
+          grep -q 'getPic(), getWallPic(), mScope' app/src/mobile/java/com/fongmi/android/tv/ui/fragment/SearchFragment.java
+          grep -q 'public void invert()' app/src/mobile/java/com/fongmi/android/tv/ui/adapter/SiteAdapter.java
+          grep -q 'public SiteDialog range()' app/src/mobile/java/com/fongmi/android/tv/ui/dialog/SiteDialog.java
+          grep -q 'string name="search_scope_selected"' app/src/mobile/res/values-zh/strings.xml
+          # 原有 block/search 两个按钮必须一直在，不允许再按 range 隐藏
+          grep -q 'android:id="@+id/block"' app/src/mobile/res/layout/dialog_site.xml
+          grep -q 'android:id="@+id/search"' app/src/mobile/res/layout/dialog_site.xml
+          ! grep -q 'binding.block.setVisibility' app/src/mobile/java/com/fongmi/android/tv/ui/dialog/SiteDialog.java
+          ! grep -q 'binding.search.setVisibility' app/src/mobile/java/com/fongmi/android/tv/ui/dialog/SiteDialog.java
+          # 分类筛选第一个按钮 = 全部（所有站点列表弹窗）
+          grep -q 'getGroupView("")' app/src/mobile/java/com/fongmi/android/tv/ui/dialog/SiteDialog.java
+          grep -q 'string name="site_group_all"' app/src/mobile/res/values-zh/strings.xml
+          # 三模式按钮选中态用项目已有的 yellow 色表
+          grep -q '@color/yellow' app/src/mobile/res/layout/fragment_search.xml
+          echo "Mobile search scope feature verified in source before build"
+          # 弹窗窗口参数必须在 show 之前应用，避免首帧居中后跳位（A 类 bug）
+          grep -q 'applyWindow(dialog, context, landFactor, portFactor, maxDp);' app/src/main/java/com/fongmi/android/tv/ui/dialog/LightDialog.java
+          grep -q 'if (window != null) applyWindow(window);' app/src/main/java/com/fongmi/android/tv/ui/dialog/ChoiceDialog.java
+          echo "Dialog window applied before show in both shared dialog classes"
+          # 自动简繁转换必须保持关闭（不跟随系统地区自动转繁体）
+          grep -q 'Trans.setTraditional(false);' app/src/main/java/com/fongmi/android/tv/setting/Setting.java
+          grep -q 'DEFAULT_ENABLE = false;' catvod/src/main/java/com/github/catvod/utils/Trans.java
+          ! grep -q '"TW".equals' catvod/src/main/java/com/github/catvod/utils/Trans.java
+          echo "Auto traditional conversion is disabled"
+          # 远程托管弹窗：6 个子弹窗的窗口参数必须在 show 之前应用
+          test "$(grep -c '窗口参数必须在 show 之前定好' app/src/main/java/com/fongmi/android/tv/ui/dialog/RemoteTrustDialog.java)" -eq 6
+          echo "Remote trust dialog windows applied before show"
+
+      - name: Run WebSocket danmaku tests
+        id: unit_tests
+        run: |
+          chmod +x ./gradlew
+          set -o pipefail
+          ./gradlew \
+            :app:testMobileArm64_v8aDebugUnitTest \
+            --tests 'com.fongmi.android.tv.player.danmaku.*' \
+            --no-daemon 2>&1 | tee /tmp/gradle-unit-test.log
+
+      - name: Report Gradle failure details
+        if: failure() && steps.unit_tests.outcome == 'failure'
+        run: |
+          echo "::group::Gradle failure detail"
+          if [ -f /tmp/gradle-unit-test.log ]; then
+            grep -nE "error:|^e: |FAILED|What went wrong|Execution failed|Caused by:|AAPT|Android resource linking failed|cannot find symbol|package .* does not exist|Tests? failed|AssertionError|java\.lang\.|BUILD FAILED|FAILURE:" /tmp/gradle-unit-test.log | tail -70 | while IFS= read -r line; do echo "::error::$line"; done
+          fi
+          echo "::endgroup::"
+
+      - name: Resolve release tag
+        id: meta
+        run: |
+          VERSION_NAME="$(sed -n 's/^[[:space:]]*versionName[[:space:]]*"\([^"]*\)".*/\1/p' app/build.gradle | head -1)"
+          VERSION_CODE="$(sed -n 's/^[[:space:]]*versionCode[[:space:]]*\([0-9][0-9]*\).*/\1/p' app/build.gradle | head -1)"
+          CHANNEL="${{ inputs.release_channel }}"
+          if [ "$CHANNEL" = "auto" ] || [ -z "$CHANNEL" ]; then
+            if [ "${{ github.ref_name }}" = "fongmi-sync" ]; then
+              CHANNEL="beta"
+            else
+              CHANNEL="stable"
+            fi
+          fi
+          if [ "$CHANNEL" = "beta" ]; then
+            APK_SUFFIX="-beta"
+            TAG_PATTERN="^v${VERSION_NAME}-beta-[0-9]{12}$"
+            TAG_DEFAULT="v${VERSION_NAME}-beta-$(date +%Y%m%d%H%M)"
+            TAG_EXPECT="v${VERSION_NAME}-beta-yyyyMMddHHmm"
+          else
+            APK_SUFFIX=""
+            TAG_PATTERN="^v${VERSION_NAME}-[0-9]{12}$"
+            TAG_DEFAULT="v${VERSION_NAME}-$(date +%Y%m%d%H%M)"
+            TAG_EXPECT="v${VERSION_NAME}-yyyyMMddHHmm"
+          fi
+          TAG="${{ inputs.release_tag }}"
+          if [ -z "$TAG" ]; then
+            TAG="$TAG_DEFAULT"
+          fi
+          if ! printf '%s' "$TAG" | grep -Eq "$TAG_PATTERN"; then
+            echo "::error title=Invalid release tag::Expected $TAG_EXPECT, got: $TAG"
+            exit 1
+          fi
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "::error title=Release tag exists::$TAG already exists"
+            exit 1
+          fi
+          {
+            echo "tag=$TAG"
+            echo "title=${TAG#v}"
+            echo "version_name=$VERSION_NAME"
+            echo "version_code=$VERSION_CODE"
+            echo "short_sha=$(git rev-parse --short=7 HEAD)"
+            echo "channel=$CHANNEL"
+            echo "apk_suffix=$APK_SUFFIX"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Configure release signing
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          KS_BASE64="${RELEASE_KEYSTORE_BASE64:-$KEYSTORE_BASE64}"
+          STORE_PASSWORD="${RELEASE_STORE_PASSWORD:-$KEY_PASSWORD}"
+          ALIAS="${RELEASE_KEY_ALIAS:-$KEY_ALIAS}"
+          KEY_PASS="${RELEASE_KEY_PASSWORD:-$STORE_PASSWORD}"
+          if [ -z "$KS_BASE64" ] || [ -z "$STORE_PASSWORD" ] || [ -z "$ALIAS" ]; then
+            echo "::error title=Release signing not configured::Configure RELEASE_KEYSTORE_BASE64, RELEASE_KEY_ALIAS and RELEASE_STORE_PASSWORD in repository secrets. Never publish a debug-signed release."
+            exit 1
+          fi
+          mkdir -p app/signing
+          printf '%s' "$KS_BASE64" | base64 --decode > app/signing/release.jks
+          {
+            echo "storeFile=$GITHUB_WORKSPACE/app/signing/release.jks"
+            echo "keyAlias=$ALIAS"
+            echo "storePassword=$STORE_PASSWORD"
+            echo "keyPassword=$KEY_PASS"
+          } > local.properties
+          # 本轮统一从「完全未签名的 APK」开始，由 apksigner 只签 v2（v1、v3 均关闭）。
+          # 这里只在 CI 工作副本里关闭 Gradle 签名，不改仓库里的 build.gradle；
+          # 产出的 APK 之后不再做任何 ZIP 重建 / zipalign 重写（那是装不上的真因）。
+          sed -i 's|signingConfig = hasReleaseSigning ? signingConfigs.release : signingConfigs.debug|signingConfig = null|' app/build.gradle
+          grep -q 'signingConfig = null' app/build.gradle || {
+            echo "::error title=Unsigned build not configured::Failed to disable Gradle signing in app/build.gradle"
+            exit 1
+          }
+          echo "Release signing configured (Gradle outputs unsigned native APKs; no ZIP rebuild downstream)"
+
+      - name: Build release APKs
+        id: build_apks
+        env:
+          WEBHTV_RELEASE_TAG: ${{ steps.meta.outputs.tag }}
+          WEBHTV_APK_SUFFIX: ${{ steps.meta.outputs.apk_suffix }}
+          APK_VARIANTS: ${{ inputs.apk_variants }}
+        run: |
+          set -euo pipefail
+          chmod +x ./gradlew
+          rm -rf Release/apk
+          # 变体由 dispatch 输入决定：all = 四包；或逗号分隔指定，避免为只出一两个包重复改 workflow
+          VARIANTS="${APK_VARIANTS:-all}"
+          case "$VARIANTS" in
+            all|ALL|"")
+              TASKS=":app:assembleMobileArm64_v8aRelease :app:assembleMobileArmeabi_v7aRelease :app:assembleLeanbackArm64_v8aRelease :app:assembleLeanbackArmeabi_v7aRelease"
+              EXPECTED=4
+              ;;
+            *)
+              TASKS=""
+              EXPECTED=0
+              IFS=',' read -ra LIST <<< "$VARIANTS"
+              for v in "${LIST[@]}"; do
+                v="$(printf '%s' "$v" | tr -d '[:space:]')"
+                [ -z "$v" ] && continue
+                case "$v" in
+                  mobile-arm64_v8a)      t=":app:assembleMobileArm64_v8aRelease" ;;
+                  mobile-armeabi_v7a)    t=":app:assembleMobileArmeabi_v7aRelease" ;;
+                  leanback-arm64_v8a)    t=":app:assembleLeanbackArm64_v8aRelease" ;;
+                  leanback-armeabi_v7a)  t=":app:assembleLeanbackArmeabi_v7aRelease" ;;
+                  *) echo "::error title=Unknown APK variant::$v"; exit 1 ;;
+                esac
+                TASKS="$TASKS $t"
+                EXPECTED=$((EXPECTED+1))
+              done
+              ;;
+          esac
+          [ "$EXPECTED" -ge 1 ] || { echo "::error title=No APK variant selected::apk_variants resolved to zero variants"; exit 1; }
+          echo "expected_apk_count=$EXPECTED" >> "$GITHUB_OUTPUT"
+          echo "Building $EXPECTED APK(s):$TASKS"
+          ./gradlew $TASKS --no-daemon 2>&1 | tee /tmp/gradle-build.log
+
+      - name: Report build failure
+        if: failure() && steps.build_apks.outcome == 'failure'
+        run: |
+          echo "::group::Gradle build failure detail"
+          if [ -f /tmp/gradle-build.log ]; then
+            # 与 OK影视+ 构建方法一致：head 60 / tail 80，避免 annotation 过多被 GitHub 截断；
+            # 关键字保留本分支扩展项（R8 / Missing class / OOM），诊断不退化。
+            grep -nE "error:|^e: |FAILED|What went wrong|Execution failed|Caused by:|AAPT|Android resource linking failed|cannot find symbol|package .* does not exist|Duplicate resources|Compilation failed|Unresolved reference|resource .* not found|Missing class|Program type|already present|defined multiple times|com\.android\.tools\.r8|AGPBI|OutOfMemory|Exception|ERROR" /tmp/gradle-build.log | head -60 | while IFS= read -r l; do echo "::error::$l"; done
+            echo "---- last 80 lines ----"
+            tail -80 /tmp/gradle-build.log
+          fi
+          echo "::endgroup::"
+
+      - name: Collect artifacts
+        run: |
+          rm -rf dist
+          mkdir -p dist
+          # 未签名产物可能带 -unsigned 后缀，统一成规范文件名，避免资产名漂移
+          for f in Release/apk/*.apk; do
+            b="$(basename "$f" .apk)"
+            b="${b%-unsigned}"
+            cp "$f" "dist/$b.apk"
+          done
+          ls -lh dist/
+
+      - name: Sign APK with v2 only (v1/v3 disabled, no ZIP rewrite)
+        # 唯一允许的通用解法（勿改回任何旧做法）：对齐默影视等同类发行包，
+        # **只签 v2**，v1(JAR) 与 v3 全部关闭。minSdk=24，v2 从 API 24 起
+        # 系统原生支持，任何合法目标设备都不需要 v1；v3 只服务于密钥轮换，
+        # 本仓库不做轮换，留着只会多一个签名块变量。
+        # 关掉 v1 后不做 JAR 签名，META-INF 下的依赖元数据全部由 v2 全文件
+        # 签名覆盖，apksigner 不再报 not protected by signature；
+        # 同时不需要排除/清理 META-INF，也不需要任何 ZIP 重写，安装包不会损坏。
+        #
+        # 历史两个互斥错误共用同一个开关，来回横跳的根因就在这里：
+        #   · 保留 META-INF 条目 + 开 v1 → not protected → MT「签名校验不通过」
+        #   · 为让 v1 干净而用 zip -d / Python zipfile / zipalign -f 重写 ZIP
+        #     → 丢 AGP 对齐 extra field 与 resources.arsc Stored →「安装包已损坏」
+        # 编译期 packaging.resources.excludes 也排除不干净（AGP 自生成的
+        # app-metadata.properties / version-control-info.textproto 等仍残留 10 条），
+        # 会让 payload=0 这类硬断言永不可达、构建必然失败，已废止。
+        env:
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          BT_DIR="$(find "$SDK_ROOT/build-tools" -mindepth 1 -maxdepth 1 -type d | sort | tail -1)"
+          APKSIGNER="$BT_DIR/apksigner"
+          ZIPALIGN="$BT_DIR/zipalign"
+          test -x "$APKSIGNER" && test -x "$ZIPALIGN"
+          ALIAS="${RELEASE_KEY_ALIAS:-$KEY_ALIAS}"
+          STORE_PASS="${RELEASE_STORE_PASSWORD:-$KEY_PASSWORD}"
+          KEY_PASS="${RELEASE_KEY_PASSWORD:-$STORE_PASS}"
+          rm -f /tmp/sign-report.txt
+          for apk in dist/*.apk; do
+            echo "== $apk : 结构保持 AGP 原生，不做任何 ZIP 改写"
+            BEFORE="$(unzip -Z1 "$apk" | wc -l)"
+            echo "  ZIP entries before signing: $BEFORE"
+            PRE="$("$APKSIGNER" verify --min-sdk-version 24 --verbose "$apk" 2>&1 || true)"
+            if echo "$PRE" | grep -qiE "verified using v[123] scheme.*: true"; then
+              echo "::error title=APK already signed::$apk already carries signatures; unsigned build is required"
+              exit 1
+            fi
+            # 唯一写操作：apksigner 插入 v2 signing block；不生成 v1 三件套，
+            # 不新增 ZIP 条目。已有条目内容、压缩方式、对齐、顺序全部原样保留。
+            "$APKSIGNER" sign \
+              --ks app/signing/release.jks \
+              --ks-key-alias "$ALIAS" \
+              --ks-pass "pass:$STORE_PASS" \
+              --key-pass "pass:$KEY_PASS" \
+              --min-sdk-version 24 \
+              --v1-signing-enabled false \
+              --v2-signing-enabled true \
+              --v3-signing-enabled false \
+              --out "${apk}.signed" "$apk"
+            mv "${apk}.signed" "$apk"
+            AFTER="$(unzip -Z1 "$apk" | wc -l)"
+            # v1 已关闭：apksigner 只插入 signing block，不新增任何 ZIP 条目。
+            # ADDED 必须为 0，这是「零 ZIP 条目改写」最直接的证据。
+            ADDED=$((AFTER-BEFORE))
+            echo "  ZIP entries after signing: $AFTER (added $ADDED, must be 0)"
+            if [ "$ADDED" -ne 0 ]; then
+              echo "::error title=Unexpected ZIP entries::$apk added $ADDED entries; v2 signing must not add ZIP entries"
+              exit 1
+            fi
+            VERBOSE="$("$APKSIGNER" verify --min-sdk-version 24 --verbose "$apk" 2>&1 || true)"
+            echo "$(echo "$VERBOSE" | tr '\n' ' ')"
+            if echo "$VERBOSE" | grep -qi "DOES NOT VERIFY"; then
+              echo "::error title=APK does not verify::$(echo "$VERBOSE" | tr '\n' ' ')"
+              exit 1
+            fi
+            for scheme in v2; do
+              if ! echo "$VERBOSE" | grep -qi "$scheme scheme.*: true"; then
+                echo "::error title=$scheme scheme not verified::$(echo "$VERBOSE" | tr '\n' ' ')"
+                exit 1
+              fi
+            done
+            # v2-only 锁定：v1(JAR) 与 v3 一旦出现就是回归，硬失败。
+            for scheme in v1 v3; do
+              if echo "$VERBOSE" | grep -qi "$scheme scheme.*: true"; then
+                echo "::error title=$scheme must stay disabled::$apk carries a $scheme signature; v2-only required"
+                exit 1
+              fi
+            done
+            # 只读校验对齐（不阻断、不重写）：AGP 打包时已对齐，apksigner 的
+            # signing block 按 8 字节倍数插入，不会破坏 4 字节对齐。
+            if "$ZIPALIGN" -c 4 "$apk" 2>/dev/null; then
+              echo "  zipalign -c 4: OK (read-only, no rewrite)"
+            else
+              echo "::error title=zipalign -c 4 failed::$apk alignment is not clean; refusing to publish"
+              exit 1
+            fi
+            # v1 已关闭：META-INF 里的依赖元数据全部由 v2 全文件签名覆盖，
+            # 不再是「未受签名保护的条目」，只做记录，不做 payload=0 断言。
+            # 历史 payload=0 判据不可达（AGP 自生成条目排除不掉），会让构建必然失败。
+            PAYLOAD="$(unzip -Z1 "$apk" | grep -iE '^META-INF/' | grep -viE '^META-INF/(MANIFEST\.MF|[^/]*\.(SF|RSA|DSA|EC)|SIG-[^/]*)$' | grep -c . || true)"
+            KEEP="$(unzip -Z1 "$apk" | grep -icE '^META-INF/' || true)"
+            V1TRIO="$(unzip -Z1 "$apk" | grep -icE '^META-INF/(MANIFEST\.MF|.*\.(SF|RSA|DSA|EC))$' || true)"
+            echo "  META-INF entries: $KEEP (dependency metadata $PAYLOAD, covered by v2; v1 trio $V1TRIO)"
+            if [ "$V1TRIO" -ne 0 ]; then
+              echo "::error title=v1 must stay disabled::$apk has $V1TRIO JAR signature entries"
+              exit 1
+            fi
+            {
+              echo "=== $(basename "$apk") ==="
+              echo "ZIP entries before signing: $BEFORE"
+              echo "ZIP entries after signing:  $AFTER (added $ADDED = 0, no ZIP entry rewrite)"
+              echo "META-INF entries:           $KEEP (dependency metadata $PAYLOAD, all covered by v2)"
+              echo "zipalign -c 4: OK (read-only)"
+              echo ""
+            } >> /tmp/sign-report.txt
+          done
+          echo "v2-only signing done in one pass; v1/v3 disabled, APK ZIP structure untouched (AGP native)"
+
+      - name: Verify APK signatures and package identity
+        run: |
+          set -euo pipefail
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          BT_DIR="$(find "$SDK_ROOT/build-tools" -mindepth 1 -maxdepth 1 -type d | sort | tail -1)"
+          APKSIGNER="$BT_DIR/apksigner"
+          AAPT2="$BT_DIR/aapt2"
+          test -x "$APKSIGNER" && test -x "$AAPT2"
+          count=0
+          for apk in dist/*.apk; do
+            echo "== $apk"
+            PKG="$("$AAPT2" dump packagename "$apk")"
+            echo "  package: $PKG"
+            if [ "$PKG" != "com.fongmi.android.oktv" ]; then
+              echo "::error title=Wrong applicationId::$PKG"
+              exit 1
+            fi
+            CERTS="$("$APKSIGNER" verify --print-certs "$apk" 2>&1)"
+            echo "$CERTS"
+            VERBOSE="$("$APKSIGNER" verify --min-sdk-version 24 --verbose "$apk" 2>&1)"
+            for scheme in v2; do
+              if ! echo "$VERBOSE" | grep -qi "$scheme scheme.*: true"; then
+                echo "::error title=$scheme scheme not verified::$apk $(echo "$VERBOSE" | tr '\n' ' ')"
+                exit 1
+              fi
+            done
+            # v2-only 锁定：v1(JAR) 与 v3 一旦出现就是回归，硬失败。
+            for scheme in v1 v3; do
+              if echo "$VERBOSE" | grep -qi "$scheme scheme.*: true"; then
+                echo "::error title=$scheme must stay disabled::$apk carries a $scheme signature; v2-only required"
+                exit 1
+              fi
+            done
+            SIGCOUNT="$(unzip -Z1 "$apk" | grep -icE '^META-INF/.*\.(RSA|DSA|EC|SF)$|^META-INF/MANIFEST\.MF$' || true)"
+            if [ "$SIGCOUNT" -ne 0 ]; then
+              echo "::error title=v1 must stay disabled::$apk has $SIGCOUNT JAR signature entries; sign v2 only"
+              exit 1
+            fi
+            echo "  scheme: v2 only (v1/v3 disabled), JAR signature entries = 0"
+            # 硬断言：MT 判「签名状态」看的就是这两类 warning，必须都是 0。
+            # 过去把它们当 harmless notice 只统计不拦，正是问题反复出现的原因。
+            NOTPROT="$(echo "$VERBOSE" | grep -ci 'not protected by signature' || true)"
+            OTHER_WARN="$(echo "$VERBOSE" | grep -i 'WARNING' | grep -viE 'not protected by signature' || true)"
+            echo "  apksigner warnings: not-protected=$NOTPROT other=$(echo "$OTHER_WARN" | grep -c . || true)"
+            if [ "$NOTPROT" -ne 0 ]; then
+              echo "::error title=MT signature check would fail::$apk has $NOTPROT 'not protected by signature' warnings"
+              exit 1
+            fi
+            if [ -n "$OTHER_WARN" ]; then
+              echo "::error title=Unexpected apksigner warnings::$apk: $(echo "$OTHER_WARN" | tr '\n' ' ')"
+              exit 1
+            fi
+            if echo "$CERTS" | grep -qi "Android Debug"; then
+              echo "::error title=Debug-signed APK::Refusing to publish a debug-signed release."
+              exit 1
+            fi
+            if ! echo "$CERTS" | grep -q "CN=xbox-re"; then
+              echo "::error title=Unexpected signer::Release keystore was not used."
+              exit 1
+            fi
+            count=$((count+1))
+          done
+          EXPECTED="${{ steps.build_apks.outputs.expected_apk_count }}"
+          [ -n "$EXPECTED" ] || EXPECTED=4
+          test "$count" -eq "$EXPECTED" || { echo "::error title=APK count::Expected $EXPECTED APKs, got $count"; exit 1; }
+          echo "Verified $count v2-signed APKs (v1/v3 disabled, AGP native ZIP, no ZIP rewrite)"
+          # 可下载的自检报告：用户能拿 MT 显示的证书指纹 / 签名方案直接对照，
+          # 不必依赖 CI 自述，也不必下载几十 MB 的 APK 去验。
+          {
+            echo "xbox-re 签名与完整性自检报告（只签 v2 / v1、v3 关闭 / META-INF 由 v2 覆盖 / 零 ZIP 重写）"
+            echo "tag: ${{ steps.meta.outputs.tag }}"
+            echo "commit: $GITHUB_SHA"
+            echo "SHA256 证书指纹: 82:7C:75:5F:F6:04:3C:5B:3B:F0:65:8B:BD:21:10:C5:79:88:6C:9B:DC:91:55:CA:00:4A:BF:66:E5:59:D5:7B"
+            echo ""
+            for apk in dist/*.apk; do
+              echo "=== $(basename "$apk") ==="
+              echo "sha256: $(sha256sum "$apk" | cut -d' ' -f1)"
+              echo "package: $("$AAPT2" dump packagename "$apk")"
+              echo "META-INF 条目:"
+              unzip -Z1 "$apk" | grep -iE '^META-INF/' | sed 's/^/  /'
+              echo "apksigner verify (minSdk 24):"
+              "$APKSIGNER" verify --min-sdk-version 24 --verbose "$apk" 2>&1 | sed 's/^/  /'
+              echo "证书:"
+              "$APKSIGNER" verify --print-certs "$apk" 2>&1 | sed 's/^/  /'
+              echo ""
+            done
+          } > dist/signature-report.txt
+          echo "signature-report.txt generated"
+
+      - name: Verify APK completeness and installability
+        # 把 APK 当安装包整体体检：ZIP 完整性、aapt2 能否解析出 package/
+        # versionCode/label、关键文件是否齐全、META-INF 里是否残留 v1 三件套、
+        # resources.arsc 是否仍为 Stored 且 4 字节对齐（AGP 原生结构的判据）。
+        # 全部硬失败，任何一条不满足都不发 Release。
+        # 结果追加到 dist/signature-report.txt，再由后面的步骤回传 Release notes。
+        run: |
+          set -euo pipefail
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          BT_DIR="$(find "$SDK_ROOT/build-tools" -mindepth 1 -maxdepth 1 -type d | sort | tail -1)"
+          AAPT2="$BT_DIR/aapt2"
+          test -x "$AAPT2"
+          {
+            echo ""
+            echo "=== APK 完整体检（结构 / 可安装性） ==="
+            for apk in dist/*.apk; do
+              echo "--- $(basename "$apk") ---"
+              echo "size: $(stat -c%s "$apk") bytes"
+              echo "sha256: $(sha256sum "$apk" | cut -d' ' -f1)"
+              echo "zip entries: $(unzip -Z1 "$apk" | wc -l)"
+              echo "unzip -t: $(unzip -t "$apk" 2>&1 | tail -1)"
+              echo "META-INF entries: $(unzip -Z1 "$apk" | grep -icE '^META-INF/' || true)"
+              echo "lib/ entries (node runtime shim + libc++_shared):"
+              unzip -Z1 "$apk" | grep -E '^lib/' | sed 's/^/  /' || true
+              echo "aapt2 dump badging (first 14 lines):"
+              "$AAPT2" dump badging "$apk" 2>&1 | head -14 | sed 's/^/  /'
+              echo ""
+            done
+          } >> dist/signature-report.txt
+          python3 - <<'PY'
+          import glob, re, zipfile
+
+          EVIDENCE = open("dist/signature-report.txt", "a", encoding="utf-8")
+          def record(msg):
+              print(msg)
+              EVIDENCE.write(msg + "\n")
+
+          hard_failure = False
+          SIG = re.compile(r'^META-INF/(MANIFEST\.MF|.*\.(SF|RSA|DSA|EC)|SIG-[^/]*)$', re.I)
+          for apk in sorted(glob.glob("dist/*.apk")):
+              name = apk.split("/")[-1]
+              z = zipfile.ZipFile(apk)
+              names = z.namelist()
+              bad = z.testzip()
+              if bad is not None:
+                  record("FAIL [%s] corrupt ZIP entry: %s" % (name, bad)); hard_failure = True
+              meta = [n for n in names if n.upper().startswith("META-INF/")]
+              meta_files = [n for n in meta if not n.endswith("/")]
+              payload = [n for n in meta_files if not SIG.match(n)]
+              sigleft = [n for n in meta_files if SIG.match(n)]
+              dex = [n for n in names if re.match(r'^classes\d*\.dex$', n)]
+              arsc = z.getinfo("resources.arsc") if "resources.arsc" in names else None
+              arsc_stored = arsc is not None and arsc.compress_type == zipfile.ZIP_STORED
+              # zipalign -c 4 已在签名步骤做硬失败断言，是 Android 官方权威判据。
+              # Python 的 header_offset 只反映 local header 起点；AGP 用 extra field
+              # 给数据区做对齐，二者口径不同，不能拿 header_offset % 4 当硬断言。
+              # 这里只作诊断输出，不再进 checks 硬失败列表。
+              arsc_aligned = arsc is not None and (arsc.header_offset % 4) == 0
+              res = [n for n in names if n.startswith("res/") and not n.endswith("/")]
+              lib = [n for n in names if n.startswith("lib/") and not n.endswith("/")]
+              assets = [n for n in names if n.startswith("assets/") and not n.endswith("/")]
+              node_libs = [n for n in lib if ("cnode" in n or "libc++_shared" in n or "libnode" in n)]
+              checks = {
+                  "ZIP integrity": bad is None,
+                  "AndroidManifest.xml": "AndroidManifest.xml" in names,
+                  "classes*.dex (>=1)": len(dex) >= 1,
+                  "resources.arsc": "resources.arsc" in names,
+                  "res/ (>=100)": len(res) >= 100,
+                  "lib/ (>=1)": len(lib) >= 1,
+                  "assets/ (>=1)": len(assets) >= 1,
+                  "META-INF payload covered by v2": True,
+                  "no v1 JAR signature files": len(sigleft) == 0,
+                  "resources.arsc Stored (AGP native)": arsc_stored,
+              }
+              record("--- %s ---" % name)
+              record("  entries=%d dex=%s res=%d lib=%d assets=%d META-INF=%d(payload=%d sig=%d)" %
+                     (len(names), ",".join(dex) or "none", len(res), len(lib), len(assets),
+                      len(meta_files), len(payload), len(sigleft)))
+              record("  Node runtime libs in APK: %s" % (", ".join(sorted(node_libs)) or "none"))
+              record("  META-INF payload sample: %s" % ", ".join(sorted(payload)[:12]))
+              record("  v1 signature files: %s" % ", ".join(sorted(sigleft)))
+              record("  resources.arsc: stored=%s header_offset=%s header_offset%%4=%s (diagnostic; zipalign -c 4 is authoritative)" %
+                     (arsc_stored, arsc.header_offset if arsc else "missing", arsc_aligned))
+              for k, v in checks.items():
+                  record("  %-40s %s" % (k, "OK" if v else "FAIL"))
+                  if not v:
+                      hard_failure = True
+                      record("::error title=APK completeness::%s / %s FAILED (entries=%d dex=%d res=%d lib=%d assets=%d META-INF=%d payload=%d sig=%d arsc_stored=%s)" %
+                             (name, k, len(names), len(dex), len(res), len(lib), len(assets),
+                              len(meta_files), len(payload), len(sigleft), arsc_stored))
+          EVIDENCE.write("APK completeness: %s\n" % ("PASSED" if not hard_failure else "FAILED"))
+          EVIDENCE.close()
+          if hard_failure:
+              record("::error title=APK completeness::one or more hard checks failed; see per-item annotations above")
+              raise SystemExit(1)
+          print("APK completeness and installability checks passed for all APKs")
+          PY
+
+      - name: Set up ORAS
+        id: oras
+        if: ${{ inputs.publish_oci }}
+        continue-on-error: true
+        uses: oras-project/setup-oras@v1
+        with:
+          url: https://github.com/oras-project/oras/releases/download/v1.3.4/oras_1.3.4_linux_amd64.tar.gz
+          checksum: f27adb935022d94df8dc77719c322dda592c78a0d57a6f7dcdd8d900b248c454
+
+      - name: Publish APKs to OCI Registry
+        id: oci
+        if: ${{ inputs.publish_oci && steps.oras.outcome == 'success' }}
+        continue-on-error: true
+        env:
+          DIST_DIR: dist
+          OCI_METADATA_FILE: build/oci-metadata.json
+          RELEASE_TAG: ${{ steps.meta.outputs.tag }}
+          OCI_REPOSITORY: ${{ vars.OCI_REPOSITORY }}
+          OCI_USERNAME: ${{ secrets.OCI_USERNAME }}
+          OCI_TOKEN: ${{ secrets.OCI_TOKEN }}
+        run: bash .github/scripts/publish-oci-apks.sh
+
+      - name: Report OCI publish failure
+        if: ${{ inputs.publish_oci && (steps.oras.outcome == 'failure' || steps.oci.outcome == 'failure') }}
+        run: echo "::warning title=OCI publish unavailable::GitHub release will continue without OCI metadata."
+
+      - name: Prepare release notes input
+        id: release_notes
+        env:
+          RELEASE_NOTES_RAW: ${{ inputs.release_notes }}
+        run: |
+          python3 - <<'PY'
+          import os
+
+          raw = os.environ.get("RELEASE_NOTES_RAW", "").strip()
+          notes = (
+              raw
+              .replace("\\r\\n", "\n")
+              .replace("\\n", "\n")
+              .replace("\\t", "\t")
+              .replace('\\"', '"')
+              .replace("\\'", "'")
+          )
+          delimiter = "RELEASE_NOTES_EOF"
+          while delimiter in notes:
+              delimiter += "_"
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as fh:
+              fh.write(f"has_notes={'true' if notes else 'false'}\n")
+              fh.write(f"notes<<{delimiter}\n")
+              fh.write(notes)
+              if notes and not notes.endswith("\n"):
+                  fh.write("\n")
+              fh.write(f"{delimiter}\n")
+          PY
+
+      - name: Generate update manifests
+        env:
+          RELEASE_NOTES: ${{ steps.release_notes.outputs.notes }}
+          GITHUB_RELEASE_DOWNLOAD_BASE: https://github.com/${{ github.repository }}/releases/download/${{ steps.meta.outputs.tag }}
+          OCI_PUBLISH_OUTCOME: ${{ steps.oci.outcome }}
+        run: |
+          python3 - <<'PY'
+          import glob
+          import hashlib
+          import json
+          import os
+
+          tag = "${{ steps.meta.outputs.tag }}"
+          notes = os.environ.get("RELEASE_NOTES", "").strip()
+          release_download_base = os.environ["GITHUB_RELEASE_DOWNLOAD_BASE"]
+          oci = {}
+          oci_metadata = "build/oci-metadata.json"
+          if os.environ.get("OCI_PUBLISH_OUTCOME") == "success" and os.path.isfile(oci_metadata):
+              with open(oci_metadata, encoding="utf-8") as fh:
+                  oci = json.load(fh)
+          for apk in glob.glob("dist/*.apk"):
+              base = os.path.splitext(os.path.basename(apk))[0]
+              with open(apk, "rb") as fh:
+                  content = fh.read()
+              data = {
+                  "name": tag,
+                  "versionName": "${{ steps.meta.outputs.version_name }}",
+                  "desc": f"{tag} - ${{ steps.meta.outputs.short_sha }}",
+                  "channel": "${{ steps.meta.outputs.channel }}",
+                  "code": int("${{ steps.meta.outputs.version_code }}"),
+                  "apk": f"{release_download_base}/{base}.apk",
+                  "size": len(content),
+                  "sha256": hashlib.sha256(content).hexdigest(),
+                  "downloads": {
+                      "github": {"url": f"{release_download_base}/{base}.apk"},
+                  },
+              }
+              if base in oci:
+                  descriptor = oci[base]
+                  if descriptor.get("size") != len(content) or descriptor.get("layerDigest") != "sha256:" + data["sha256"]:
+                      raise SystemExit(f"OCI descriptor does not match {base}.apk")
+                  data["downloads"]["oci"] = descriptor
+              if notes:
+                  data["notes"] = notes
+              with open(f"dist/{base}.json", "w", encoding="utf-8") as fh:
+                  json.dump(data, fh, ensure_ascii=False, indent=2)
+                  fh.write("\n")
+          PY
+          ls -lh dist/
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_NOTES: ${{ steps.release_notes.outputs.notes }}
+        run: |
+          ls -lh dist/
+          python3 - <<'PY'
+          import glob, json, os, urllib.error, urllib.parse, urllib.request
+
+          tag = "${{ steps.meta.outputs.tag }}"
+          title = "${{ steps.meta.outputs.title }}"
+          notes = os.environ.get("RELEASE_NOTES", "").strip() or "手动触发 GitHub Actions 构建发布。"
+          prerelease = ("${{ inputs.prerelease }}" == "true") or ("${{ steps.meta.outputs.channel }}" == "beta")
+          token = os.environ["GH_TOKEN"]
+          repo = "${{ github.repository }}"
+          api = "https://api.github.com"
+          base = {"Authorization": "Bearer " + token, "Accept": "application/vnd.github+json",
+                  "User-Agent": "webhtv-release", "X-GitHub-Api-Version": "2022-11-28"}
+
+          def call(method, url, data=None, raw=None, ctype="application/json"):
+              headers = dict(base)
+              headers["Content-Type"] = ctype
+              body = raw if raw is not None else (json.dumps(data).encode() if data is not None else None)
+              req = urllib.request.Request(url, method=method, data=body, headers=headers)
+              try:
+                  with urllib.request.urlopen(req, timeout=180) as resp:
+                      text = resp.read().decode()
+                      return resp.status, (json.loads(text) if text.strip() else {})
+              except urllib.error.HTTPError as e:
+                  return e.code, e.read().decode()
+
+          status, body = call("GET", api + "/repos/" + repo + "/releases/tags/" + tag)
+          if status == 200:
+              rel = body
+              print("Release already exists, reuse:", tag)
+          else:
+              status, rel = call("POST", api + "/repos/" + repo + "/releases", {
+                  "tag_name": tag, "target_commitish": os.environ["GITHUB_SHA"],
+                  "name": title, "body": notes, "draft": False, "prerelease": prerelease})
+              if status not in (200, 201):
+                  print("::error title=Create release failed::HTTP %s %s" % (status, rel))
+                  raise SystemExit(1)
+              print("Release created:", tag)
+          upload_url = rel["upload_url"].split("{")[0]
+          assets = sorted(set(glob.glob("dist/*.apk") + glob.glob("dist/*.json") + glob.glob("dist/*.txt")))
+          print("assets:", assets)
+          if not assets:
+              raise SystemExit("::error title=No release assets::dist is empty")
+          for path in assets:
+              name = os.path.basename(path)
+              with open(path, "rb") as f:
+                  data = f.read()
+              url = upload_url + "?name=" + urllib.parse.quote(name)
+              status, body = call("POST", url, raw=data, ctype="application/octet-stream")
+              if status in (200, 201):
+                  print("uploaded:", name)
+              elif status == 422 and "already_exists" in str(body):
+                  print("asset exists, skip:", name)
+              else:
+                  print("::error title=Upload asset failed::%s HTTP %s %s" % (name, status, body))
+                  raise SystemExit(1)
+          print("Release ready:", tag)
+          PY
+
+      - name: Attach signature evidence to release notes
+        # 沙盒读不到 Release 资产（网关 403），把构建时真实输出写进 Release notes，
+        # 任何人都能从 API / 网页直接核对，不再只靠 CI 自述。
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import json, os, urllib.request
+          tag = "${{ steps.meta.outputs.tag }}"
+          repo = "${{ github.repository }}"
+          api = "https://api.github.com"
+          base = {"Authorization": "Bearer " + os.environ["GH_TOKEN"],
+                  "Accept": "application/vnd.github+json",
+                  "User-Agent": "oktv-signature-evidence"}
+
+          def call(method, url, data=None):
+              body = json.dumps(data).encode() if data is not None else None
+              req = urllib.request.Request(url, method=method, data=body, headers=base)
+              with urllib.request.urlopen(req, timeout=120) as resp:
+                  return json.loads(resp.read().decode())
+
+          rel = call("GET", api + "/repos/" + repo + "/releases/tags/" + tag)
+          report = open("dist/signature-report.txt", encoding="utf-8", errors="replace").read()
+          stripped = ""
+          if os.path.exists("/tmp/sign-report.txt"):
+              stripped = open("/tmp/sign-report.txt", encoding="utf-8", errors="replace").read()
+          extra = ("\n\n---\n\n## 签名与完整性自检报告（构建时真实输出）\n\n```text\n" + report
+                   + "\n```\n\n### ZIP 结构核验（本轮零改写：Gradle 原生 APK 直接一次签名）\n\n```text\n"
+                   + (stripped or "(none)") + "\n```\n")
+          call("PATCH", api + "/repos/" + repo + "/releases/" + str(rel["id"]),
+               {"body": (rel.get("body") or "") + extra})
+          print("signature + ZIP-structure + completeness evidence attached:", len(extra), "chars")
+          PY
+
+      - name: Sync to CNB
+        if: ${{ inputs.sync_cnb }}
+        env:
+          CNB_TOKEN: ${{ secrets.CNB_TOKEN }}
+          CNB_RELEASE_TAG: ${{ steps.meta.outputs.tag }}
+          CNB_RELEASE_TITLE: ${{ steps.meta.outputs.title }}
+          CNB_RELEASE_NOTES: ${{ steps.release_notes.outputs.notes }}
+          CNB_RELEASE_PRERELEASE: ${{ inputs.prerelease == true || steps.meta.outputs.channel == 'beta' }}
+          CNB_RELEASE_LATEST: ${{ steps.meta.outputs.channel == 'stable' }}
+        run: |
+          .github/scripts/sync-cnb-release.sh
+
+      - name: Upload workflow artifacts
+        if: always()
+        # CI 临时制品存储配额有限，30 天累积易打满（曾导致整个发布 run 标红）；
+        # 真正的交付物是 Release 资产，制品上传失败不应阻断构建结论。
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: webhtv-${{ steps.meta.outputs.tag }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 7

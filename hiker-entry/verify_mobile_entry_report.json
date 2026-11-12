@@ -1,0 +1,201 @@
+{
+  "title": "手机版海阔独立入口 · 构建前兼容性与结构验证",
+  "v3_head": "50d2bef6e6f1cbbc5d91fbf9fed9c2002756b480",
+  "changed_files": [
+    "app/src/mobile/res/menu/menu_nav.xml",
+    "app/src/mobile/res/drawable/ic_nav_hiker.xml",
+    "app/src/mobile/java/com/fongmi/android/tv/ui/activity/HomeActivity.java"
+  ],
+  "total": 31,
+  "passed": 31,
+  "failed": 0,
+  "all_pass": true,
+  "results": [
+    {
+      "code": "A01",
+      "name": "menu_nav.xml 除预期插入块外与 v3 基线逐字节一致",
+      "ok": true,
+      "detail": "零删除/零修改，仅新增 1 个 item + 注释"
+    },
+    {
+      "code": "A02",
+      "name": "HomeActivity.java 除两处预期插入外与 v3 基线逐字节一致",
+      "ok": true,
+      "detail": "零删除/零修改，仅 setNavigation() 与 onNavigationItemSelected() 各加 1 处"
+    },
+    {
+      "code": "A03",
+      "name": "基线锚点唯一（替换未误伤其它位置）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "code": "A04",
+      "name": "Java import 段完全未变（使用全限定名，无新增依赖）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "code": "A05",
+      "name": "Java 大括号平衡且总数与基线一致",
+      "ok": true,
+      "detail": "新增 1 个 if 块"
+    },
+    {
+      "code": "B01",
+      "name": "menu_nav.xml 是合法 XML",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "code": "B02",
+      "name": "菜单项数 4 → 5，且不超过 BottomNavigationView 硬上限 5",
+      "ok": true,
+      "detail": "item 数=5；Material BottomNavigationView MAX_ITEM_COUNT=5"
+    },
+    {
+      "code": "B03",
+      "name": "原有 4 项 id 顺序未变，新项 id 唯一",
+      "ok": true,
+      "detail": "['@+id/vod', '@+id/live', '@+id/setting', '@+id/lab', '@+id/hiker']"
+    },
+    {
+      "code": "B04",
+      "name": "新项引用 mobile 专属图标与 main 本地化标题",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "code": "B05",
+      "name": "新项遵循既有 visible=false 约定（由 setNavigation() 统一置可见）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "code": "B06",
+      "name": "5 个菜单项均配置 icon（unlabeled 模式下图标为唯一视觉标识）",
+      "ok": true,
+      "detail": "标题仅作无障碍描述，不占布局宽度"
+    },
+    {
+      "code": "B07",
+      "name": "activity_home.xml 使用 BottomNavigationView（故适用 5 项上限）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "code": "B08",
+      "name": "导航 labelVisibilityMode=unlabeled，新增项不影响既有排布",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "code": "C01",
+      "name": "ic_nav_hiker.xml 是合法 vector XML",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "code": "C02",
+      "name": "图标尺寸/tint/viewport 与既有 ic_nav_lab 完全一致",
+      "ok": true,
+      "detail": "48dp / tint=?attr/colorControlNormal / viewport 24x24"
+    },
+    {
+      "code": "C03",
+      "name": "图标 pathData 复用 main 的 ic_home_hiker（海阔立方体标识）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "code": "D01",
+      "name": "FragmentStateManager 的 case 0..5 / default 与基线逐字一致",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "code": "D02",
+      "name": "7 个 position/导航/返回关键方法体逐字未改",
+      "ok": true,
+      "detail": "全部一致"
+    },
+    {
+      "code": "D03",
+      "name": "新分支使用 return false（与 lab 同模式，不改变选中项）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "code": "D04",
+      "name": "R.id.hiker 仅出现在可见性与点击两处，未进入 position 映射",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "code": "D05",
+      "name": "currentPosition 赋值语句未新增",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "code": "E01",
+      "name": "main 的 home_hiker 字符串覆盖 4 个语言目录（所有 flavor 共用）",
+      "ok": true,
+      "detail": "{'values': True, 'values-zh': True, 'values-zh-rCN': True, 'values-zh-rTW': True}"
+    },
+    {
+      "code": "E02",
+      "name": "HikerEntry.start(Activity) 签名存在且为 public static",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "code": "E03",
+      "name": "main/AndroidManifest.xml 已注册 .hiker.HikerActivity（所有 flavor 共用）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "code": "E04",
+      "name": "运行时层 8 个 Java 类完整且本次未列入改动清单",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "code": "E05",
+      "name": "改动清单仅含 3 个 mobile 文件，main/ 运行时层与 leanback/ 电视版入口均未触碰",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "code": "F01",
+      "name": "CI 源码门禁不检查 menu_nav.xml / mobile HomeActivity.java（改动不会触发门禁失败）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "code": "F02",
+      "name": "工作流支持 mobile-arm64_v8a 变体",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "code": "F03",
+      "name": "CI 临时制品上传已 continue-on-error（非关键步不染红 run）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "code": "F04",
+      "name": "release_tag 已存在会硬失败（需使用新 tag）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "code": "G01",
+      "name": "完整 unified diff 已归档",
+      "ok": true,
+      "detail": ""
+    }
+  ]
+}
