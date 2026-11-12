@@ -814,9 +814,12 @@ jobs:
 
       - name: Upload workflow artifacts
         if: always()
+        # CI 临时制品存储配额有限，30 天累积易打满（曾导致整个发布 run 标红）；
+        # 真正的交付物是 Release 资产，制品上传失败不应阻断构建结论。
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: webhtv-${{ steps.meta.outputs.tag }}
           path: dist/*
           if-no-files-found: error
-          retention-days: 30
+          retention-days: 7
