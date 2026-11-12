@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- 階段六：海闊獨立入口 -->
-    <string name="home_hiker">海闊</string>
-    <string name="hiker_entry_title">海闊 · 獨立模組</string>
+    <string name="home_hiker">小程序</string>
+    <string name="hiker_entry_title">小程序</string>
 </resources>

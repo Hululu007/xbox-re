@@ -88,16 +88,37 @@ public class HikerBridge {
      * 不直接调用 VideoActivity.start，避免与首页/播放器代码耦合。
      */
     @JavascriptInterface
-    public boolean play(String url, String title, String pic) {
+    public boolean play(final String url, String title, String pic) {
         if (url == null || url.length() == 0) return false;
+        /* 首选：直接投递宿主的播放事件（Main 源集 → 两个 flavor 的 HomeActivity 都订阅了 PUSH）。
+         * 这条路不依赖本地 HTTP 服务是否在跑 —— 服务只在部分入口里 start()，
+         * 之前用 HTTP 推送会出现「点了没反应」。 */
+        try {
+            com.fongmi.android.tv.App.post(() -> com.fongmi.android.tv.event.ServerEvent.push(url));
+            report(HikerContract.EV_PLAY, url);
+            return true;
+        } catch (Throwable ignored) {
+        }
+        /* 兜底：老路径（本地 HTTP 推送） */
         try {
             String target = "http://127.0.0.1:" + detectPort() + HikerContract.PUSH_PATH
                     + URLEncoder.encode(url, "UTF-8");
             String r = HikerHttp.get(target, null);
-            report(HikerContract.EV_PLAY, url);
             return r != null;
         } catch (Throwable t) {
             return false;
+        }
+    }
+
+    /** 页面里的 toast 直接弹原生的（比 HTML toast 更显眼，也不会被 WebView 层挡住）。 */
+    @JavascriptInterface
+    public void toast(final String message) {
+        if (activity == null || message == null) return;
+        try {
+            activity.runOnUiThread(() ->
+                    android.widget.Toast.makeText(activity.getApplicationContext(), message,
+                            android.widget.Toast.LENGTH_SHORT).show());
+        } catch (Throwable ignored) {
         }
     }
 

@@ -162,6 +162,14 @@ public final class HikerApi {
             if ("writeHexFile".equals(n)) return writeHexFile(a);
             if ("createQRCode".equals(n)) return createQRCode(a);
             if ("readFile".equals(n)) return readFile(HikerJson.s(a, 0, ""));
+            if ("writeFile".equals(n) || "saveFile".equals(n)) {
+                return writeTextFile(HikerJson.s(a, 0, ""), HikerJson.s(a, 1, ""));
+            }
+            if ("fileExist".equals(n)) {
+                try { return new File(root(), safeName(HikerJson.s(a, 0, "")
+                        .replace("hiker://files/", ""))).exists() ? "1" : "0"; }
+                catch (Throwable t) { return "0"; }
+            }
             if ("report".equals(n)) return report();
             mark("unknown", n);
             return "";
@@ -186,7 +194,8 @@ public final class HikerApi {
                 "batchCacheM3u8", "clearM3u8Ad", "clearM3u8AdLazy", "x5Rule", "parseLazyRule",
                 "parseLazyRuleAsync", "getIP", "convertBase64Image", "createQRCode",
                 "requireCache", "fixM3u8", "refreshVideoUrl", "refreshX5WebView", "getCpuAbi",
-                "findReachableIP", "ipping", "getCryptoJS2", "writeHexFile", "readFile"
+                "findReachableIP", "ipping", "getCryptoJS2", "writeHexFile", "readFile",
+                "writeFile", "saveFile", "fileExist"
         };
         for (String s : names) METHODS.add(s);
     }
@@ -482,6 +491,25 @@ public final class HikerApi {
         byte[] data = fetchBytes(url, headers);
         if (data.length == 0) return "";
         return writeBytes(n, data);
+    }
+
+    /**
+     * 规则自己 writeFile 出来的内容（缓存、配置、备份）。
+     * 落到 filesDir/hiker/ 下，和 readFile 同一套命名，App 重启后还在。
+     */
+    private static String writeTextFile(String path, String content) {
+        try {
+            String n = safeName(String.valueOf(path).replace("hiker://files/", ""));
+            File f = new File(root(), n);
+            File parent = f.getParentFile();
+            if (parent != null && !parent.exists()) parent.mkdirs();
+            java.io.FileOutputStream out = new java.io.FileOutputStream(f);
+            out.write(String.valueOf(content).getBytes(java.nio.charset.Charset.forName("UTF-8")));
+            out.close();
+            return "1";
+        } catch (Throwable t) {
+            return "";
+        }
     }
 
     private static String readFile(String path) {

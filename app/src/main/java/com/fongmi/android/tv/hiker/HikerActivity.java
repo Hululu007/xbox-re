@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.ViewGroup;
+import android.webkit.JsPromptResult;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -44,11 +45,11 @@ public class HikerActivity extends Activity {
         }
 
         FrameLayout root = new FrameLayout(this);
-        root.setBackgroundColor(0xFF0F1420);
+        root.setBackgroundColor(0xFF101014);   // 与 App 的 Material3 深色背景一致
         // 避开透明状态栏/导航栏与刘海，否则 sticky header 与底部按钮被系统栏盖住。
         root.setFitsSystemWindows(true);
         webView = new WebView(this);
-        webView.setBackgroundColor(0xFF0F1420);
+        webView.setBackgroundColor(0xFF101014);
         webView.setOverScrollMode(WebView.OVER_SCROLL_NEVER);
         webView.setHorizontalScrollBarEnabled(false);
         webView.setVerticalScrollBarEnabled(false);
@@ -88,7 +89,27 @@ public class HikerActivity extends Activity {
                 return true;
             }
         });
-        webView.setWebChromeClient(new WebChromeClient());
+        /* prompt() 不给默认实现的话，WebView 会直接返回 null ——
+         * 规则里的「输入框」条目（$(默认值, 提示).input(回调)）和搜索都会点不动。
+         * 这里补一个原生输入框。 */
+        webView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public boolean onJsPrompt(WebView view, String url, String message,
+                                      String defaultValue, final JsPromptResult result) {
+                final android.widget.EditText input = new android.widget.EditText(HikerActivity.this);
+                input.setText(defaultValue == null ? "" : defaultValue);
+                input.setSelection(input.getText().length());
+                if (message != null && message.length() > 0) input.setHint(message);
+                new android.app.AlertDialog.Builder(HikerActivity.this)
+                        .setTitle("请输入")
+                        .setView(input)
+                        .setPositiveButton("确定", (d, w) -> result.confirm(input.getText().toString()))
+                        .setNegativeButton("取消", (d, w) -> result.cancel())
+                        .setOnCancelListener(d -> result.cancel())
+                        .show();
+                return true;
+            }
+        });
 
         webView.loadUrl(HikerEntry.ASSET_URL);
     }
@@ -102,9 +123,22 @@ public class HikerActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        // 页面栈由 HikerCompat 的 hiker:// 路由表管理；无栈时直接退出独立 Activity
-        if (webView != null && webView.canGoBack()) webView.goBack();
-        else super.onBackPressed();
+        /* 页面栈在 JS 里（HikerUI.STATE.stack）。先问页面能不能退：
+         * 能退就让页面自己回上一级，退到底了才关掉这个 Activity。 */
+        if (webView != null) {
+            webView.evaluateJavascript(
+                    "(function(){try{return window.HikerUI && HikerUI.back ? (HikerUI.back(), '1') : '0';}"
+                            + "catch(e){return '0';}})()",
+                    value -> {
+                        boolean handled = value != null && value.indexOf('1') >= 0;
+                        if (!handled) {
+                            if (webView != null && webView.canGoBack()) webView.goBack();
+                            else finish();
+                        }
+                    });
+            return;
+        }
+        super.onBackPressed();
     }
 
     @Override
