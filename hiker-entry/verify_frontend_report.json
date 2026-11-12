@@ -1,0 +1,157 @@
+{
+  "title": "前端重写（录口令 → 生成站点 → 点站点播放）验证",
+  "files": {
+    "hiker_app.js": 33386,
+    "index.html": 25388
+  },
+  "total": 24,
+  "passed": 24,
+  "failed": 0,
+  "all_pass": true,
+  "checks": [
+    {
+      "id": "A01",
+      "desc": "hiker_app.js 与 index.html 均存在且非空",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "A02",
+      "desc": "7 个运行时脚本引用顺序正确（应用逻辑层在最后）",
+      "ok": true,
+      "detail": "[12192, 12240, 12280, 12325, 12357, 12403, 12443]"
+    },
+    {
+      "id": "A03",
+      "desc": "index.html 已移除后端数据可视化/自测面板元素（剥离注释后）",
+      "ok": true,
+      "detail": "[]"
+    },
+    {
+      "id": "A04",
+      "desc": "四视图 + 四种口令模式 + 生成/搜索/详情/播放按钮齐备",
+      "ok": true,
+      "detail": "[]"
+    },
+    {
+      "id": "A05",
+      "desc": "hiker_app.js 为 ES5（无 ES6+ 语法）",
+      "ok": true,
+      "detail": "[]"
+    },
+    {
+      "id": "A06",
+      "desc": "index.html 内联脚本为 ES5（无 ES6+ 语法）",
+      "ok": true,
+      "detail": "[]"
+    },
+    {
+      "id": "B01",
+      "desc": "四种口令模式均可解析（single/multi/password/import）",
+      "ok": true,
+      "detail": "{'single': 1, 'multi': 3, 'password': 1, 'import': 3}"
+    },
+    {
+      "id": "B02",
+      "desc": "多口令/导入能拆出 3 条（云/分享/URL），单口令只 1 条",
+      "ok": true,
+      "detail": "{'single': 1, 'multi': 3, 'import': 3}"
+    },
+    {
+      "id": "B03",
+      "desc": "含密码模式把密码应用到条目",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "B04",
+      "desc": "云1/2/5/6/7/9/10 七个通道 URL 映射正确",
+      "ok": true,
+      "detail": "{'云1oooole/raw/Ab12': {'url': 'https://pastebin.com/raw/Ab12', 'ch': '云1/pastebin'}, '云2oooole/apidb/key1': {'url': 'https://textdb.online/key1', 'ch': '云2/apidb(textdb)'}, '云5oooole/xx': {'url': 'https://cmd.im/xx', 'ch': '云5/cmd.im'}, '云6oooole/xxxxxx/note1': {'url': 'https://pasteme.tyrantg.com/api/getContent/note1(@secret)', 'ch': '云6/pasteme'}, '云7oooole/nt': {'url': 'https://note.ms/nt', 'ch': '云7/note.ms'}, '云9oooole/id': {'url': 'https://txtpad.cn/id', 'ch': '云9/txtpad'}, '云10oooole/share/a/b/k': {'url': 'https://hassdtebin.com/raw/k', 'ch': '云10/hastebin'}}"
+    },
+    {
+      "id": "B05",
+      "desc": "netcut(/p/) 与 云3 明确报错不静默",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "B06",
+      "desc": "云6 带密码拼 (@pwd) 后缀",
+      "ok": true,
+      "detail": "https://pasteme.tyrantg.com/api/getContent/note1(@pw)"
+    },
+    {
+      "id": "B07",
+      "desc": "分享包装/base64壳/裸JSON 三种解包正确",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "B08",
+      "desc": "buildSites 解析 {sites:[]} 并按 key 去重",
+      "ok": true,
+      "detail": "{'cfg': ['c1', 'c2'], 'dedup': 1}"
+    },
+    {
+      "id": "B09",
+      "desc": "generate(demoConfig) 生成 2 个站点且带完整规则",
+      "ok": true,
+      "detail": "{'count': 2, 'has_rules': True}"
+    },
+    {
+      "id": "B10",
+      "desc": "点站点 home 真实产出分类(4) 与影片(4) 且无错",
+      "ok": true,
+      "detail": "{'classes': 4, 'vods': 4, 'action': 'run-in-webview', 'err': None, 'first': '海阔演示·影片A'}"
+    },
+    {
+      "id": "B11",
+      "desc": "cate 分类过滤真实生效（动作=2 部，非恒真全量）",
+      "ok": true,
+      "detail": "{'vods': 2, 'titles': ['海阔演示·影片A', '海阔演示·影片C']}"
+    },
+    {
+      "id": "B12",
+      "desc": "search 关键词命中 1 部、无命中为 0（不假成功）",
+      "ok": true,
+      "detail": "{'hit': {'vods': 1, 'action': 'run-in-webview'}, 'zero': 0}"
+    },
+    {
+      "id": "B13",
+      "desc": "detail 产出 4 个选集且带剧集名",
+      "ok": true,
+      "detail": "{'eps': 4, 'action': 'run-in-webview', 'first': '第1集', 'err': None}"
+    },
+    {
+      "id": "B14",
+      "desc": "play 解析播放地址并交给 App 播放器（离线 mock 留痕）",
+      "ok": true,
+      "detail": "{'ok': True, 'url': 'hiker://page/vod_a/1.m3u8', 'channel': 'offline-mock'}"
+    },
+    {
+      "id": "B15",
+      "desc": "单条分享口令也能生成站点并点开产出影片",
+      "ok": true,
+      "detail": "{'gen': 1, 'home': {'vods': 1, 'first': '影片X'}}"
+    },
+    {
+      "id": "B16",
+      "desc": "Rhino/Python/选择器/空规则均明确降级，不假成功",
+      "ok": true,
+      "detail": "{'rhino': {'ok': False, 'action': 'degrade', 'err': 'unsupported-form: rhino/python', 'degrade': 'rhino/python'}, 'py': {'ok': False, 'action': 'degrade', 'err': 'unsupported-form: rhino/python', 'degrade': 'rhino/python'}, 'sel': {'ok': False, 'action': 'degrade', 'err': '选择器型规则需要 DOM/CSP 引擎，本 WebView 前端不支持', 'degrade': 'selector'}, 'empty': {'ok': False, 'action': 'no-rule', 'err': '站点未配置此段规则', 'degrade': None}}"
+    },
+    {
+      "id": "B17",
+      "desc": "规则执行结果完整不截断（300 条全量返回）",
+      "ok": true,
+      "detail": "{'ok': True, 'n': 300}"
+    },
+    {
+      "id": "B18",
+      "desc": "离线云口令明确提示需联网、不伪造内容",
+      "ok": true,
+      "detail": "['口令#1：云口令需联网取回内容（当前离线）']"
+    }
+  ]
+}

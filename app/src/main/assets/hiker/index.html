@@ -3,519 +3,480 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>海阔 · 独立模块</title>
+<title>海阔 · 视界</title>
 <style>
-*{box-sizing:border-box}
-:root{--bg:#0f1420;--card:#1a2233;--line:#33415c;--txt:#e8edf5;--sub:#9fb0c9;--acc:#7fd1ff;--ok:#5fd39a;--warn:#ffb86b;--bad:#ff7b7b}
-html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font:15px/1.6 -apple-system,"Noto Sans CJK SC",sans-serif}
-.wrap{max-width:1160px;margin:0 auto;padding:14px 14px calc(20px + env(safe-area-inset-bottom,0px))}
-header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 0 14px;border-bottom:1px solid var(--line)}
-header h1{font-size:19px;margin:0;color:var(--acc);font-weight:700}
-.badge{font:12px/1 monospace;padding:5px 9px;border:1px solid var(--line);border-radius:20px;color:var(--sub)}
-.badge.on{color:var(--ok);border-color:#2f6f52}
-.badge.off{color:var(--warn);border-color:#7a5a2c}
-nav{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
-nav button{background:var(--card);color:var(--txt);border:1px solid var(--line);border-radius:9px;padding:8px 13px;font-size:14px;cursor:pointer}
-nav button.cur{background:#24405e;border-color:var(--acc);color:var(--acc)}
-section{display:none;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:12px}
-section.cur{display:block}
-h2{font-size:16px;margin:0 0 10px;color:var(--acc)}
-p.hint{color:var(--sub);font-size:13px;margin:0 0 12px}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
-input,textarea,select{background:#0d1220;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:14px/1.4 monospace;min-width:180px}
-input{flex:1}
-button.act{background:#24405e;color:var(--acc);border:1px solid var(--acc);border-radius:8px;padding:8px 13px;cursor:pointer;font-size:14px}
-button.gh{background:transparent;color:var(--sub);border:1px solid var(--line);border-radius:8px;padding:7px 11px;cursor:pointer;font-size:13px}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
-th{color:var(--sub);font-weight:600}
-code,.mono{font:12px/1.5 monospace;color:var(--acc);word-break:break-all}
-pre{background:#0d1220;border:1px solid var(--line);border-radius:8px;padding:10px;overflow:auto;font:12px/1.5 monospace;color:var(--sub);max-height:230px;white-space:pre-wrap}
-.tag{display:inline-block;font:11px/1 monospace;padding:3px 7px;border-radius:5px;background:#26344b;color:var(--sub);margin-right:4px}
-.tag.ok{background:#204532;color:var(--ok)}.tag.bad{background:#4a2626;color:var(--bad)}.tag.warn{background:#4a3a20;color:var(--warn)}
-.log{margin-top:10px;max-height:170px;overflow:auto;font:12px/1.55 monospace;color:var(--sub);border-top:1px dashed var(--line);padding-top:8px}
-.err{color:var(--bad)}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
-.kv{background:#0d1220;border:1px solid var(--line);border-radius:9px;padding:10px}
-.kv b{display:block;color:var(--acc);font-size:22px;line-height:1.2}
-.kv span{color:var(--sub);font-size:12px}
-footer{color:var(--sub);font-size:12px;text-align:center;padding:10px 0 4px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0d1220;--card:#1a2438;--card2:#202c44;--line:#2c3a56;
+  --txt:#eaf0fb;--sub:#93a4c2;--dim:#63748f;--acc:#5db4ff;--acc2:#8a7dff;
+  --ok:#4fd39a;--warn:#ffb45e;--bad:#ff7b7b;
+}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
+  font:15px/1.6 -apple-system,"Noto Sans CJK SC","PingFang SC",sans-serif;
+  background-image:radial-gradient(1200px 600px at 10% -10%,#1a2a4a 0%,transparent 60%),
+                   radial-gradient(900px 500px at 110% 0%,#2a1f4a 0%,transparent 55%);
+  min-height:100%}
+.app{max-width:1080px;margin:0 auto;padding:0 14px calc(26px + env(safe-area-inset-bottom,0px))}
+header{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:10px;
+  padding:14px 2px 12px;background:linear-gradient(180deg,rgba(13,18,32,.97),rgba(13,18,32,.82) 70%,transparent);
+  backdrop-filter:blur(8px)}
+.brand{display:flex;align-items:center;gap:9px;font-size:18px;font-weight:800;letter-spacing:.5px}
+.logo{width:30px;height:30px;border-radius:9px;flex:none;
+  background:linear-gradient(135deg,var(--acc),var(--acc2));display:flex;align-items:center;justify-content:center;
+  color:#0b1220;font-weight:900;font-size:16px;box-shadow:0 4px 16px rgba(93,180,255,.35)}
+.brand small{display:block;font-size:10px;font-weight:500;color:var(--sub);letter-spacing:2px;line-height:1}
+.crumb{flex:1;min-width:0;color:var(--sub);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.iconbtn{width:34px;height:34px;flex:none;border-radius:10px;border:1px solid var(--line);
+  background:var(--card);color:var(--txt);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ok);flex:none;box-shadow:0 0 8px var(--ok)}
+.dot.off{background:var(--warn);box-shadow:0 0 8px var(--warn)}
+.view{display:none;animation:fade .22s ease}
+.view.cur{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.hero{padding:18px 2px 8px}
+.hero h1{margin:0 0 6px;font-size:23px;font-weight:800}
+.hero p{margin:0 0 16px;color:var(--sub);font-size:13px}
+.modes{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.modes button{flex:1;min-width:96px;background:var(--card);color:var(--sub);border:1px solid var(--line);
+  border-radius:12px;padding:11px 8px;font-size:14px;cursor:pointer;font-weight:600}
+.modes button.cur{background:linear-gradient(135deg,#244a7a,#3a3270);border-color:var(--acc);color:#fff;
+  box-shadow:0 4px 16px rgba(93,180,255,.18)}
+.modes button b{display:block;font-size:12px;font-weight:500;opacity:.75;margin-top:2px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}
+.lbl{display:block;font-size:12px;color:var(--sub);margin:0 0 7px;font-weight:600}
+textarea{width:100%;min-height:118px;background:#0b1120;color:var(--txt);border:1px solid var(--line);
+  border-radius:11px;padding:12px;font:13px/1.6 monospace;resize:vertical;outline:none}
+textarea:focus{border-color:var(--acc)}
+input.f{width:100%;background:#0b1120;color:var(--txt);border:1px solid var(--line);
+  border-radius:11px;padding:11px 12px;font:14px/1.4 -apple-system,sans-serif;outline:none}
+input.f:focus{border-color:var(--acc)}
+.row{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.btn{border-radius:11px;padding:11px 18px;font-size:14px;font-weight:700;cursor:pointer;border:1px solid var(--line)}
+.btn.primary{background:linear-gradient(135deg,var(--acc),var(--acc2));border:none;color:#0b1220;flex:1;min-width:150px;
+  box-shadow:0 6px 18px rgba(93,180,255,.28)}
+.btn.gh{background:var(--card2);color:var(--txt)}
+.btn.sm{padding:8px 13px;font-size:13px;font-weight:600}
+.btn:active{transform:translateY(1px)}
+.hintline{color:var(--dim);font-size:12px;margin-top:10px;line-height:1.7}
+.hintline code{color:var(--acc);font:12px monospace}
+.imports{display:none;gap:8px;flex-wrap:wrap;margin-top:12px}
+.imports.show{display:flex}
+.filelab{position:relative;overflow:hidden;display:inline-block}
+.filelab input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.grid.posters{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:14px;cursor:pointer;
+  transition:transform .15s,border-color .15s;position:relative;overflow:hidden}
+.card:active{transform:scale(.98)}
+.card:hover{border-color:var(--acc)}
+.site-ic{width:44px;height:44px;border-radius:13px;display:flex;align-items:center;justify-content:center;
+  font-size:20px;font-weight:800;color:#0b1220;margin-bottom:11px}
+.site-nm{font-weight:700;font-size:15px;margin-bottom:3px;word-break:break-all}
+.site-mt{font-size:11px;color:var(--dim);display:flex;gap:6px;flex-wrap:wrap}
+.pill{display:inline-block;font:10px/1 monospace;padding:3px 7px;border-radius:6px;background:#26344b;color:var(--sub)}
+.pill.ok{background:#1d4433;color:var(--ok)}
+.poster{background:var(--card);border:1px solid var(--line);border-radius:13px;overflow:hidden;cursor:pointer;transition:transform .15s}
+.poster:active{transform:scale(.97)}
+.poster .ph{aspect-ratio:2/3;background:linear-gradient(135deg,#22304c,#2a2450);display:flex;align-items:center;
+  justify-content:center;color:#5a6f96;font-size:30px;font-weight:800}
+.poster .ph img{width:100%;height:100%;object-fit:cover}
+.poster .pt{padding:8px 9px 10px}
+.poster .pt b{display:block;font-size:13px;font-weight:600;line-height:1.35;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.poster .pt span{font-size:11px;color:var(--dim);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.toolbar{display:flex;gap:9px;align-items:center;margin:4px 0 14px;flex-wrap:wrap}
+.toolbar .f{flex:1;min-width:150px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 12px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;background:var(--card);border:1px solid var(--line);color:var(--sub);
+  border-radius:20px;padding:7px 15px;font-size:13px;cursor:pointer;white-space:nowrap}
+.chip.cur{background:var(--acc);color:#0b1220;border-color:var(--acc);font-weight:700}
+.detail-hero{display:flex;gap:16px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
+.detail-hero .ph{width:120px;aspect-ratio:2/3;border-radius:11px;flex:none;
+  background:linear-gradient(135deg,#22304c,#2a2450);display:flex;align-items:center;justify-content:center;
+  color:#5a6f96;font-size:38px;font-weight:800;overflow:hidden}
+.detail-hero .ph img{width:100%;height:100%;object-fit:cover}
+.detail-hero .info{flex:1;min-width:0}
+.detail-hero h2{margin:2px 0 8px;font-size:19px}
+.detail-hero p{margin:0;color:var(--sub);font-size:13px;line-height:1.7}
+.eps{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:9px;margin-top:6px}
+.ep{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:9px 6px;text-align:center;
+  font-size:13px;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ep:active{background:var(--acc);color:#0b1220}
+.sect-t{font-size:15px;font-weight:700;margin:18px 2px 10px;display:flex;align-items:center;gap:8px}
+.sect-t:before{content:"";width:4px;height:15px;border-radius:3px;background:linear-gradient(var(--acc),var(--acc2))}
+.empty{color:var(--dim);text-align:center;padding:36px 12px;font-size:14px}
+.empty .big{font-size:34px;display:block;margin-bottom:8px;opacity:.5}
+.notice{background:#3a2a18;border:1px solid #6b4a22;color:var(--warn);border-radius:11px;
+  padding:10px 13px;font-size:13px;margin:10px 0}
+.notice.info{background:#16283f;border-color:#2c4a70;color:var(--acc)}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);
+  background:#0b1120ee;border:1px solid var(--line);color:var(--txt);padding:11px 18px;border-radius:12px;
+  font-size:14px;z-index:50;opacity:0;transition:.25s;max-width:88%;text-align:center;box-shadow:0 8px 30px #0008}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.history{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.hist{background:var(--card2);border:1px solid var(--line);border-radius:9px;padding:7px 11px;font-size:12px;
+  color:var(--sub);cursor:pointer;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+footer{color:var(--dim);font-size:11px;text-align:center;padding:22px 0 6px}
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="app">
   <header>
-    <h1>海阔 · 独立模块</h1>
-    <span class="badge" id="bBridge">桥检测中</span>
-    <span class="badge" id="bIso">隔离检测中</span>
-    <span class="badge" id="bSdk">首页 SDK 检测中</span>
-    <span class="badge" id="bMode">—</span>
+    <button class="iconbtn" id="btnBack" style="display:none" aria-label="返回">&lsaquo;</button>
+    <div class="brand"><span class="logo">海</span><span>海阔<small>HIKER VIEW</small></span></div>
+    <div class="crumb" id="crumb">录入口令，生成站点</div>
+    <span class="dot" id="netDot" title="同步桥状态"></span>
   </header>
 
-  <nav id="nav">
-    <button data-v="0" class="cur">① 入口</button>
-    <button data-v="1">② 口令管理</button>
-    <button data-v="2">③ 口令数据</button>
-    <button data-v="3">④ 生成站点</button>
-    <button data-v="4">⑤ 站点运行</button>
-    <button data-v="5">⑥ 桥接播放</button>
-    <button data-v="6">⑦ 兼容性</button>
-  </nav>
-
-  <!-- ① 入口 -->
-  <section class="cur" data-v="0">
-    <h2>① 入口 · 独立运行时状态</h2>
-    <p class="hint">本页运行在独立 Activity 的独立 WebView，与首页 <code>webOverlay</code> / <code>fongmiBridge</code> 完全隔离。首页横按钮只负责跳转到这里。</p>
-    <div class="grid">
-      <div class="kv"><b id="kBridge">—</b><span>同步桥</span></div>
-      <div class="kv"><b id="kApi">—</b><span>补齐 API</span></div>
-      <div class="kv"><b id="kRules">—</b><span>可用规则片段</span></div>
-      <div class="kv"><b id="kPort">—</b><span>本地服务端口</span></div>
+  <!-- ① 录口令 -->
+  <section class="view cur" data-v="input">
+    <div class="hero">
+      <h1>录入口令，生成站点</h1>
+      <p>粘贴海阔口令或配置地址 → 一键生成站点 → 点站点即可进入播放。</p>
     </div>
-    <div class="row" style="margin-top:12px">
-      <button class="act" id="btnBoot">初始化兼容层</button>
-      <button class="gh" id="btnProbe">重新探测桥</button>
+    <div class="modes" id="modes">
+      <button data-m="single" class="cur">单口令<b>一条口令</b></button>
+      <button data-m="multi">多口令<b>换行 / 分号分隔</b></button>
+      <button data-m="password">含密码<b>口令 + 访问密码</b></button>
+      <button data-m="import">导入<b>粘贴 / 文件 / 剪贴板</b></button>
     </div>
-    <pre id="bootOut">等待初始化…</pre>
+    <div class="box">
+      <label class="lbl" id="codeLbl">口令 / 配置地址</label>
+      <textarea id="code" placeholder="粘贴云口令、分享口令、规则 JSON 或配置 URL…&#10;例：小程序￥home_rule￥{…}&#10;或：云6oooole/xxxxxx/abc123"></textarea>
+      <div id="pwdWrap" style="display:none;margin-top:12px">
+        <label class="lbl">访问密码（云便签 / 加密口令）</label>
+        <input class="f" id="pwd" type="password" placeholder="可选，口令自带 (@密码) 时可留空">
+      </div>
+      <div class="row">
+        <button class="btn primary" id="btnGen">生成站点 →</button>
+        <button class="btn gh" id="btnDemo">载入演示</button>
+        <button class="btn gh" id="btnClear">清空</button>
+      </div>
+      <div class="imports" id="imports">
+        <button class="btn gh sm" id="btnPaste">粘贴文本</button>
+        <button class="btn gh sm" id="btnClip">读取剪贴板</button>
+        <label class="btn gh sm filelab">选择文件<input type="file" id="fileIn" accept=".txt,.json,.js,.md,*"></label>
+      </div>
+      <div class="hintline" id="hint">
+        支持 <code>云1~云10 oooole/…</code>（可带 <code>(@密码)</code>）、<code>￥home_rule￥{json}</code> 分享口令、
+        <code>base64://@标题@…</code>、规则 JSON / 数组、TVBox 配置 URL、<code>名称,http://…</code>。
+      </div>
+    </div>
+    <div class="sect-t">最近录入</div>
+    <div class="history" id="history"><span class="hintline">暂无记录</span></div>
+    <div id="genNote"></div>
   </section>
 
-  <!-- ② 口令管理 -->
-  <section data-v="1">
-    <h2>② 口令管理</h2>
-    <p class="hint">口令 = <code>{name, code, endpoint, method, headers, enabled}</code>。端点模板中的 <code>{code}</code> 会被替换。持久化走独立桥的 <code>getCache/setCache</code>，不写首页配置。</p>
-    <div class="row">
-      <input id="tName" placeholder="名称，如 演示源">
-      <input id="tCode" placeholder="口令">
-      <input id="tEp" placeholder="端点模板，如 https://x/api?k={code}&kw={kw}">
-      <select id="tMethod"><option>GET</option><option>POST</option></select>
-      <button class="act" id="btnAddToken">新增</button>
-      <button class="gh" id="btnDemoToken">载入演示</button>
+  <!-- ② 站点列表 -->
+  <section class="view" data-v="sites">
+    <div class="sect-t" id="siteTitle">我的站点</div>
+    <div class="grid" id="siteGrid"></div>
+    <div class="row" style="margin-top:16px">
+      <button class="btn gh sm" id="btnAddMore">＋ 继续录口令</button>
+      <button class="btn gh sm" id="btnDemo2">载入演示站点</button>
+      <button class="btn gh sm" id="btnClearSites">清空站点</button>
     </div>
-    <table><thead><tr><th>名称</th><th>口令</th><th>端点</th><th>状态</th><th></th></tr></thead><tbody id="tokenBody"></tbody></table>
   </section>
 
-  <!-- ③ 口令数据 -->
-  <section data-v="2">
-    <h2>③ 获取口令数据管理</h2>
-    <p class="hint">用同步桥 <code>HikerBridge.req()</code> 取数（无 CORS）。归一化支持 <code>sites[]</code> / <code>urls[]</code> / <code>data|list|items</code> / 顶层数组 / 单站点对象 / 纯文本行。</p>
-    <div class="row">
-      <select id="dsToken"></select>
-      <input id="dsKw" placeholder="关键词（可选）" value="影片">
-      <button class="act" id="btnFetch">取数</button>
-      <button class="gh" id="btnDemoData">离线样本</button>
-      <button class="gh" id="btnImport">粘贴导入</button>
+  <!-- ③ 站点内容 -->
+  <section class="view" data-v="content">
+    <div class="toolbar">
+      <input class="f" id="kw" placeholder="在此站点内搜索…">
+      <button class="btn primary sm" id="btnSearch" style="flex:none;min-width:0">搜索</button>
     </div>
-    <table><thead><tr><th>#</th><th>数据集</th><th>原始长度</th><th>解析站点</th><th></th></tr></thead><tbody id="dsBody"></tbody></table>
+    <div class="chips" id="chips"></div>
+    <div id="listNote"></div>
+    <div class="grid posters" id="vodGrid"></div>
   </section>
 
-  <!-- ④ 生成站点 -->
-  <section data-v="3">
-    <h2>④ 口令数据生成站点管理</h2>
-    <p class="hint">按 <code>key</code> 合并去重生成 registry，可导出、复制，或经 <code>/manage/csp?registry=</code> 注入宿主。失败时降级为「复制 JSON → 管理页手动粘贴」。</p>
-    <div class="row">
-      <button class="act" id="btnGen">生成站点</button>
-      <button class="gh" id="btnInject">注入到 App</button>
-      <button class="gh" id="btnCopy">复制 registry</button>
-      <button class="gh" id="btnExport">导出 JSON</button>
-    </div>
-    <table><thead><tr><th><input type="checkbox" id="ckAll" checked style="min-width:auto;flex:none"></th><th>key</th><th>name</th><th>type</th><th>api / homePage</th></tr></thead><tbody id="siteBody"></tbody></table>
-    <pre id="registryOut">尚未生成</pre>
+  <!-- ④ 详情 -->
+  <section class="view" data-v="detail">
+    <div class="detail-hero" id="detailHero"></div>
+    <div class="sect-t">选集 · 点击播放</div>
+    <div class="eps" id="eps"></div>
+    <div id="detailNote"></div>
   </section>
 
-  <!-- ⑤ 站点运行 -->
-  <section data-v="4">
-    <h2>⑤ 站点运行</h2>
-    <p class="hint">在独立运行时里跑海阔规则片段（<code>HikerCompat.classify → run</code>）。Rhino / Python / 加密规则会被明确降级，不静默失败。</p>
-    <div class="row">
-      <select id="runSite"></select>
-      <input id="runKw" placeholder="搜索关键词" value="影片">
-      <button class="act" id="btnRun">运行</button>
-      <button class="gh" id="btnRunAll">跑全部样本规则</button>
-    </div>
-    <table><thead><tr><th>#</th><th>标题</th><th>播放地址 / 规则形态</th><th></th></tr></thead><tbody id="vodBody"></tbody></table>
-    <pre id="runOut">等待运行…</pre>
-  </section>
-
-  <!-- ⑥ 桥接播放 -->
-  <section data-v="5">
-    <h2>⑥ 桥接通过 App 播放器播放</h2>
-    <p class="hint"><code>HikerBridge.play()</code> → 本地 <code>/action?do=push&amp;url=</code> → <code>ServerEvent.push</code> → <code>VideoActivity.push</code>。独立模块不直接引用首页播放器类。</p>
-    <div class="row">
-      <input id="pUrl" placeholder="播放直链" value="https://example.com/a.m3u8">
-      <input id="pTitle" placeholder="标题" value="影片A">
-      <button class="act" id="btnPlay">播放</button>
-    </div>
-    <table><thead><tr><th>#</th><th>标题</th><th>地址</th><th>通道</th></tr></thead><tbody id="playBody"></tbody></table>
-  </section>
-
-  <!-- ⑦ 兼容性 -->
-  <section data-v="6">
-    <h2>⑦ 兼容性（构建前置结论）</h2>
-    <p class="hint">五类历史桥的能力探测 + 多变规则形态分类。本页刻意不注册 <code>window.fm</code> / <code>fongmiBridge</code> 异步形态。</p>
-    <div class="row"><button class="act" id="btnCompat">刷新能力表</button></div>
-    <pre id="compatOut">等待探测…</pre>
-    <h2 style="margin-top:14px">运行日志</h2>
-    <div class="log" id="log"></div>
-  </section>
-
-  <footer>海阔独立入口 · 阶段七 · 独立 WebView / 独立同步桥 / 官方契约补齐 / hiker:// 分发 / HikerCompat v2.0.0</footer>
+  <footer>海阔独立运行时 · 独立 WebView / 同步桥 · 口令 → 站点 → 播放</footer>
 </div>
+<div class="toast" id="toast"></div>
 
+<!-- 运行时层（顺序不可变）：独立同步桥 → scheme → API 契约 → JsT4 → shim → 兼容层 → 应用逻辑 -->
 <script src="hiker_bridge_adapter.js"></script>
 <script src="hiker_scheme.js"></script>
 <script src="hiker_api_surface.js"></script>
 <script src="jst4.js"></script>
 <script src="hiker_runtime_shim.js"></script>
 <script src="hiker_compat.js"></script>
+<script src="hiker_app.js"></script>
 <script>
-/* 容器页逻辑：ES5 + Promise，旧 WebView 兼容（Chromium 50~70） */
+/* 容器页 UI 逻辑：ES5，旧 WebView 兼容（Chromium 50~70） */
 (function () {
   'use strict';
-  var S = { tokens: [], datasets: [], sites: [], vods: [], plays: [], inst: null, seq: 1 };
+  var G = window, A = window.HikerApp;
   var $ = function (id) { return document.getElementById(id); };
-  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
-    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  var esc = function (v) { return String(v === null || v === undefined ? '' : v)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;'); };
+  var S = { mode: 'single', sites: [], stack: [], site: null, vods: [], classes: [], cls: '', vod: null, detail: null };
 
-  function log(msg, bad) {
-    var d = document.createElement('div');
-    if (bad) d.className = 'err';
-    d.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
-    $('log').appendChild(d); $('log').scrollTop = $('log').scrollHeight;
+  var toastTimer = null;
+  function toast(msg) {
+    var t = $('toast'); t.textContent = msg; t.className = 'toast show';
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.className = 'toast'; }, 2600);
   }
-  function save() {
-    try { if (window.HikerHost) window.HikerHost.req; } catch (e) {}
-    try { localStorage.setItem('hiker_tokens', JSON.stringify(S.tokens)); } catch (e) {}
+  function show(v, crumb, canBack) {
+    var vs = document.getElementsByTagName('section'), i;
+    for (i = 0; i < vs.length; i++) vs[i].className = 'view' + (vs[i].getAttribute('data-v') === v ? ' cur' : '');
+    $('crumb').textContent = crumb || '';
+    $('btnBack').style.display = canBack ? 'flex' : 'none';
+    window.scrollTo(0, 0);
   }
-  function load() {
-    try { var v = localStorage.getItem('hiker_tokens'); if (v) S.tokens = JSON.parse(v); } catch (e) {}
+  function push(v, crumb) { S.stack.push({ v: v, crumb: crumb }); apply(); }
+  function apply() {
+    var top = S.stack[S.stack.length - 1];
+    if (!top) { show('input', '录入口令，生成站点', false); return; }
+    show(top.v, top.crumb, true);
   }
+  function goInput() { S.stack = []; show('input', '录入口令，生成站点', false); }
+  function goSites() { S.stack = []; push('sites', '我的站点 · ' + S.sites.length + ' 个'); renderSites(); }
+  $('btnBack').onclick = function () {
+    if (!S.stack.length) { goInput(); return; }
+    S.stack.pop();
+    if (!S.stack.length) goInput(); else apply();
+  };
 
-  /* ---------------- 导航 ---------------- */
-  var nav = $('nav');
-  nav.addEventListener('click', function (e) {
-    var b = e.target.closest ? e.target.closest('button') : null;
-    if (!b) return;
-    var v = b.getAttribute('data-v');
-    var bs = nav.getElementsByTagName('button');
-    for (var i = 0; i < bs.length; i++) bs[i].className = bs[i] === b ? 'cur' : '';
-    var ss = document.getElementsByTagName('section');
-    for (var j = 0; j < ss.length; j++) ss[j].className = ss[j].getAttribute('data-v') === v ? 'cur' : '';
-  });
-
-  /* ---------------- ① 兼容性初始化 ---------------- */
+  /* 静默装配运行时层；这一层只负责执行规则，不给用户展示任何调试信息 */
   function boot() {
-    var out = [];
-    var inst = window.HikerCompat.install({
-      isolation: 'strict',
-      page: { MY_URL: 'https://example.com/s?wd=test', MY_KEYWORD: 'test', MY_PAGE: 1 },
-      offlineHtml: '<html><body><a class="item" href="/v/1.html">影片A</a></body></html>',
-      onResult: function (v, json) { window.HikerHost.report('hiker.result', json); }
-    });
-    S.inst = inst;
-    var p = inst.probe;
-    $('bBridge').textContent = p.syncUsable.length ? '同步桥 ' + p.syncUsable.join('/') : '仅异步桥';
-    $('bBridge').className = 'badge ' + (p.syncUsable.length ? 'on' : 'off');
-    $('bIso').textContent = p.documentIsolated ? '作用域隔离 ✓' : '检测到首页标记';
-    $('bIso').className = 'badge ' + (p.documentIsolated ? 'on' : 'off');
-    $('bSdk').textContent = p.hasHomeSdk ? '首页 SDK 存在（异常）' : '无首页 SDK ✓';
-    $('bSdk').className = 'badge ' + (p.hasHomeSdk ? 'off' : 'on');
-    var cap = window.HikerHost.capabilities();
-    $('bMode').textContent = cap.bridge + (cap.port ? ':' + cap.port : '');
-    $('kBridge').textContent = inst.bridge || cap.bridge;
-    var cov = inst.coverage || window.HikerCompat.coverage();
-    $('kApi').textContent = cov.available + '/' + cov.official;
-    $('kRules').textContent = '内置';
-    $('kPort').textContent = cap.port || '离线';
-    out.push('bridge      : ' + (inst.bridge || '(未装配)'));
-    out.push('syncUsable  : ' + JSON.stringify(p.syncUsable));
-    out.push('asyncOnly   : ' + p.asyncOnly);
-    out.push('hasHomeSdk  : ' + p.hasHomeSdk);
-    out.push('isolated    : ' + p.documentIsolated);
-    out.push('apiSurface  : ' + (inst.apiSurface ? inst.apiSurface.added + ' 个 API 已装配' : '未装配'));
-    out.push('apiCoverage : ' + cov.available + '/' + cov.official
-      + '  [full ' + cov.levels.full + ' / bridge ' + cov.levels.bridge
-      + ' / delegate ' + cov.levels.delegate + ' / degrade ' + cov.levels.degrade + ']');
-    out.push('hikerScheme : ' + (inst.scheme ? inst.scheme.wrapped + ' 个同步桥已包装' : '未装配'));
-    out.push('shim        : ' + inst.shim + '  jst4: ' + inst.jst4);
-    out.push('warnings    : ' + (inst.warnings.length ? inst.warnings.join(' | ') : '无'));
-    out.push('capabilities: ' + JSON.stringify(cap));
-    $('bootOut').textContent = out.join('\n');
-    log('兼容层初始化完成：同步桥 ' + p.syncUsable.length + ' 个，警告 ' + inst.warnings.length + ' 条');
-    compat();
-  }
-  $('btnBoot').onclick = boot;
-  $('btnProbe').onclick = function () {
-    var p = window.HikerCompat.probe();
-    $('bootOut').textContent = JSON.stringify(p, null, 2);
-    log('重新探测：' + p.syncUsable.join('/'));
-  };
-
-  /* ---------------- ② 口令 ---------------- */
-  function renderTokens() {
-    var h = '';
-    for (var i = 0; i < S.tokens.length; i++) {
-      var t = S.tokens[i];
-      h += '<tr><td>' + esc(t.name) + '</td><td class="mono">' + esc(t.code) + '</td>'
-        + '<td class="mono">' + esc(t.endpoint) + '</td>'
-        + '<td><span class="tag ' + (t.enabled ? 'ok' : '') + '">' + (t.enabled ? '启用' : '停用') + '</span></td>'
-        + '<td><button class="gh" data-del="' + i + '">删</button></td></tr>';
-    }
-    $('tokenBody').innerHTML = h || '<tr><td colspan="5" class="hint">暂无口令，点「载入演示」</td></tr>';
-    var sel = $('dsToken'); var old = sel.value; sel.innerHTML = '';
-    for (var j = 0; j < S.tokens.length; j++) {
-      var o = document.createElement('option'); o.value = S.tokens[j].code;
-      o.textContent = S.tokens[j].name + ' / ' + S.tokens[j].code; sel.appendChild(o);
-    }
-    if (old) sel.value = old;
-  }
-  $('tokenBody').addEventListener('click', function (e) {
-    var i = e.target.getAttribute && e.target.getAttribute('data-del');
-    if (i == null) return; S.tokens.splice(+i, 1); save(); renderTokens(); log('删除口令');
-  });
-  $('btnAddToken').onclick = function () {
-    var t = { name: $('tName').value || '未命名', code: $('tCode').value || '',
-      endpoint: $('tEp').value || '', method: $('tMethod').value,
-      headers: '', enabled: true };
-    if (!t.code) { log('口令不能为空', true); return; }
-    S.tokens.push(t); save(); renderTokens(); log('新增口令 ' + t.name);
-  };
-  $('btnDemoToken').onclick = function () {
-    S.tokens = [{ name: '演示源', code: 'demo-2026',
-      endpoint: 'https://example.com/api?k={code}&kw={kw}', method: 'GET', headers: '', enabled: true }];
-    save(); renderTokens(); log('载入演示口令');
-  };
-
-  /* ---------------- ③ 取数 ---------------- */
-  function normalize(raw) {
-    var sites = [], d;
-    try { d = JSON.parse(raw); } catch (e) { d = null; }
-    function one(o, i) {
-      if (typeof o === 'string') {
-        var m = o.match(/^(https?:\/\/\S+)/);
-        return m ? { key: 's' + i, name: o.split(',')[0].slice(0, 30), type: 3, api: m[1], homePage: '' } : null;
+    try {
+      if (G.HikerCompat && G.HikerCompat.install) {
+        G.HikerCompat.install({ isolation: 'strict',
+          page: { MOBILE_UA: navigator.userAgent, PC_UA: '' },
+          onResult: function () {} });
       }
-      if (!o || typeof o !== 'object') return null;
-      return { key: String(o.key || o.id || o.name || ('s' + i)),
-        name: String(o.name || o.title || o.key || ('站点' + i)),
-        type: Number(o.type || 3), api: String(o.api || o.url || o.searchUrl || ''),
-        homePage: String(o.homePage || o.home || '') };
-    }
-    if (d && Array.isArray(d)) { for (var a = 0; a < d.length; a++) { var s = one(d[a], a); if (s) sites.push(s); } }
-    else if (d && typeof d === 'object') {
-      var arr = d.sites || d.urls || d.data || d.list || d.items || d.depot || null;
-      if (Array.isArray(arr)) { for (var b = 0; b < arr.length; b++) { var t = one(arr[b], b); if (t) sites.push(t); } }
-      else { var u = one(d, 0); if (u) sites.push(u); }
+    } catch (e) {}
+    A.wire();
+    var offline = !!(G.HikerHost && G.HikerHost.isOffline);
+    $('netDot').className = 'dot' + (offline ? ' off' : '');
+    $('netDot').title = offline ? '离线：云口令/配置地址需联网，演示站点可完整体验' : '同步桥已连接';
+    S.sites = A.load('sites', []) || [];
+    renderHistory();
+    if (S.sites.length) goSites();
+  }
+
+  /* ---------- 录口令 ---------- */
+  var modeHint = {
+    single: '支持 <code>云1~云10 oooole/…</code>、<code>￥home_rule￥{json}</code>、<code>base64://@标题@…</code>、规则 JSON、配置 URL、<code>名称,http://…</code>。',
+    multi: '每行一条口令，或用 <code>;</code> 分隔；多条口令的站点会合并去重。',
+    password: '口令里含 <code>(@密码)</code> 或分享人设了访问密码时，用此模式；也可在下方填密码。',
+    import: '粘贴整段文本、从文件导入，或读取系统剪贴板；会自动识别分享包装 / JSON 数组 / 多口令。'
+  };
+  $('modes').addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button') : e.target;
+    if (!b || !b.getAttribute('data-m')) return;
+    S.mode = b.getAttribute('data-m');
+    var bs = $('modes').getElementsByTagName('button'), i;
+    for (i = 0; i < bs.length; i++) bs[i].className = (bs[i] === b ? 'cur' : '');
+    $('pwdWrap').style.display = (S.mode === 'password') ? 'block' : 'none';
+    $('imports').className = 'imports' + (S.mode === 'import' ? ' show' : '');
+    $('hint').innerHTML = modeHint[S.mode];
+    $('codeLbl').textContent = (S.mode === 'multi' || S.mode === 'import') ? '口令（可多行 / 整段）' : '口令 / 配置地址';
+  });
+  function addHistory(text) {
+    var h = A.load('history', []);
+    h = [String(text).slice(0, 160)].concat(h.filter(function (x) { return x !== text; })).slice(0, 6);
+    A.save('history', h); renderHistory();
+  }
+  function renderHistory() {
+    var h = A.load('history', []), out = '', i;
+    for (i = 0; i < h.length; i++) out += '<span class="hist" data-h="' + i + '" title="' + esc(h[i]) + '">' + esc(h[i]) + '</span>';
+    $('history').innerHTML = out || '<span class="hintline">暂无记录</span>';
+  }
+  $('history').addEventListener('click', function (e) {
+    var i = e.target.getAttribute && e.target.getAttribute('data-h');
+    if (i === null || i === undefined) return;
+    var h = A.load('history', []); $('code').value = h[+i] || '';
+    toast('已填入历史口令');
+  });
+  function doGenerate(text) {
+    text = String(text || '').replace(/^\s+|\s+$/g, '');
+    if (!text) { toast('请先录入口令'); return; }
+    var res = A.generate(text, { mode: S.mode, password: $('pwd').value });
+    addHistory(text);
+    var html = '';
+    if (res.notes.length) html += '<div class="notice info">' + esc(res.notes.join('　·　')) + '</div>';
+    if (res.warnings.length) html += '<div class="notice">' + esc(res.warnings.join('　·　')) + '</div>';
+    $('genNote').innerHTML = html;
+    if (!res.count) { toast('未生成站点：' + (res.notes[0] || '请检查口令')); return; }
+    var seen = {}, merged = [], i;
+    for (i = 0; i < res.sites.length; i++) { seen[res.sites[i].key] = 1; merged.push(res.sites[i]); }
+    for (i = 0; i < S.sites.length; i++) if (!seen[S.sites[i].key]) merged.push(S.sites[i]);
+    S.sites = merged; A.save('sites', S.sites);
+    toast('已生成 ' + res.count + ' 个站点');
+    goSites();
+  }
+  $('btnGen').onclick = function () { doGenerate($('code').value); };
+  $('btnClear').onclick = function () { $('code').value = ''; $('pwd').value = ''; $('genNote').innerHTML = ''; };
+  $('btnDemo').onclick = function () {
+    /* 走真实链路：把一份配置口令填进输入框 → doGenerate 解析 → 生成带规则的站点 */
+    var cfg = A.demoConfig();
+    $('code').value = cfg;
+    S.mode = 'single';
+    var bs = $('modes').getElementsByTagName('button'), i;
+    for (i = 0; i < bs.length; i++) bs[i].className = (bs[i].getAttribute('data-m') === 'single' ? 'cur' : '');
+    $('pwdWrap').style.display = 'none'; $('imports').className = 'imports';
+    doGenerate(cfg);
+  };
+  $('btnPaste').onclick = function () {
+    var v = window.prompt('粘贴整段口令 / 配置文本：');
+    if (v) { $('code').value = v; toast('已填入 ' + v.length + ' 字符'); }
+  };
+  $('btnClip').onclick = function () {
+    if (G.navigator && navigator.clipboard && navigator.clipboard.readText) {
+      navigator.clipboard.readText().then(function (t) { $('code').value = t || ''; toast(t ? '已读取剪贴板' : '剪贴板为空'); })
+        .catch(function () { toast('剪贴板不可用，请用「粘贴文本」'); });
     } else {
-      var lines = String(raw || '').split(/\r?\n/);
-      for (var c = 0; c < lines.length; c++) { var v = one(lines[c].trim(), c); if (v) sites.push(v); }
+      var v = window.prompt('此环境无法直接读剪贴板，请粘贴：');
+      if (v) { $('code').value = v; toast('已填入'); }
     }
-    return sites;
-  }
-  function addDataset(name, raw, parsed) {
-    S.datasets.push({ id: S.seq++, name: name, raw: String(raw || ''), sites: parsed });
-    renderDs(); log('数据集 ' + name + '：解析 ' + parsed.length + ' 个站点');
-  }
-  function renderDs() {
-    var h = '';
-    for (var i = 0; i < S.datasets.length; i++) {
-      var d = S.datasets[i];
-      h += '<tr><td>' + d.id + '</td><td>' + esc(d.name) + '</td><td>' + d.raw.length + '</td>'
-        + '<td>' + d.sites.length + '</td><td><button class="gh" data-dsdel="' + i + '">删</button></td></tr>';
-    }
-    $('dsBody').innerHTML = h || '<tr><td colspan="5" class="hint">暂无数据集</td></tr>';
-  }
-  $('dsBody').addEventListener('click', function (e) {
-    var i = e.target.getAttribute && e.target.getAttribute('data-dsdel');
-    if (i != null) { S.datasets.splice(+i, 1); renderDs(); }
-  });
-  $('btnFetch').onclick = function () {
-    var code = $('dsToken').value || 'demo-2026', kw = $('dsKw').value || '';
-    var t = null;
-    for (var i = 0; i < S.tokens.length; i++) if (S.tokens[i].code === code) t = S.tokens[i];
-    var ep = t ? t.endpoint : 'https://example.com/api?k={code}&kw={kw}';
-    var url = ep.replace('{code}', encodeURIComponent(code)).replace('{kw}', encodeURIComponent(kw));
-    var raw = window.HikerHost ? window.HikerHost.req(url, '{}') : '';
-    addDataset('取数 ' + code, raw, normalize(raw));
   };
-  $('btnDemoData').onclick = function () {
-    var demo = { sites: [
-      { key: 'hk_a', name: '海阔演示A', type: 3, api: 'https://example.com/a' },
-      { key: 'hk_b', name: '海阔演示B', type: 3, api: 'https://example.com/b' },
-      { key: 'hk_c', name: '海阔演示C', type: 3, api: 'https://example.com/c' },
-      { key: 'hk_d', name: '海阔演示D', type: 3, api: 'https://example.com/d' } ] };
-    addDataset('离线样本', JSON.stringify(demo), normalize(JSON.stringify(demo)));
-  };
-  $('btnImport').onclick = function () {
-    var v = window.prompt('粘贴口令数据（JSON 或文本）');
-    if (v != null) addDataset('导入', v, normalize(v));
+  $('fileIn').onchange = function (e) {
+    var f = e.target.files && e.target.files[0]; if (!f) return;
+    var rd = new FileReader();
+    rd.onload = function () { $('code').value = String(rd.result || ''); toast('已导入 ' + f.name); };
+    rd.onerror = function () { toast('文件读取失败'); };
+    rd.readAsText(f, 'UTF-8');
   };
 
-  /* ---------------- ④ 生成站点 / 注入 ---------------- */
-  function genSites() {
-    var map = {}, order = [];
-    for (var i = 0; i < S.datasets.length; i++) {
-      var ss = S.datasets[i].sites;
-      for (var j = 0; j < ss.length; j++) {
-        var s = ss[j];
-        if (!map[s.key]) { map[s.key] = s; order.push(s.key); }
-      }
-    }
-    S.sites = [];
-    for (var k = 0; k < order.length; k++) S.sites.push(map[order[k]]);
-    renderSites(); return S.sites.length;
-  }
-  function registry() {
-    var items = [];
-    for (var i = 0; i < S.sites.length; i++) items.push({
-      key: S.sites[i].key, name: S.sites[i].name, type: S.sites[i].type,
-      api: S.sites[i].api, homePage: S.sites[i].homePage });
-    return { items: items };
-  }
+  /* ---------- 站点列表 ---------- */
+  var COLORS = ['#5db4ff', '#4fd39a', '#ffb45e', '#8a7dff', '#ff8fb1', '#5fd0d3'];
   function renderSites() {
-    var h = '';
-    for (var i = 0; i < S.sites.length; i++) {
-      var s = S.sites[i];
-      h += '<tr><td><input type="checkbox" checked data-si="' + i + '" style="min-width:auto;flex:none"></td>'
-        + '<td class="mono">' + esc(s.key) + '</td><td>' + esc(s.name) + '</td><td>' + s.type + '</td>'
-        + '<td class="mono">' + esc(s.api || s.homePage) + '</td></tr>';
+    $('siteTitle').textContent = '我的站点 · ' + S.sites.length + ' 个';
+    if (!S.sites.length) { $('siteGrid').innerHTML = '<div class="empty"><span class="big">◇</span>还没有站点，回首页录入口令</div>'; return; }
+    var h = '', i, st, c, initial;
+    for (i = 0; i < S.sites.length; i++) {
+      st = S.sites[i]; c = st.color || COLORS[i % COLORS.length];
+      initial = (st.name || '?').replace(/[^0-9A-Za-z\u4e00-\u9fa5]/g, '').charAt(0) || '海';
+      h += '<div class="card" data-si="' + i + '">'
+        + '<div class="site-ic" style="background:' + c + '">' + esc(initial) + '</div>'
+        + '<div class="site-nm">' + esc(st.name) + '</div>'
+        + '<div class="site-mt"><span class="pill">' + (st.siteKind === 'rule' ? '规则站' : '配置站') + '</span>'
+        + (st.searchable ? '<span class="pill ok">可搜索</span>' : '')
+        + (st.group ? '<span class="pill">' + esc(st.group) + '</span>' : '') + '</div></div>';
     }
-    $('siteBody').innerHTML = h || '<tr><td colspan="5" class="hint">尚未生成站点</td></tr>';
-    var sel = $('runSite'); sel.innerHTML = '';
-    for (var j = 0; j < S.sites.length; j++) {
-      var o = document.createElement('option'); o.value = S.sites[j].key;
-      o.textContent = S.sites[j].name; sel.appendChild(o);
-    }
-    $('registryOut').textContent = JSON.stringify(registry(), null, 2);
+    $('siteGrid').innerHTML = h;
   }
-  $('ckAll').onchange = function () {
-    var c = $('siteBody').getElementsByTagName('input');
-    for (var i = 0; i < c.length; i++) c[i].checked = $('ckAll').checked;
+  $('siteGrid').addEventListener('click', function (e) {
+    var n = e.target, idx = null;
+    while (n && n !== this) { if (n.getAttribute && n.getAttribute('data-si') !== null) { idx = n.getAttribute('data-si'); break; } n = n.parentNode; }
+    if (idx === null) return;
+    openSite(S.sites[+idx]);
+  });
+  $('btnAddMore').onclick = goInput;
+  $('btnDemo2').onclick = function () {
+    var res = A.generate(A.demoConfig(), { mode: 'single' });
+    var seen = {}, merged = res.sites.slice(), i;
+    for (i = 0; i < merged.length; i++) seen[merged[i].key] = 1;
+    for (i = 0; i < S.sites.length; i++) if (!seen[S.sites[i].key]) merged.push(S.sites[i]);
+    S.sites = merged; A.save('sites', S.sites); renderSites(); toast('已载入演示站点');
   };
-  $('btnGen').onclick = function () { var n = genSites(); log('生成站点 ' + n + ' 个'); };
-  $('btnInject').onclick = function () {
-    var r = JSON.stringify(registry());
-    var port = (window.HikerHost.capabilities() || {}).port;
-    var url = 'http://127.0.0.1:' + (port || 9978) + '/manage/csp?registry=' + encodeURIComponent(r);
-    var res = window.HikerHost ? window.HikerHost.req(url, '{}') : '';
-    log('注入 /manage/csp：' + (res ? '已请求（' + res.length + ' 字节响应）' : '离线降级，请复制 JSON 手动粘贴'));
-  };
-  $('btnCopy').onclick = function () {
-    var t = $('registryOut').textContent;
-    try { navigator.clipboard.writeText(t); } catch (e) {}
-    log('复制 registry 到剪贴板（离线环境请手动选中 pre 内容）');
-  };
-  $('btnExport').onclick = function () { log('导出：' + $('registryOut').textContent.slice(0, 120) + '…'); };
+  $('btnClearSites').onclick = function () { S.sites = []; A.save('sites', []); renderSites(); toast('已清空站点'); };
 
-  /* ---------------- ⑤ 站点运行（真实海阔规则片段） ---------------- */
-  var SAMPLE_RULES = [
-    { id: 'local', name: '本地 DOM 规则', code: "var h=fetch('https://e.com/s');setResult(pdfa(h,'a.item'));" },
-    { id: 'request', name: '同步 request 规则', code: "var h=request('https://e.com/s');setResult([{title:'A',url:'https://e.com/1.m3u8'}]);" },
-    { id: 'lazy', name: 'jQuery 风格 lazyRule', code: "var h=fetch('https://e.com/s');setResult($.fn.lazyRule(function(){return 'ok';}));" },
-    { id: 'rhino', name: 'Rhino 专有（应降级）', code: "var x=new JavaAdapter(java.lang.Runnable,{run:function(){}});setResult(x);" },
-    { id: 'py', name: 'Python 规则（应降级）', code: "py: import requests; setResult(requests.get('http://x'))" }
-  ];
-  function runRules(list, label) {
-    var out = [], vods = [];
-    for (var i = 0; i < list.length; i++) {
-      var r = window.HikerCompat.run(list[i].code,
-        { MY_URL: 'https://e.com/s?wd=' + $('runKw').value, MY_KEYWORD: $('runKw').value, MY_PAGE: 1 },
-        { id: list[i].id });
-      out.push((r.ok ? '✓' : '✗') + ' ' + list[i].id + ' [' + r.action + '] '
-        + (r.err || r.out || '').slice(0, 90));
-      if (r.ok) vods.push({ title: list[i].name, url: (r.out || '').slice(0, 90), form: r.forms.map(function (f) { return f.id; }).join(',') });
-    }
-    $('runOut').textContent = label + '\n' + out.join('\n');
-    S.vods = vods; renderVods();
-    log(label + '：' + out.filter(function (x) { return x.charAt(0) === '✓'; }).length + '/' + list.length + ' 产出 setResult');
-    return out;
+  /* ---------- 站点内容（home / cate / search） ---------- */
+  function openSite(st) {
+    S.site = st; S.cls = '';
+    var r = A.home(st);
+    S.classes = r.classes.length ? r.classes : (st.categories || []);
+    S.vods = r.vods;
+    push('content', st.name);
+    renderChips(); renderVods(); renderListNote(r);
   }
-  function renderVods() {
+  function renderListNote(r) {
     var h = '';
-    for (var i = 0; i < S.vods.length; i++) {
-      h += '<tr><td>' + (i + 1) + '</td><td>' + esc(S.vods[i].title) + '</td>'
-        + '<td class="mono">' + esc(S.vods[i].url) + '<br><span class="tag">' + esc(S.vods[i].form) + '</span></td>'
-        + '<td><button class="gh" data-play="' + i + '">播放</button></td></tr>';
+    if (!r.vods.length && r.action === 'degrade') {
+      h = '<div class="notice">该站点首页规则需要 ' + esc(r.degrade || '内核引擎') +
+          '，本独立 WebView 只能执行 js: 规则片段；可点「载入演示站点」体验完整链路。</div>';
+    } else if (!r.vods.length && r.err && r.action !== 'no-rule') {
+      h = '<div class="notice">规则未产出内容：' + esc(r.err) + '</div>';
+    } else if (r.action === 'no-rule') {
+      h = '<div class="notice">此站点来自配置，未提供可在 WebView 执行的首页规则（home/find_rule）；' +
+          '配置型站点（csp_/jar/X5）需 App 原生引擎，独立 WebView 不接管。</div>';
     }
-    $('vodBody').innerHTML = h || '<tr><td colspan="4" class="hint">尚无运行结果</td></tr>';
+    $('listNote').innerHTML = h;
   }
-  $('btnRun').onclick = function () { runRules(SAMPLE_RULES.slice(0, 3), '站点运行结果'); };
-  $('btnRunAll').onclick = function () { runRules(SAMPLE_RULES, '全部样本规则（含降级）'); };
-  $('vodBody').addEventListener('click', function (e) {
-    var i = e.target.getAttribute && e.target.getAttribute('data-play');
-    if (i != null) doPlay(S.vods[+i].url || 'https://example.com/' + (+i + 1) + '.m3u8', S.vods[+i].title);
+  function renderChips() {
+    var h = '', i;
+    if (!S.classes.length) { $('chips').innerHTML = ''; return; }
+    for (i = 0; i < S.classes.length; i++)
+      h += '<span class="chip' + (S.cls === S.classes[i] || (i === 0 && !S.cls) ? ' cur' : '') + '" data-c="' + esc(S.classes[i]) + '">' + esc(S.classes[i]) + '</span>';
+    $('chips').innerHTML = h;
+  }
+  $('chips').addEventListener('click', function (e) {
+    var c = e.target.getAttribute && e.target.getAttribute('data-c');
+    if (c === null || c === undefined) return;
+    S.cls = c;
+    var r = A.cate(S.site, c);
+    S.vods = r.vods; renderChips(); renderVods(); renderListNote(r);
+  });
+  $('btnSearch').onclick = function () {
+    var kw = $('kw').value.replace(/^\s+|\s+$/g, '');
+    if (!kw) { toast('请输入关键词'); return; }
+    if (!S.site) return;
+    var r = A.search(S.site, kw);
+    S.cls = ''; S.vods = r.vods; renderChips(); renderVods(); renderListNote(r);
+    toast('搜索「' + kw + '」：' + r.vods.length + ' 条');
+  };
+  function renderVods() {
+    if (!S.vods.length) { $('vodGrid').innerHTML = '<div class="empty"><span class="big">▤</span>暂无内容</div>'; return; }
+    var h = '', i, v, ph;
+    for (i = 0; i < S.vods.length; i++) {
+      v = S.vods[i];
+      ph = v.pic ? '<img src="' + esc(v.pic) + '" alt="">' : esc((v.title || '海').charAt(0));
+      h += '<div class="poster" data-vi="' + i + '"><div class="ph">' + ph + '</div>'
+        + '<div class="pt"><b>' + esc(v.title) + '</b><span>' + esc(v.desc || '') + '</span></div></div>';
+    }
+    $('vodGrid').innerHTML = h;
+  }
+  $('vodGrid').addEventListener('click', function (e) {
+    var n = e.target, idx = null;
+    while (n && n !== this) { if (n.getAttribute && n.getAttribute('data-vi') !== null) { idx = n.getAttribute('data-vi'); break; } n = n.parentNode; }
+    if (idx === null) return;
+    openDetail(S.vods[+idx]);
   });
 
-  /* ---------------- ⑥ 播放 ---------------- */
-  function doPlay(url, title) {
-    var ok = window.HikerHost ? window.HikerHost.play(url, title, '') : false;
-    S.plays.push({ title: title, url: url, channel: ok ? 'local-push(/action?do=push)' : 'offline-mock' });
-    renderPlays(); log('播放：' + title + ' → ' + (ok ? '本地推送' : '离线 mock'));
+  /* ---------- 详情 / 选集 / 播放 ---------- */
+  function openDetail(v) {
+    S.vod = v;
+    var d = A.detail(S.site, v);
+    S.detail = d;
+    var ph = d.pic ? '<img src="' + esc(d.pic) + '" alt="">' : esc((v.title || '海').charAt(0));
+    $('detailHero').innerHTML = '<div class="ph">' + ph + '</div><div class="info">'
+      + '<h2>' + esc(v.title) + '</h2><p>' + esc(d.desc || '暂无简介') + '</p>'
+      + '<div style="margin-top:10px"><span class="pill">' + esc(S.site.name) + '</span> '
+      + '<span class="pill ' + (d.episodes.length ? 'ok' : '') + '">' + d.episodes.length + ' 集</span></div></div>';
+    var h = '', i;
+    for (i = 0; i < d.episodes.length; i++)
+      h += '<div class="ep" data-ei="' + i + '" title="' + esc(d.episodes[i].name) + '">' + esc(d.episodes[i].name) + '</div>';
+    $('eps').innerHTML = h || '<div class="empty" style="grid-column:1/-1">该剧集列表为空</div>';
+    var note = '';
+    if (d.action === 'degrade') note = '<div class="notice">详情规则需 ' + esc(d.degrade) + ' 引擎，已降级。</div>';
+    else if (!d.episodes.length && d.err) note = '<div class="notice">详情规则未产出选集：' + esc(d.err) + '</div>';
+    $('detailNote').innerHTML = note;
+    push('detail', v.title);
   }
-  function renderPlays() {
-    var h = '';
-    for (var i = 0; i < S.plays.length; i++) {
-      h += '<tr><td>' + (i + 1) + '</td><td>' + esc(S.plays[i].title) + '</td>'
-        + '<td class="mono">' + esc(S.plays[i].url) + '</td><td><span class="tag ok">' + esc(S.plays[i].channel) + '</span></td></tr>';
-    }
-    $('playBody').innerHTML = h || '<tr><td colspan="4" class="hint">尚无播放记录</td></tr>';
-  }
-  $('btnPlay').onclick = function () { doPlay($('pUrl').value, $('pTitle').value || '未命名'); };
+  $('eps').addEventListener('click', function (e) {
+    var i = e.target.getAttribute && e.target.getAttribute('data-ei');
+    if (i === null || i === undefined) return;
+    var ep = S.detail.episodes[+i];
+    var r = A.playEpisode(S.site, S.vod, ep);
+    if (r.ok) toast('▶ ' + ep.name + ' 已交给 App 播放器');
+    else toast('播放失败：' + (r.err || '无地址'));
+  });
 
-  /* ---------------- ⑦ 能力表 ---------------- */
-  function compat() {
-    var p = window.HikerCompat.probe(), lines = [];
-    lines.push('=== 五类历史桥能力探测 ===');
-    for (var i = 0; i < p.bridges.length; i++) {
-      var b = p.bridges[i];
-      lines.push('  ' + (b.present ? '●' : '○') + ' ' + b.id + ' [' + b.kind + '] ' + b.desc);
-    }
-    lines.push('');
-    lines.push('  syncUsable   : ' + JSON.stringify(p.syncUsable));
-    lines.push('  asyncOnly    : ' + p.asyncOnly);
-    lines.push('  hasHomeSdk   : ' + p.hasHomeSdk + '  (应为 false)');
-    lines.push('  isolated     : ' + p.documentIsolated + '  (应为 true)');
-    lines.push('');
-    lines.push('=== 多变规则形态分类 ===');
-    for (var j = 0; j < SAMPLE_RULES.length; j++) {
-      var c = window.HikerCompat.classify(SAMPLE_RULES[j].code);
-      lines.push('  ' + SAMPLE_RULES[j].id + ': ' + c.action + ' [' + c.unsupported.join(',') + ']');
-    }
-    lines.push('');
-    lines.push('=== 反假阳性 ===');
-    lines.push('  normalize(string) : ' + JSON.stringify(window.HikerCompat.normalize('<html>ok</html>')));
-    lines.push('  normalize(Promise): ' + JSON.stringify(window.HikerCompat.normalize(Promise.resolve(1))));
-    lines.push('');
-    lines.push('=== 官方 API 契约覆盖率（hikerView help_js / JSEngine + hiker_54.db） ===');
-    var cov = window.HikerCompat.coverage();
-    lines.push('  可用 ' + cov.available + '/' + cov.official
-      + '  [真实现 ' + cov.levels.full + ' / 桥转发 ' + cov.levels.bridge
-      + ' / 保留 ' + cov.levels.delegate + ' / 降级 ' + cov.levels.degrade + ']');
-    lines.push('  缺失 : ' + (cov.missing.length ? cov.missing.slice(0, 18).join(', ') : '无'));
-    lines.push('');
-    lines.push('=== hiker:// 内部地址分发（取自 xingchen 1.2.8 真机事故） ===');
-    var probes = ['hiker://empty', 'hiker://empty#http://a.com/x', 'hiker://page/x',
-                  'hiker://home', 'hiker://files/missing.txt', 'hiker://bookmark',
-                  'file:///tmp/none.txt'];
-    for (var q = 0; q < probes.length; q++) {
-      var d = window.HikerCompat.scheme(probes[q]);
-      lines.push('  ' + probes[q] + ' → ' + (d ? d.route + ' / ' + d.status
-        + (d.error ? ' / ' + d.error : '') + ' / body=' + JSON.stringify(d.body.slice(0, 34)) : 'null'));
-    }
-    lines.push('');
-    lines.push('=== 新鲜作用域（修 getUaObject / getJsPlugin 未定义） ===');
-    var fr = window.HikerCompat.runInFresh(
-      "var u = JSON.parse(getUaObject()); var p = getJsPlugin(); setResult({ua:!!u, plugin:typeof p});",
-      { MY_URL: 'https://example.com' });
-    lines.push('  fresh setResult: ' + fr.ok + '  out=' + fr.out + '  err=' + (fr.err || '—'));
-    $('compatOut').textContent = lines.join('\n');
-  }
-  $('btnCompat').onclick = compat;
-
-  /* ---------------- 启动 ---------------- */
-  load(); renderTokens(); renderDs(); renderSites(); renderVods(); renderPlays();
-  window.__HIKER_STATE__ = S;
   boot();
-  log('独立容器页就绪（六段链路 + 兼容层）');
+  G.__HIKER_APP_STATE__ = S;
 })();
 </script>
 </body>
