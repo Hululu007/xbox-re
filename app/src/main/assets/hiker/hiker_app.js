@@ -297,19 +297,51 @@
    * ===================================================================== */
 
 
-  /* [完善] 云6 pasteme 信封剥壳 —— 移植自 xingchen HkRuleManager.extractRuleJsonFromPasteme。
-   * 官方响应形如 {"return_code":0,"data":"...rule.json / 分享口令 / 配置..."}。
-   * 未剥壳时整个信封会被当裸 JSON，buildSites 生成一个无规则的假站点。
-   */
+  /* [完善 v2] HTML 实体还原 —— 参照 xingchen extractRuleJsonFromCmdIm 的同款处理。
+   * pasteme / 剪贴板站点偶尔把 JSON 里的引号转义成 &quot;，不还原则整段解析失败。
+   * &amp; 必须最后替换，避免 &amp;quot; 被二次解码。 */
+  function htmlUnescape(v) {
+    return String(v === null || v === undefined ? '' : v)
+      .replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+      .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&');
+  }
+  App.htmlUnescape = htmlUnescape;
+
+  /* [完善 v2] 云6 pasteme 信封剥壳。
+   * 参照 xingchen HkRuleManager.extractRuleJsonFromPasteme（官方逆向实现）：
+   *   {"return_code":0,"data":"...rule.json / 分享口令 / 配置..."}
+   *   · return_code 有且 != 0 才判失败（案例允许字段缺失），兼容 code/status/success
+   *   · data 可为字符串或对象；兼容 content/text/value/result 别名
+   *   · 不是信封（裸规则 / 分享包装 / base64）时原样交回后续 unwrap
+   *   · BOM、前后空白、HTML 实体全部先归一化
+   * 未剥壳时整个信封会被当裸 JSON，buildSites 只生成一个无规则的「站点1」，
+   * 这正是用户反馈的「输入口令获取不到站点信息」。 */
   function pastemeEnvelope(body) {
-    try {
-      var o = JSON.parse(String(body).trim());
-      if (!o || typeof o !== 'object' || o.return_code === undefined) return null;
-      if (Number(o.return_code) !== 0) return null;              /* 需密码 / 密码错 / 不存在 */
-      if (o.data === null || o.data === undefined) return null;
-      var d = String(o.data).trim();
-      return d ? d : null;
-    } catch (e) { return null; }
+    if (body === null || body === undefined) return null;
+    var t = String(body).replace(/^\uFEFF/, '').replace(/^\s+|\s+$/g, '');
+    if (!t) return null;
+    /* 关键：只对外层信封做 JSON.parse，HTML 实体还原放到取到 data 之后。
+     * 若先整体解码，data 字符串里的 &quot; 会变成裸引号、把外层 JSON 撑破。
+     * 案例 extractRuleJsonFromPasteme 同样是 parse(resp) → getAsString(data)。 */
+    var o = jparse(t, null);
+    if (!o || typeof o !== 'object' || Object.prototype.toString.call(o) === '[object Array]') {
+      return htmlUnescape(t);                    /* 裸规则 / 分享包装 / base64，交回 unwrap */
+    }
+    var rc = 0;
+    if (o.return_code !== undefined) rc = o.return_code;
+    else if (o.code !== undefined) rc = o.code;
+    else if (o.status !== undefined) rc = o.status;
+    else if (o.success !== undefined) rc = o.success ? 0 : 1;
+    if (Number(rc) !== 0) return null;            /* 需密码 / 密码错 / 便签不存在 */
+    var keys = ['data', 'content', 'text', 'value', 'result'], d = null;
+    for (var i = 0; i < keys.length; i++) {
+      if (o[keys[i]] !== undefined && o[keys[i]] !== null) { d = o[keys[i]]; break; }
+    }
+    if (d === null) return t;                     /* 无 data：整个对象就是配置 {sites:[]} */
+    var out = (typeof d === 'string') ? d : JSON.stringify(d);
+    out = htmlUnescape(out.replace(/^\uFEFF/, '')).replace(/^\s+|\s+$/g, '');
+    return out || null;
   }
   App.pastemeEnvelope = pastemeEnvelope;
 
@@ -326,10 +358,17 @@
       if (!body && cu.fallback) body = net(cu.fallback, {});
       if (!body) { out.error = '云端未返回内容（便签不存在或密码错误）'; out.channel = cu.channel; return out; }
       out.channel = cu.channel;
-      /* [完善] 云6 pasteme：先剥 {"return_code":0,"data":"..."} 信封，再走分享包装还原 */
+      /* [完善 v2] 云6 pasteme：剥信封 → unwrap 分享包装（案例 unwrapShareText 同款顺序）。
+       * 案例在首次取回失败且口令带密码时，会再用 rest(@pwd) 取一次；本实现
+       * cloudUrl() 首次即把密码拼进 URL，语义等价，不再重复请求。 */
       if (cu.channel === '云6/pasteme') {
         var env = pastemeEnvelope(body);
-        if (env === null) { out.error = '云6 便签不存在/需密码/密码错误（return_code≠0 或 data 为空）'; return out; }
+        if (env === null) {
+          out.error = cu.url.indexOf('(@') >= 0
+            ? '云6 便签密码错误或内容已被删除（return_code≠0）'
+            : '云6 便签不存在或需要访问密码（请切「含密码」模式重填，return_code≠0）';
+          return out;
+        }
         body = env;
       }
       if (cu.outerB64) {                    /* 云2 textdb：外层 base64 → 剥壳 */

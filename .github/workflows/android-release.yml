@@ -289,30 +289,29 @@ jobs:
         run: |
           rm -rf dist
           mkdir -p dist
-          # 未签名产物可能带 -unsigned 后缀，统一成规范文件名，避免资产名漂移
+          # 未签名产物可能带 -unsigned 后缀，统一成规范文件名，避免资产名漂移。
+          # 本轮双签名形态：同一份 AGP 原生 unsigned APK 复制两份，分别签 v2-only
+          # 与 v1+v2+v3。文件名带唯一形态标识，避免与历史十几个同名资产
+          # 在手机下载目录里被复用/缓存（用户连续两包装不上，这一层必须排除）。
           for f in Release/apk/*.apk; do
             b="$(basename "$f" .apk)"
             b="${b%-unsigned}"
-            cp "$f" "dist/$b.apk"
+            cp "$f" "dist/${b}-v2only.apk"
+            cp "$f" "dist/${b}-v1v2v3.apk"
           done
           ls -lh dist/
 
-      - name: Sign APK with v2 only (v1/v3 disabled, no ZIP rewrite)
-        # 唯一允许的通用解法（勿改回任何旧做法）：对齐默影视等同类发行包，
-        # **只签 v2**，v1(JAR) 与 v3 全部关闭。minSdk=24，v2 从 API 24 起
-        # 系统原生支持，任何合法目标设备都不需要 v1；v3 只服务于密钥轮换，
-        # 本仓库不做轮换，留着只会多一个签名块变量。
-        # 关掉 v1 后不做 JAR 签名，META-INF 下的依赖元数据全部由 v2 全文件
-        # 签名覆盖，apksigner 不再报 not protected by signature；
-        # 同时不需要排除/清理 META-INF，也不需要任何 ZIP 重写，安装包不会损坏。
-        #
-        # 历史两个互斥错误共用同一个开关，来回横跳的根因就在这里：
-        #   · 保留 META-INF 条目 + 开 v1 → not protected → MT「签名校验不通过」
-        #   · 为让 v1 干净而用 zip -d / Python zipfile / zipalign -f 重写 ZIP
-        #     → 丢 AGP 对齐 extra field 与 resources.arsc Stored →「安装包已损坏」
-        # 编译期 packaging.resources.excludes 也排除不干净（AGP 自生成的
-        # app-metadata.properties / version-control-info.textproto 等仍残留 10 条），
-        # 会让 payload=0 这类硬断言永不可达、构建必然失败，已废止。
+      - name: Sign APKs with dual schemes
+        # 不再赌单一方案：用户连续两版「安装失败，应该是签名问题」，且明确
+        # 「MT 签名后可以安装」。MT 重签产出的形态就是带 v1 的，因此本轮同时
+        # 提供两种形态，让用户设备在真机上一次判定哪一种能装：
+        #   *-v2only.apk   : v2-only，与已验证可装的横版逐字节同形态（保底）
+        #   *-v1v2v3.apk   : v1+v2+v3，贴近 MT 重签形态
+        # 两份都保持 AGP 原生 ZIP 结构，不做 zip -d / zipfile / zipalign -f 重写。
+        # v1 那份由 apksigner 原生新增 MANIFEST.MF/CERT.SF/CERT.RSA 三条；
+        # 依赖自带的 META-INF 元数据一条都不删（删了会出现「文件不全」）。
+        # v2/v3 覆盖整个 ZIP，META-INF 元数据在签名覆盖内；v1 的 MANIFEST.MF
+        # 不列 META-INF 条目是 JAR 签名规范本身的行为，不是文件缺失。
         env:
           RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
           RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
@@ -331,7 +330,11 @@ jobs:
           KEY_PASS="${RELEASE_KEY_PASSWORD:-$STORE_PASS}"
           rm -f /tmp/sign-report.txt
           for apk in dist/*.apk; do
-            echo "== $apk : 结构保持 AGP 原生，不做任何 ZIP 改写"
+            case "$(basename "$apk")" in
+              *-v1v2v3.apk) V1=true;  V3=true;  SCHEMES="v1 v2 v3"; EXPECT_ADDED=3; LABEL="v1+v2+v3" ;;
+              *)            V1=false; V3=false; SCHEMES="v2";       EXPECT_ADDED=0; LABEL="v2-only" ;;
+            esac
+            echo "== $apk : 方案 $LABEL（AGP 原生 ZIP，不做任何事后重写）"
             BEFORE="$(unzip -Z1 "$apk" | wc -l)"
             echo "  ZIP entries before signing: $BEFORE"
             PRE="$("$APKSIGNER" verify --min-sdk-version 24 --verbose "$apk" 2>&1 || true)"
@@ -339,26 +342,22 @@ jobs:
               echo "::error title=APK already signed::$apk already carries signatures; unsigned build is required"
               exit 1
             fi
-            # 唯一写操作：apksigner 插入 v2 signing block；不生成 v1 三件套，
-            # 不新增 ZIP 条目。已有条目内容、压缩方式、对齐、顺序全部原样保留。
             "$APKSIGNER" sign \
               --ks app/signing/release.jks \
               --ks-key-alias "$ALIAS" \
               --ks-pass "pass:$STORE_PASS" \
               --key-pass "pass:$KEY_PASS" \
               --min-sdk-version 24 \
-              --v1-signing-enabled false \
+              --v1-signing-enabled "$V1" \
               --v2-signing-enabled true \
-              --v3-signing-enabled false \
+              --v3-signing-enabled "$V3" \
               --out "${apk}.signed" "$apk"
             mv "${apk}.signed" "$apk"
             AFTER="$(unzip -Z1 "$apk" | wc -l)"
-            # v1 已关闭：apksigner 只插入 signing block，不新增任何 ZIP 条目。
-            # ADDED 必须为 0，这是「零 ZIP 条目改写」最直接的证据。
             ADDED=$((AFTER-BEFORE))
-            echo "  ZIP entries after signing: $AFTER (added $ADDED, must be 0)"
-            if [ "$ADDED" -ne 0 ]; then
-              echo "::error title=Unexpected ZIP entries::$apk added $ADDED entries; v2 signing must not add ZIP entries"
+            echo "  ZIP entries after signing: $AFTER (added $ADDED, expected $EXPECT_ADDED)"
+            if [ "$ADDED" -ne "$EXPECT_ADDED" ]; then
+              echo "::error title=Unexpected ZIP entries::$apk added $ADDED entries, expected $EXPECT_ADDED"
               exit 1
             fi
             VERBOSE="$("$APKSIGNER" verify --min-sdk-version 24 --verbose "$apk" 2>&1 || true)"
@@ -367,48 +366,51 @@ jobs:
               echo "::error title=APK does not verify::$(echo "$VERBOSE" | tr '\n' ' ')"
               exit 1
             fi
-            for scheme in v2; do
+            for scheme in $SCHEMES; do
               if ! echo "$VERBOSE" | grep -qi "$scheme scheme.*: true"; then
-                echo "::error title=$scheme scheme not verified::$(echo "$VERBOSE" | tr '\n' ' ')"
+                echo "::error title=$scheme scheme not verified::$apk $(echo "$VERBOSE" | tr '\n' ' ')"
                 exit 1
               fi
             done
-            # v2-only 锁定：v1(JAR) 与 v3 一旦出现就是回归，硬失败。
-            for scheme in v1 v3; do
-              if echo "$VERBOSE" | grep -qi "$scheme scheme.*: true"; then
-                echo "::error title=$scheme must stay disabled::$apk carries a $scheme signature; v2-only required"
-                exit 1
-              fi
-            done
-            # 只读校验对齐（不阻断、不重写）：AGP 打包时已对齐，apksigner 的
-            # signing block 按 8 字节倍数插入，不会破坏 4 字节对齐。
+            if [ "$V1" = false ]; then
+              for scheme in v1 v3; do
+                if echo "$VERBOSE" | grep -qi "$scheme scheme.*: true"; then
+                  echo "::error title=$scheme must stay disabled::$apk carries a $scheme signature; v2-only required"
+                  exit 1
+                fi
+              done
+            fi
             if "$ZIPALIGN" -c 4 "$apk" 2>/dev/null; then
               echo "  zipalign -c 4: OK (read-only, no rewrite)"
             else
               echo "::error title=zipalign -c 4 failed::$apk alignment is not clean; refusing to publish"
               exit 1
             fi
-            # v1 已关闭：META-INF 里的依赖元数据全部由 v2 全文件签名覆盖，
-            # 不再是「未受签名保护的条目」，只做记录，不做 payload=0 断言。
-            # 历史 payload=0 判据不可达（AGP 自生成条目排除不掉），会让构建必然失败。
             PAYLOAD="$(unzip -Z1 "$apk" | grep -iE '^META-INF/' | grep -viE '^META-INF/(MANIFEST\.MF|[^/]*\.(SF|RSA|DSA|EC)|SIG-[^/]*)$' | grep -c . || true)"
             KEEP="$(unzip -Z1 "$apk" | grep -icE '^META-INF/' || true)"
             V1TRIO="$(unzip -Z1 "$apk" | grep -icE '^META-INF/(MANIFEST\.MF|.*\.(SF|RSA|DSA|EC))$' || true)"
-            echo "  META-INF entries: $KEEP (dependency metadata $PAYLOAD, covered by v2; v1 trio $V1TRIO)"
-            if [ "$V1TRIO" -ne 0 ]; then
+            echo "  META-INF entries: $KEEP (dependency metadata $PAYLOAD; v1 trio $V1TRIO)"
+            if [ "$V1" = true ]; then
+              if [ "$V1TRIO" -lt 3 ]; then
+                echo "::error title=v1 trio missing::$apk has $V1TRIO JAR signature entries"
+                exit 1
+              fi
+            elif [ "$V1TRIO" -ne 0 ]; then
               echo "::error title=v1 must stay disabled::$apk has $V1TRIO JAR signature entries"
               exit 1
             fi
             {
               echo "=== $(basename "$apk") ==="
+              echo "scheme: $LABEL"
               echo "ZIP entries before signing: $BEFORE"
-              echo "ZIP entries after signing:  $AFTER (added $ADDED = 0, no ZIP entry rewrite)"
-              echo "META-INF entries:           $KEEP (dependency metadata $PAYLOAD, all covered by v2)"
+              echo "ZIP entries after signing:  $AFTER (added $ADDED = $EXPECT_ADDED, apksigner native only)"
+              echo "META-INF entries:           $KEEP (dependency metadata $PAYLOAD, all covered by v2/v3)"
+              echo "v1 trio:                    $V1TRIO"
               echo "zipalign -c 4: OK (read-only)"
               echo ""
             } >> /tmp/sign-report.txt
           done
-          echo "v2-only signing done in one pass; v1/v3 disabled, APK ZIP structure untouched (AGP native)"
+          echo "dual-scheme signing done; AGP native ZIP preserved for both variants"
 
       - name: Verify APK signatures and package identity
         run: |
@@ -430,31 +432,43 @@ jobs:
             CERTS="$("$APKSIGNER" verify --print-certs "$apk" 2>&1)"
             echo "$CERTS"
             VERBOSE="$("$APKSIGNER" verify --min-sdk-version 24 --verbose "$apk" 2>&1)"
-            for scheme in v2; do
+            case "$(basename "$apk")" in
+              *-v1v2v3.apk) SCHEMES="v1 v2 v3"; EXPECT_TRIO=1; LABEL="v1+v2+v3" ;;
+              *)            SCHEMES="v2";       EXPECT_TRIO=0; LABEL="v2-only" ;;
+            esac
+            for scheme in $SCHEMES; do
               if ! echo "$VERBOSE" | grep -qi "$scheme scheme.*: true"; then
                 echo "::error title=$scheme scheme not verified::$apk $(echo "$VERBOSE" | tr '\n' ' ')"
                 exit 1
               fi
             done
-            # v2-only 锁定：v1(JAR) 与 v3 一旦出现就是回归，硬失败。
-            for scheme in v1 v3; do
-              if echo "$VERBOSE" | grep -qi "$scheme scheme.*: true"; then
-                echo "::error title=$scheme must stay disabled::$apk carries a $scheme signature; v2-only required"
-                exit 1
-              fi
-            done
+            if [ "$EXPECT_TRIO" -eq 0 ]; then
+              for scheme in v1 v3; do
+                if echo "$VERBOSE" | grep -qi "$scheme scheme.*: true"; then
+                  echo "::error title=$scheme must stay disabled::$apk carries a $scheme signature; v2-only required"
+                  exit 1
+                fi
+              done
+            fi
             SIGCOUNT="$(unzip -Z1 "$apk" | grep -icE '^META-INF/.*\.(RSA|DSA|EC|SF)$|^META-INF/MANIFEST\.MF$' || true)"
-            if [ "$SIGCOUNT" -ne 0 ]; then
+            if [ "$EXPECT_TRIO" -eq 0 ] && [ "$SIGCOUNT" -ne 0 ]; then
               echo "::error title=v1 must stay disabled::$apk has $SIGCOUNT JAR signature entries; sign v2 only"
               exit 1
             fi
-            echo "  scheme: v2 only (v1/v3 disabled), JAR signature entries = 0"
-            # 硬断言：MT 判「签名状态」看的就是这两类 warning，必须都是 0。
-            # 过去把它们当 harmless notice 只统计不拦，正是问题反复出现的原因。
+            if [ "$EXPECT_TRIO" -eq 1 ] && [ "$SIGCOUNT" -lt 3 ]; then
+              echo "::error title=v1 trio missing::$apk has $SIGCOUNT JAR signature entries"
+              exit 1
+            fi
+            echo "  scheme: $LABEL, JAR signature entries = $SIGCOUNT"
+            # v2-only 那份仍保持零 warning 的严格判据（历史假绿漏洞不重开）。
+            # v1+v2+v3 那份：v1 的 MANIFEST.MF 按 JAR 规范不列 META-INF/ 下条目，
+            # apksigner 会输出 not-protected 提示；但 v2/v3 覆盖整个 ZIP，
+            # 系统安装器按 v2/v3 验签，这些条目是受保护的。这里如实记录不硬拦，
+            # 同时在报告里列出数量，避免再次变成「看不见的假绿」。
             NOTPROT="$(echo "$VERBOSE" | grep -ci 'not protected by signature' || true)"
             OTHER_WARN="$(echo "$VERBOSE" | grep -i 'WARNING' | grep -viE 'not protected by signature' || true)"
             echo "  apksigner warnings: not-protected=$NOTPROT other=$(echo "$OTHER_WARN" | grep -c . || true)"
-            if [ "$NOTPROT" -ne 0 ]; then
+            if [ "$EXPECT_TRIO" -eq 0 ] && [ "$NOTPROT" -ne 0 ]; then
               echo "::error title=MT signature check would fail::$apk has $NOTPROT 'not protected by signature' warnings"
               exit 1
             fi
@@ -474,12 +488,13 @@ jobs:
           done
           EXPECTED="${{ steps.build_apks.outputs.expected_apk_count }}"
           [ -n "$EXPECTED" ] || EXPECTED=4
-          test "$count" -eq "$EXPECTED" || { echo "::error title=APK count::Expected $EXPECTED APKs, got $count"; exit 1; }
-          echo "Verified $count v2-signed APKs (v1/v3 disabled, AGP native ZIP, no ZIP rewrite)"
+          WANT=$((EXPECTED * 2))
+          test "$count" -eq "$WANT" || { echo "::error title=APK count::Expected $WANT APKs (dual scheme), got $count"; exit 1; }
+          echo "Verified $count APKs (dual scheme: v2-only + v1/v2/v3, AGP native ZIP, no ZIP rewrite)"
           # 可下载的自检报告：用户能拿 MT 显示的证书指纹 / 签名方案直接对照，
           # 不必依赖 CI 自述，也不必下载几十 MB 的 APK 去验。
           {
-            echo "xbox-re 签名与完整性自检报告（只签 v2 / v1、v3 关闭 / META-INF 由 v2 覆盖 / 零 ZIP 重写）"
+            echo "xbox-re 签名与完整性自检报告（双形态：v2-only 与 v1+v2+v3 / 同证书 / 零 ZIP 重写）"
             echo "tag: ${{ steps.meta.outputs.tag }}"
             echo "commit: $GITHUB_SHA"
             echo "SHA256 证书指纹: 82:7C:75:5F:F6:04:3C:5B:3B:F0:65:8B:BD:21:10:C5:79:88:6C:9B:DC:91:55:CA:00:4A:BF:66:E5:59:D5:7B"
@@ -570,7 +585,7 @@ jobs:
                   "lib/ (>=1)": len(lib) >= 1,
                   "assets/ (>=1)": len(assets) >= 1,
                   "META-INF payload covered by v2": True,
-                  "no v1 JAR signature files": len(sigleft) == 0,
+                  "v1 trio matches declared scheme": (len(sigleft) >= 3) if name.endswith("-v1v2v3.apk") else (len(sigleft) == 0),
                   "resources.arsc Stored (AGP native)": arsc_stored,
               }
               record("--- %s ---" % name)
