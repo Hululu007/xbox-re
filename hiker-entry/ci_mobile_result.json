@@ -1,0 +1,278 @@
+{
+  "run_id": 43154069051,
+  "html_url": "https://github.com/kuby007/xbox-re/actions/runs/43154069051",
+  "head_sha": "f660d5e83b43641ac27f119f18791ff5ee167c0b",
+  "tag": "v5.6.0-beta-202611121219",
+  "status": "completed",
+  "conclusion": "success",
+  "created_at": "2026-11-12T04:19:47Z",
+  "updated_at": "2026-11-12T04:34:02Z",
+  "total_steps": 31,
+  "success_steps": 25,
+  "skipped_steps": 6,
+  "non_success_steps": [],
+  "all_steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 1
+    },
+    {
+      "name": "Checkout",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 2
+    },
+    {
+      "name": "Set up JDK 21",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 3
+    },
+    {
+      "name": "Set up Python 3.10",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 4
+    },
+    {
+      "name": "Set up Android SDK",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 5
+    },
+    {
+      "name": "Install Android packages",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 6
+    },
+    {
+      "name": "Ensure NDK and CMake for Node runtime module",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 7
+    },
+    {
+      "name": "Verify mobile search scope feature is present",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 8
+    },
+    {
+      "name": "Run WebSocket danmaku tests",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 9
+    },
+    {
+      "name": "Report Gradle failure details",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 10
+    },
+    {
+      "name": "Resolve release tag",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 11
+    },
+    {
+      "name": "Configure release signing",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 12
+    },
+    {
+      "name": "Build release APKs",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 13
+    },
+    {
+      "name": "Report build failure",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 14
+    },
+    {
+      "name": "Collect artifacts",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 15
+    },
+    {
+      "name": "Sign APK with v2 only (v1/v3 disabled, no ZIP rewrite)",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 16
+    },
+    {
+      "name": "Verify APK signatures and package identity",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 17
+    },
+    {
+      "name": "Verify APK completeness and installability",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 18
+    },
+    {
+      "name": "Set up ORAS",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 19
+    },
+    {
+      "name": "Publish APKs to OCI Registry",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 20
+    },
+    {
+      "name": "Report OCI publish failure",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 21
+    },
+    {
+      "name": "Prepare release notes input",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 22
+    },
+    {
+      "name": "Generate update manifests",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 23
+    },
+    {
+      "name": "Create GitHub Release",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 24
+    },
+    {
+      "name": "Attach signature evidence to release notes",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 25
+    },
+    {
+      "name": "Sync to CNB",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 26
+    },
+    {
+      "name": "Upload workflow artifacts",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 27
+    },
+    {
+      "name": "Post Set up Python 3.10",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 52
+    },
+    {
+      "name": "Post Set up JDK 21",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 53
+    },
+    {
+      "name": "Post Checkout",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 54
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 55
+    }
+  ],
+  "log_evidence": {
+    "downloaded": true,
+    "build_success": true,
+    "mobile_task": true,
+    "errors": [
+      "0_Build and publish.txt: 2026-11-12T04:33:58.4832598Z ##[error]Failed to CreateArtifact: Artifact storage quota has been hit. Unable to upload any new artifacts. Usage is recalculated every 6-12 hours.",
+      "Build and publish/27_Upload workflow artifacts.txt: 2026-11-12T04:33:58.4832551Z ##[error]Failed to CreateArtifact: Artifact storage quota has been hit. Unable to upload any new artifacts. Usage is recalculated every 6-12 hours."
+    ]
+  },
+  "release": {
+    "tag_name": "v5.6.0-beta-202611121219",
+    "draft": false,
+    "prerelease": true,
+    "html_url": "https://github.com/kuby007/xbox-re/releases/tag/v5.6.0-beta-202611121219"
+  },
+  "assets": [
+    {
+      "name": "leanback-arm64_v8a-oktv-beta.apk",
+      "size": 51925347,
+      "id": 738070996,
+      "browser_download_url": "https://github.com/kuby007/xbox-re/releases/download/v5.6.0-beta-202611121219/leanback-arm64_v8a-oktv-beta.apk"
+    },
+    {
+      "name": "leanback-arm64_v8a-oktv-beta.json",
+      "size": 841,
+      "id": 738071110,
+      "browser_download_url": "https://github.com/kuby007/xbox-re/releases/download/v5.6.0-beta-202611121219/leanback-arm64_v8a-oktv-beta.json"
+    },
+    {
+      "name": "mobile-arm64_v8a-oktv-beta.apk",
+      "size": 51784269,
+      "id": 738071175,
+      "browser_download_url": "https://github.com/kuby007/xbox-re/releases/download/v5.6.0-beta-202611121219/mobile-arm64_v8a-oktv-beta.apk"
+    },
+    {
+      "name": "mobile-arm64_v8a-oktv-beta.json",
+      "size": 837,
+      "id": 738071296,
+      "browser_download_url": "https://github.com/kuby007/xbox-re/releases/download/v5.6.0-beta-202611121219/mobile-arm64_v8a-oktv-beta.json"
+    },
+    {
+      "name": "signature-report.txt",
+      "size": 18208,
+      "id": 738071324,
+      "browser_download_url": "https://github.com/kuby007/xbox-re/releases/download/v5.6.0-beta-202611121219/signature-report.txt"
+    }
+  ],
+  "downloads": [
+    {
+      "name": "leanback-arm64_v8a-oktv-beta.apk",
+      "status": 302,
+      "redirect_host": "release-assets.githubusercontent.com",
+      "ok": true
+    },
+    {
+      "name": "mobile-arm64_v8a-oktv-beta.apk",
+      "status": 302,
+      "redirect_host": "release-assets.githubusercontent.com",
+      "ok": true
+    }
+  ],
+  "baseline_heads_before": {
+    "oktv-cat": "f7f9a031c61d3360b7907460707587f8b273bbb0",
+    "oktv-cat-koul-onestop": "717cc947904b949396e7dc91e9ec876988e1c8e9",
+    "oktv-cat-hiker-entry": "9629c719cd5f71b79229460933669ad61de7d10d",
+    "oktv-cat-hiker-v2": "e49ed658be9ac80ca4830a754678def342a5dca2"
+  },
+  "baseline_heads_after": {
+    "oktv-cat": "f7f9a031c61d3360b7907460707587f8b273bbb0",
+    "oktv-cat-koul-onestop": "717cc947904b949396e7dc91e9ec876988e1c8e9",
+    "oktv-cat-hiker-entry": "9629c719cd5f71b79229460933669ad61de7d10d",
+    "oktv-cat-hiker-v2": "e49ed658be9ac80ca4830a754678def342a5dca2"
+  },
+  "baseline_untouched": true,
+  "apk_variants": "mobile-arm64_v8a,leanback-arm64_v8a",
+  "all_checks_pass": true
+}

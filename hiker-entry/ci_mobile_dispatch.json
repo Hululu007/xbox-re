@@ -1,0 +1,19 @@
+{
+  "run_id": 43154069051,
+  "html_url": "https://github.com/kuby007/xbox-re/actions/runs/43154069051",
+  "head_sha": "f660d5e83b43641ac27f119f18791ff5ee167c0b",
+  "head_branch": "oktv-cat-hiker-v3",
+  "status": "in_progress",
+  "created_at": "2026-11-12T04:19:47Z",
+  "tag": "v5.6.0-beta-202611121219",
+  "inputs": {
+    "release_tag": "v5.6.0-beta-202611121219",
+    "release_channel": "beta",
+    "prerelease": "true",
+    "apk_variants": "mobile-arm64_v8a,leanback-arm64_v8a",
+    "sync_cnb": "false",
+    "publish_oci": "false",
+    "release_notes": "手机版首页补齐海阔独立入口（底部导航第 5 项，点击跳 HikerActivity 独立 WebView）。\\n本包同时含 mobile / leanback 两个 arm64-v8a 变体；运行时层与桥层零改动。\\n构建前兼容性验证 31/31 通过，桥层 ecj/d8 编译回归通过。"
+  },
+  "branch": "oktv-cat-hiker-v3"
+}
