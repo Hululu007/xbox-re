@@ -296,6 +296,23 @@
    * 2) 口令取内容 + 站点生成
    * ===================================================================== */
 
+
+  /* [完善] 云6 pasteme 信封剥壳 —— 移植自 xingchen HkRuleManager.extractRuleJsonFromPasteme。
+   * 官方响应形如 {"return_code":0,"data":"...rule.json / 分享口令 / 配置..."}。
+   * 未剥壳时整个信封会被当裸 JSON，buildSites 生成一个无规则的假站点。
+   */
+  function pastemeEnvelope(body) {
+    try {
+      var o = JSON.parse(String(body).trim());
+      if (!o || typeof o !== 'object' || o.return_code === undefined) return null;
+      if (Number(o.return_code) !== 0) return null;              /* 需密码 / 密码错 / 不存在 */
+      if (o.data === null || o.data === undefined) return null;
+      var d = String(o.data).trim();
+      return d ? d : null;
+    } catch (e) { return null; }
+  }
+  App.pastemeEnvelope = pastemeEnvelope;
+
   /* 取一条口令的原始内容文本（云口令走真实网络；本地形态直接用） */
   function resolveEntry(entry, opts) {
     opts = opts || {};
@@ -309,6 +326,12 @@
       if (!body && cu.fallback) body = net(cu.fallback, {});
       if (!body) { out.error = '云端未返回内容（便签不存在或密码错误）'; out.channel = cu.channel; return out; }
       out.channel = cu.channel;
+      /* [完善] 云6 pasteme：先剥 {"return_code":0,"data":"..."} 信封，再走分享包装还原 */
+      if (cu.channel === '云6/pasteme') {
+        var env = pastemeEnvelope(body);
+        if (env === null) { out.error = '云6 便签不存在/需密码/密码错误（return_code≠0 或 data 为空）'; return out; }
+        body = env;
+      }
       if (cu.outerB64) {                    /* 云2 textdb：外层 base64 → 剥壳 */
         var dec = b64d(body);
         if (!dec) { out.error = '云端内容不是有效 base64'; return out; }
@@ -663,6 +686,11 @@
                    input: target, params: { url: target } };
       rec = execRule(site.rules.play, vars, opts);
       if (rec.ok) target = extractUrl(rec.value) || target;
+      /* [完善] 规则降级/报错时明确失败，不把 vod.url 兜底值伪装成可播放地址 */
+      else if (rec.action === 'degrade' || rec.action === 'error') {
+        return { site: site, vod: vod, episode: ep, url: '', title: s(vod.title),
+                 playAction: rec.action, err: rec.err || '播放规则无法执行', ok: false, channel: '' };
+      }
     }
     var out = { site: site, vod: vod, episode: ep, url: target, title: s(vod.title),
                 playAction: rec ? rec.action : 'direct', err: rec ? rec.err : null, ok: false, channel: '' };
