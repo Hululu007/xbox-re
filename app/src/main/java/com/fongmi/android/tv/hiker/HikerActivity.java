@@ -34,10 +34,18 @@ public class HikerActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // 方向在运行时修正：绝不改 AndroidManifest（改了会让手机版装不上，见 B2 诊断）。
+        // main 的 sensorLandscape 是 TV 默认值；手机非 leanback 设备改回跟随用户方向，
+        // TV 设备（FEATURE_LEANBACK）保持原横屏不变。
+        if (!getPackageManager().hasSystemFeature(
+                android.content.pm.PackageManager.FEATURE_LEANBACK)) {
+            setRequestedOrientation(
+                    android.content.pm.ActivityInfo.SCREEN_ORIENTATION_FULL_USER);
+        }
+
         FrameLayout root = new FrameLayout(this);
         root.setBackgroundColor(0xFF0F1420);
-        // 避开透明状态栏/导航栏与刘海：让系统把内容 inset 应用到根布局，
-        // 否则页面顶部 sticky header 与底部按钮会被系统栏盖住（显示不全）。
+        // 避开透明状态栏/导航栏与刘海，否则 sticky header 与底部按钮被系统栏盖住。
         root.setFitsSystemWindows(true);
         webView = new WebView(this);
         webView.setBackgroundColor(0xFF0F1420);
@@ -52,10 +60,7 @@ public class HikerActivity extends Activity {
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
         s.setDatabaseEnabled(true);
-        // 视口适配：让 index.html 的 viewport meta 真正按设备宽度生效。
-        // 此前未设 useWideViewPort / overviewMode，配合强制横屏会出现缩放错位、
-        // 横向滚动条占位，看起来就是「只显示一部分」。这里同时锁死缩放，
-        // 保证手机竖屏窄屏与 TV 横屏共用同一容器页都不跑版。
+        // 视口适配：让 index.html 的 viewport meta 按设备宽度生效，修「显示不全」。
         s.setUseWideViewPort(true);
         s.setLoadWithOverviewMode(true);
         s.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.NORMAL);

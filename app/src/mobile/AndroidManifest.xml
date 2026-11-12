@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-feature
         android:name="android.hardware.camera"
@@ -18,18 +17,6 @@
 
     <application>
 
-        <!-- 手机版海阔独立入口：覆盖 main 里 TV 默认的 sensorLandscape。
-             main 的 activity 声明会被两个 flavor 合并继承，手机版此前没有覆盖，
-             因此从底部导航第 5 项进入会被强制横屏（横屏后可用高度骤减，页面显示不全）。
-             这里与手机版其它 Activity 一致用 fullUser，竖屏/横屏跟随用户；
-             补 keyboardHidden|navigation|uiMode 与 adjustResize，避免软键盘遮挡输入框。 -->
-        <activity
-            android:name=".hiker.HikerActivity"
-            android:configChanges="keyboard|keyboardHidden|navigation|uiMode|screenSize|smallestScreenSize|screenLayout|orientation"
-            android:exported="false"
-            android:screenOrientation="fullUser"
-            android:windowSoftInputMode="adjustResize"
-            tools:replace="android:screenOrientation,android:configChanges" />
         <activity
             android:name=".ui.activity.HomeActivity"
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
